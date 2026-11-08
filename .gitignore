@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# секреты
+.env
+.env.*
+!.env.example
+
+# сырые ответы опроса не коммитим
+docs/research/raw/
+answers*.json
+*.xlsx
+
+.DS_Store
+*.log
