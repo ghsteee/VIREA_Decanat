@@ -1,6 +1,6 @@
 # Как подключить Codex ×2 и ChatGPT к репозиторию
 
-Репозиторий: `virea-dekanat` (приватный). Владелец — Алёна, напарник — collaborator с правом Write.
+Репозиторий: https://github.com/ghsteee/VIREA_Decanat (приватный). Владелец — Алёна, напарник — collaborator с правом Write.
 
 ## 0. Один раз — Алёна
 
@@ -13,10 +13,10 @@
 
 1. Открыть **chatgpt.com/codex** и войти своим аккаунтом ChatGPT.
 2. **Connect GitHub** (или Settings → Connectors / Plugins → GitHub). Откроется страница приложения **ChatGPT Codex Connector** на GitHub.
-3. Install → выбрать **Only select repositories** → `virea-dekanat`.
+3. Install → выбрать **Only select repositories** → `VIREA_Decanat`.
    - Алёна ставит приложение на свой аккаунт сама.
    - Напарник: если GitHub попросит одобрение владельца — Алёне придёт запрос, его нужно принять (Settings → Applications / GitHub Apps → Pending requests).
-4. В Codex: **Settings → Environments → New environment** → репозиторий `virea-dekanat`.
+4. В Codex: **Settings → Environments → New environment** → репозиторий `VIREA_Decanat`.
    - Setup script пока пустой. Когда появится код: `npm ci`.
    - Internet access: включить для установки пакетов (npm registry).
    - Секреты в environment не добавлять, пока нет тестовой БД. Боевые ключи — только на VPS.
@@ -32,10 +32,10 @@
 
 ChatGPT (обычный чат, не Codex) генерирует картинки. Доступ к репозиторию нужен, чтобы он читал PRD, дизайн-систему и журнал.
 
-1. chatgpt.com → **Settings → Apps (Connectors) → GitHub → Connect** → выбрать `virea-dekanat`. Это то же приложение GitHub, что у Codex, — если уже установлено, достаточно подтвердить.
+1. chatgpt.com → **Settings → Apps (Connectors) → GitHub → Connect** → выбрать `VIREA_Decanat`. Это то же приложение GitHub, что у Codex, — если уже установлено, достаточно подтвердить.
 2. Создать в ChatGPT проект «ВТУ ВИРЭА» и вставить в инструкции проекта:
 
-   > Ты делаешь картинки для прототипа «Цифровой деканат ВТУ ВИРЭА». Перед работой прочитай в репозитории virea-dekanat файлы AGENTS.md, docs/brand/README.md и docs/design-system.md. ВТУ ВИРЭА — вымышленный вуз: не копируй герб, логотип и фирменный стиль РТУ МИРЭА, не рисуй реальных людей. После каждой картинки дай текст записи для журнала ИИ по шаблону docs/ai-log/_template.md (инструмент ChatGPT, промпт, выбранный вариант).
+   > Ты делаешь картинки для прототипа «Цифровой деканат ВТУ ВИРЭА». Перед работой прочитай в репозитории ghsteee/VIREA_Decanat файлы AGENTS.md, docs/brand/README.md и docs/design-system.md. ВТУ ВИРЭА — вымышленный вуз: не копируй герб, логотип и фирменный стиль РТУ МИРЭА, не рисуй реальных людей. После каждой картинки дай текст записи для журнала ИИ по шаблону docs/ai-log/_template.md (инструмент ChatGPT, промпт, выбранный вариант).
 
 3. ChatGPT через GitHub только **читает** репозиторий. Готовые картинки в репозиторий кладём так:
    - скачать PNG/SVG → GitHub → `docs/brand/` → **Add file → Upload files** → «Create a new branch» → PR; или
@@ -44,12 +44,12 @@ ChatGPT (обычный чат, не Codex) генерирует картинк�
 
 ## 3. Claude Code (Алёна)
 
-Уже работает в проекте claude.ai «MGIMO AI HACK». Чтобы он мог пушить сам: claude.ai → **Settings → Connectors → GitHub → Connect** и выдать доступ к `virea-dekanat`.
+Подключён 8 ноября: claude.ai → Settings → Connectors → GitHub, плюс приложение **Claude** установлено на GitHub (github.com/settings/installations) с доступом к `VIREA_Decanat`. Важно: одной авторизации приложения (вкладка Authorized GitHub Apps) мало — без установки (Installed GitHub Apps) Claude не видит репозиторий.
 
 ## Проверка, что всё подключено
 
 - [ ] Напарник видит репозиторий и может создать ветку
-- [ ] Codex Алёны открыл PR с записью журнала
+- [ ] Codex Алёны открыл PR с записью журнала (Codex подключён 8 ноября, проверочный PR ещё не открыт)
 - [ ] Codex напарника открыл PR с записью журнала
 - [ ] ChatGPT отвечает на «Перескажи правила из AGENTS.md про картинки»
 - [ ] Прямой push в `main` запрещён
