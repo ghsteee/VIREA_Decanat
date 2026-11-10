@@ -6,6 +6,7 @@
 | --- | --- | --- | --- |
 | Lucide | Иконки | lucide.dev | ISC |
 | shadcn/ui | Компоненты интерфейса | ui.shadcn.com | MIT |
+| Golos Text | Шрифт интерфейса, раздаём со своего сервера (`@fontsource-variable/golos-text`) | ParaType, github.com/googlefonts/golos-text-font | SIL OFL 1.1 |
 | Картинки и логотип | `docs/brand/`, `public/brand/` | Сгенерированы ChatGPT командой | Созданы для проекта |
 
-Шрифт выбираем с лицензией SIL OFL и раздаём со своего сервера (не Google Fonts CDN).
+Шрифт — Golos Text (SIL OFL), раздаём со своего сервера, не с Google Fonts CDN.
