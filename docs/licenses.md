@@ -6,7 +6,8 @@
 | --- | --- | --- | --- |
 | Lucide | Иконки | lucide.dev | ISC |
 | shadcn/ui | Компоненты интерфейса | ui.shadcn.com | MIT |
-| Golos Text | Шрифт интерфейса, раздаём со своего сервера (`@fontsource-variable/golos-text`) | ParaType, github.com/googlefonts/golos-text-font | SIL OFL 1.1 |
+| Days One | Шрифт заголовков, раздаём со своего сервера (`@fontsource/days-one`) | fonts.google.com/specimen/Days+One | SIL OFL 1.1 |
+| Onest | Шрифт текста интерфейса, раздаём со своего сервера (`@fontsource-variable/onest`) | fonts.google.com/specimen/Onest | SIL OFL 1.1 |
 | Картинки и логотип | `docs/brand/`, `public/brand/` | Сгенерированы ChatGPT командой | Созданы для проекта |
 
-Шрифт — Golos Text (SIL OFL), раздаём со своего сервера, не с Google Fonts CDN.
+Шрифты — Days One и Onest (SIL OFL), раздаём со своего сервера, не с Google Fonts CDN.
