@@ -10,6 +10,7 @@ import {
 } from "@/server/auth/password";
 import { createSession, revokeCurrentSession } from "@/server/auth/session";
 import { hitRateLimit, resetRateLimit } from "@/server/rate-limit";
+import { DEMO_ACCOUNTS, demoLoginEnabled } from "@/server/demo";
 
 export type LoginState = { error?: string; login?: string };
 
@@ -72,6 +73,28 @@ export async function login(
   }
 
   await resetRateLimit(`login:${loginName}`);
+  await createSession(user.id);
+  redirect(user.role === "staff" ? "/staff" : "/");
+}
+
+/** Вход в тестовый аккаунт без пароля — только если DEMO_LOGIN=on на сервере. */
+export async function demoLogin(form: FormData): Promise<void> {
+  if (!demoLoginEnabled()) redirect("/login");
+  const key = String(form.get("account") ?? "") as keyof typeof DEMO_ACCOUNTS;
+  const login = DEMO_ACCOUNTS[key];
+  if (!login) redirect("/login");
+
+  const ip =
+    (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown";
+  const limit = await hitRateLimit(`demo-login:${ip}`, 60, WINDOW_SEC);
+  if (!limit.allowed) redirect("/login");
+
+  const user = await db.user.findUnique({
+    where: { login },
+    select: { id: true, role: true, disabledAt: true },
+  });
+  if (!user || user.disabledAt) redirect("/login");
   await createSession(user.id);
   redirect(user.role === "staff" ? "/staff" : "/");
 }

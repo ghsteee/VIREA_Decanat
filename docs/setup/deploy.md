@@ -57,6 +57,16 @@ cd /opt/dekanych && sudo bash deploy/gen-vapid.sh .env && sudo docker compose up
 
 Ключи — только в `.env`. Если их поменять, старые подписки браузеров перестанут работать — студентам придётся включить push заново.
 
+## Вход для жюри без пароля
+
+Кнопки на странице входа включаются переменной `DEMO_LOGIN=on` в `.env` (новый сервер — автоматически). На уже настроенном:
+
+```bash
+cd /opt/dekanych && grep -q '^DEMO_LOGIN=' .env && sudo sed -i 's/^DEMO_LOGIN=.*/DEMO_LOGIN=on/' .env || echo 'DEMO_LOGIN=on' | sudo tee -a .env && sudo docker compose up -d
+```
+
+Выключить после итогов — `DEMO_LOGIN=` и `sudo docker compose up -d`.
+
 ## Обновление
 
 ```bash
