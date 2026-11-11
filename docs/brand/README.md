@@ -11,6 +11,7 @@
 | Шапка, светлая тема | [`dekanych-logo.svg`](dekanych-logo.svg) — знак + надпись графитом `#1D1B18` |
 | Шапка, тёмная тема | [`dekanych-logo-dark.svg`](dekanych-logo-dark.svg) — надпись `#F3F0EA` |
 | Знак отдельно, favicon | [`dekanych-mark.svg`](dekanych-mark.svg), [`favicon-32.png`](favicon-32.png) |
+| Вариант для светлой темы (на рассмотрении) | [`dekanych-mark-pink.svg`](dekanych-mark-pink.svg), [`dekanych-logo-pink.svg`](dekanych-logo-pink.svg) — розовая табличка `#F9C1CE`, синие глаза `#064F6E` (5,8:1), светлые зрачки |
 | Иконка PWA (maskable, плашка на весь квадрат, глаза в безопасной зоне) | [`dekanych-icon-full.svg`](dekanych-icon-full.svg), [`icon-192.png`](icon-192.png), [`icon-512.png`](icon-512.png), [`apple-touch-icon.png`](apple-touch-icon.png) |
 
 ## Правила
