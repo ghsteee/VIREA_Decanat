@@ -89,6 +89,7 @@ if [[ ! -f .env ]]; then
   sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 24)|" .env
   sed -i "s|^SESSION_SECRET=.*|SESSION_SECRET=$(openssl rand -hex 32)|" .env
   sed -i "s|^SEED_PASSWORD=.*|SEED_PASSWORD=$SEED_PW|" .env
+  sed -i "s|^DEMO_LOGIN=.*|DEMO_LOGIN=on|" .env
   sed -i "s|^GIGACHAT_CA_BUNDLE=.*|GIGACHAT_CA_BUNDLE=/certs/russian_trusted_ca.pem|" .env
   bash deploy/gen-vapid.sh .env >/dev/null
   chmod 600 .env
