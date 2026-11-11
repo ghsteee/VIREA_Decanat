@@ -1,38 +1,241 @@
 @import "tailwindcss";
 
 /*
- * Временная основа каркаса (задача 3.1). Полный набор токенов светлой и тёмной
- * темы из docs/design-system.md подключается в задаче 3.6.
+ * Дизайн-токены «Деканыча» (docs/design-system.md, задача 3.6).
+ * Светлая тема — песочное табло и розовые главные кнопки; тёмная — синее табло.
+ * Тема: data-theme="light" | "dark" на <html>; без атрибута — как в системе.
  */
 :root {
   --bg: #f7f5f0;
+  --surface: #fffefb;
+  --surface-muted: #efece5;
   --text: #1d1b18;
   --text-muted: #5e5a53;
+  --border: #e2ded5;
+  --border-strong: #7e7a72;
+  --primary: #064f6e;
+  --action: #f9c1ce;
+  --on-action: #1d1b18;
+  --danger-text: #a62c37;
+
   --board: #e8dab8;
+  --board-row: #f3ead3;
+  --board-line: #cdb98f;
+  --flap-top: #3a362f;
+  --flap-bottom: #2a2722;
+  --flap-digit: #f3ebd8;
+  --flap-notch: #0e0d0b;
+  --board-text: #1d1b18;
+  --board-muted: #5c5038;
+  --board-dim: #625842;
+  --board-dim-digit: #a9a397;
+  --board-head: #6b5e43;
+  --board-soon: #7a4a00;
+  --board-soon-row: rgb(251 230 160 / 0.6);
+  --board-change: #9c2f55;
+  --board-ok: #1f6b3a;
+  --board-link: #064f6e;
+  --board-danger-text: #a62c37;
+
+  --plate-change: #f9c1ce;
+  --plate-danger: #a62c37;
+  --plate-warning: #fbe6a0;
+  --plate-success: #96d1aa;
+  --plate-info: #a7d4e4;
+  --plate-head: #b5b1d8;
+  --plate-ink: #1d1b18;
+
+  --nav: #1d1b18;
+  --nav-text: #cfcac0;
+  --nav-active: #f3f0ea;
+  --nav-active-text: #1d1b18;
+
   --font-body: "Onest", system-ui, sans-serif;
   --font-board: "Sofia Sans Extra Condensed", "Onest", sans-serif;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1d1b19;
+  --surface-muted: #282622;
+  --text: #f3f0ea;
+  --text-muted: #aba69d;
+  --border: #36332e;
+  --border-strong: #7e7a72;
+  --primary: #7db1d5;
+  --action: #7db1d5;
+  --on-action: #062f42;
+  --danger-text: #f8b6ba;
+  --board: #062f42;
+  --board-row: #0a3b52;
+  --board-line: #13506d;
+  --flap-top: #135675;
+  --flap-bottom: #0d4864;
+  --flap-digit: #f3f0ea;
+  --flap-notch: #041f2c;
+  --board-text: #f3f0ea;
+  --board-muted: #a9c6d6;
+  --board-dim: #8ba7b6;
+  --board-dim-digit: #a9c7d7;
+  --board-head: #7e98a6;
+  --board-soon: #fbe6a0;
+  --board-soon-row: rgb(251 230 160 / 0.1);
+  --board-change: #f9c1ce;
+  --board-ok: #96d1aa;
+  --board-link: #a9d1ef;
+  --board-danger-text: #f8b6ba;
+  --nav: #f3f0ea;
+  --nav-text: #5e5a53;
+  --nav-active: #1d1b18;
+  --nav-active-text: #f3f0ea;
+  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #141311;
+    --surface: #1d1b19;
+    --surface-muted: #282622;
     --text: #f3f0ea;
     --text-muted: #aba69d;
+    --border: #36332e;
+    --border-strong: #7e7a72;
+    --primary: #7db1d5;
+    --action: #7db1d5;
+    --on-action: #062f42;
+    --danger-text: #f8b6ba;
     --board: #062f42;
+    --board-row: #0a3b52;
+    --board-line: #13506d;
+    --flap-top: #135675;
+    --flap-bottom: #0d4864;
+    --flap-digit: #f3f0ea;
+    --flap-notch: #041f2c;
+    --board-text: #f3f0ea;
+    --board-muted: #a9c6d6;
+    --board-dim: #8ba7b6;
+    --board-dim-digit: #a9c7d7;
+    --board-head: #7e98a6;
+    --board-soon: #fbe6a0;
+    --board-soon-row: rgb(251 230 160 / 0.1);
+    --board-change: #f9c1ce;
+    --board-ok: #96d1aa;
+    --board-link: #a9d1ef;
+    --board-danger-text: #f8b6ba;
+    --nav: #f3f0ea;
+    --nav-text: #5e5a53;
+    --nav-active: #1d1b18;
+    --nav-active-text: #f3f0ea;
+    color-scheme: dark;
   }
 }
 
 @theme inline {
   --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-action: var(--action);
+  --color-on-action: var(--on-action);
+  --color-danger-text: var(--danger-text);
   --color-board: var(--board);
+  --color-board-row: var(--board-row);
+  --color-board-line: var(--board-line);
+  --color-board-text: var(--board-text);
+  --color-board-muted: var(--board-muted);
+  --color-board-dim: var(--board-dim);
+  --color-board-head: var(--board-head);
+  --color-board-soon: var(--board-soon);
+  --color-board-soon-row: var(--board-soon-row);
+  --color-board-change: var(--board-change);
+  --color-board-ok: var(--board-ok);
+  --color-board-link: var(--board-link);
+  --color-board-danger-text: var(--board-danger-text);
+  --color-plate-change: var(--plate-change);
+  --color-plate-danger: var(--plate-danger);
+  --color-plate-warning: var(--plate-warning);
+  --color-plate-success: var(--plate-success);
+  --color-plate-info: var(--plate-info);
+  --color-plate-head: var(--plate-head);
+  --color-plate-ink: var(--plate-ink);
+  --color-nav: var(--nav);
+  --color-nav-text: var(--nav-text);
+  --color-nav-active: var(--nav-active);
+  --color-nav-active-text: var(--nav-active-text);
   --font-sans: var(--font-body);
   --font-board: var(--font-board);
 }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
+@layer base {
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+  }
+
+  a {
+    color: var(--primary);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+/* Плитка перекидного табло (docs/design-system.md, «Плитка») */
+.flap {
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  width: 0.85em;
+  height: 1.25em;
+  margin-right: 0.1em;
+  border-radius: 0.18em;
+  background: linear-gradient(
+    var(--flap-top) 0 50%,
+    var(--flap-bottom) 50% 100%
+  );
+  color: var(--flap-digit);
+  font-family: var(--font-board);
+  font-weight: 800;
+  line-height: 1;
+}
+.flap::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - 0.5px);
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--flap-notch) 0 2px,
+    transparent 2px calc(100% - 2px),
+    var(--flap-notch) calc(100% - 2px)
+  );
+}
+.flaps-change .flap {
+  background: linear-gradient(#fad0da 0 50%, #f6b9c7 50% 100%);
+  color: #1d1b18;
+}
+.flaps-dim .flap {
+  color: var(--board-dim-digit);
+}
+.flap-sep {
+  display: inline-block;
+  width: 0.3em;
+  text-align: center;
+  font-family: var(--font-board);
+  font-weight: 800;
+  color: var(--board-link);
+  margin-right: 0.1em;
+}
+.flaps-change .flap-sep {
+  color: var(--board-change);
 }
