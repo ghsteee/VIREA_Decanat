@@ -1,0 +1,17 @@
+# HTTPS-сертификат Caddy получает сам (Let's Encrypt). Домен — из переменной DOMAIN.
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# Caddy не доверяет чужому X-Forwarded-For и ставит в него настоящий адрес клиента —
+	# на этом держится лимит попыток входа по адресу.
+	reverse_proxy app:3000
+}

@@ -1,0 +1,70 @@
+# Продакшен на российском VPS (задача 3.2). Секреты — только в .env рядом с этим файлом.
+# Запуск:  docker compose up -d --build
+# Миграции: docker compose run --rm tools npx prisma migrate deploy
+# Демо:    docker compose run --rm tools npm run db:seed
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dekanych
+      POSTGRES_USER: dekanych
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задай POSTGRES_PASSWORD в .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dekanych -d dekanych"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://dekanych:${POSTGRES_PASSWORD}@db:5432/dekanych
+      # Корневой сертификат НУЦ Минцифры для GigaChat (docs/research/ai-provider.md)
+      NODE_EXTRA_CA_CERTS: /certs/russian_trusted_root_ca.pem
+    volumes:
+      - ./deploy/certs:/certs:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Разовые команды: миграции и демо-данные. Не запускается вместе с остальными.
+  tools:
+    build:
+      context: .
+      target: builder
+    profiles: ["tools"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://dekanych:${POSTGRES_PASSWORD}@db:5432/dekanych
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?задай DOMAIN в .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

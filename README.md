@@ -77,4 +77,4 @@ npm run db:seed
 
 Логины: `d.severov` (студент), `k.lavrova` (студентка, риск недопуска), `m.gainullin` (староста), `i.sokolova` (дирекция). Пароль берётся из `SEED_PASSWORD` или генерируется и печатается в консоль; в репозиторий не сохраняется.
 
-Секреты — только в `.env` (образец — `.env.example`). Docker появится в задаче 3.2.
+Секреты — только в `.env` (образец — `.env.example`). Деплой на VPS — [`docs/setup/deploy.md`](docs/setup/deploy.md).
