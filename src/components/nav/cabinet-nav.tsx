@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrandMark } from "@/components/brand-mark";
 
 type Item = { href: string; label: string; icon: LucideIcon };
 
@@ -74,14 +75,7 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
         aria-label="Разделы"
         className="fixed inset-y-0 left-0 z-20 hidden w-[92px] flex-col items-center gap-1.5 bg-[#1d1b18] py-[18px] lg:flex"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/brand/dekanych-mark.svg"
-          alt="Деканыч"
-          width={40}
-          height={40}
-          className="mb-[18px]"
-        />
+        <BrandMark size={40} alt="Деканыч" className="mb-[18px]" />
         {items.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (

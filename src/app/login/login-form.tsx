@@ -20,7 +20,7 @@ export function LoginForm() {
           spellCheck={false}
           defaultValue={state.login}
           required
-          className="h-12 rounded-xl border border-[#7e7a72] bg-[#fffefb] px-3 text-base font-normal text-[#1d1b18]"
+          className="h-12 rounded-xl border border-border-strong bg-surface px-3 text-base font-normal text-text"
         />
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-semibold">
@@ -30,18 +30,18 @@ export function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
-          className="h-12 rounded-xl border border-[#7e7a72] bg-[#fffefb] px-3 text-base font-normal text-[#1d1b18]"
+          className="h-12 rounded-xl border border-border-strong bg-surface px-3 text-base font-normal text-text"
         />
       </label>
       {state.error ? (
-        <p role="alert" className="text-sm font-medium text-[#a62c37]">
+        <p role="alert" className="text-sm font-medium text-danger-text">
           {state.error}
         </p>
       ) : null}
       <button
         type="submit"
         disabled={pending}
-        className="h-12 rounded-xl bg-[#f9c1ce] font-semibold text-[#1d1b18] disabled:opacity-60"
+        className="h-12 rounded-xl bg-action font-semibold text-on-action disabled:opacity-60"
       >
         {pending ? "Входим…" : "Войти"}
       </button>

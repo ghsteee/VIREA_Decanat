@@ -4,6 +4,7 @@ import { Bell, ChevronRight, Navigation } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { Flaps } from "@/components/board/flaps";
+import { BrandMark } from "@/components/brand-mark";
 import { CompactRoute } from "@/components/board/route";
 import { ConceptNote } from "@/components/concept-note";
 import { DeadlineCheck } from "@/components/deadline-check";
@@ -66,8 +67,7 @@ export default async function TodayPage() {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-board text-xl font-extrabold uppercase tracking-[0.03em]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/dekanych-mark.svg" alt="" width={26} height={26} />
+            <BrandMark size={26} />
             Деканыч
           </div>
           <Link
