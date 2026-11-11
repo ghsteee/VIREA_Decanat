@@ -90,6 +90,7 @@ if [[ ! -f .env ]]; then
   sed -i "s|^SESSION_SECRET=.*|SESSION_SECRET=$(openssl rand -hex 32)|" .env
   sed -i "s|^SEED_PASSWORD=.*|SEED_PASSWORD=$SEED_PW|" .env
   sed -i "s|^GIGACHAT_CA_BUNDLE=.*|GIGACHAT_CA_BUNDLE=/certs/russian_trusted_ca.pem|" .env
+  bash deploy/gen-vapid.sh .env >/dev/null
   chmod 600 .env
   echo "Создан .env (права 600). Пароль тестовых аккаунтов: $SEED_PW"
   echo "Сохрани его в менеджер паролей — он нужен для комментария к работе. В репозиторий и чат его не отправляй."

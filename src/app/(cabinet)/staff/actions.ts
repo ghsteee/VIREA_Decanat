@@ -10,6 +10,7 @@ import {
   staffInstituteIds,
 } from "@/server/staff";
 import { PAIRS } from "@/lib/pairs";
+import { afterPublish } from "@/server/delivery";
 import { addDays, dayMonth, mskDate, mskTime, weekdayShort } from "@/lib/time";
 
 export type FormState = { error?: string };
@@ -113,6 +114,7 @@ export async function updateLesson(
   const urgent = soon.includes(oldDate) || soon.includes(newDate);
   const recipients = await groupRecipientUserIds([lesson.groupId]);
 
+  let notificationId = "";
   try {
     await db.$transaction(async (tx) => {
       const res = await tx.lesson.updateMany({
@@ -158,8 +160,8 @@ export async function updateLesson(
           newStatus: cancel ? "cancelled" : "scheduled",
         },
       });
-      // Доставка push и писем добавится в задачах 4.6 и 4.7 — из этих же получателей
-      await tx.notification.create({
+      // Push уходит после коммита (afterPublish); письма — задача 4.7
+      const n = await tx.notification.create({
         data: {
           kind: "lesson_change",
           importance: urgent ? "urgent" : "normal",
@@ -170,6 +172,7 @@ export async function updateLesson(
           recipients: { create: recipients.map((userId) => ({ userId })) },
         },
       });
+      notificationId = n.id;
     });
   } catch (e) {
     if (e instanceof Error && e.message === "conflict") {
@@ -177,6 +180,7 @@ export async function updateLesson(
     }
     throw e;
   }
+  await afterPublish([notificationId]);
 
   revalidatePath("/staff/schedule");
   redirect(
@@ -222,7 +226,7 @@ export async function publishPost(
   }
 
   const recipients = await groupRecipientUserIds(ids);
-  await db.$transaction(async (tx) => {
+  const notificationId = await db.$transaction(async (tx) => {
     if (type === "deadline" && dueAt) {
       const d = await tx.deadline.create({
         data: {
@@ -248,7 +252,7 @@ export async function publishPost(
           },
         },
       });
-      await tx.notification.create({
+      const n = await tx.notification.create({
         data: {
           kind: "deadline",
           eventKey: `deadline:${d.id}:v1`,
@@ -258,6 +262,7 @@ export async function publishPost(
           recipients: { create: recipients.map((userId) => ({ userId })) },
         },
       });
+      return n.id;
     } else {
       const a = await tx.announcement.create({
         data: {
@@ -268,7 +273,7 @@ export async function publishPost(
           groups: { create: ids.map((groupId) => ({ groupId })) },
         },
       });
-      await tx.notification.create({
+      const n = await tx.notification.create({
         data: {
           kind: "announcement",
           eventKey: `announcement:${a.id}`,
@@ -278,8 +283,10 @@ export async function publishPost(
           recipients: { create: recipients.map((userId) => ({ userId })) },
         },
       });
+      return n.id;
     }
   });
+  await afterPublish([notificationId]);
 
   revalidatePath("/staff/announcements");
   redirect("/staff/announcements?done=1");
