@@ -18,3 +18,8 @@ answers*.json
 
 .DS_Store
 *.log
+
+# Next.js и TypeScript
+*.tsbuildinfo
+next-env.d.ts
+*.pem
