@@ -32,9 +32,31 @@
 | `docs/brand/` | Логотип и картинки от ChatGPT, промпты |
 | `docs/ai-log/` | Журнал работы с ИИ: записи, скриншоты, сборка |
 | `docs/setup/connect-agents.md` | Как подключить Codex ×2 и ChatGPT |
+| `docs/knowledge/` | Демо-положение ВТУ ВИРЭА — база ИИ-помощника и правила баллов |
+| `src/app/` | Страницы Next.js (App Router) |
+| `src/components/` | Компоненты интерфейса, `ui/` — компоненты shadcn/ui |
+| `src/lib/` | Общие помощники для клиента и сервера |
+| `src/server/` | Только серверный код: доступ к БД, сессии, отправка уведомлений |
+| `public/brand/` | Логотип и иконки, которые раздаёт сайт |
 
-Код приложения появится на этапе 3 (каркас): Next.js + TypeScript, PostgreSQL + Prisma.
+Стек: Next.js 15 (App Router) + TypeScript, Tailwind CSS 4 + shadcn/ui, иконки Lucide, шрифты Onest и Sofia Sans Extra Condensed из пакетов `@fontsource` (со своего сервера, без Google Fonts). Дальше — PostgreSQL + Prisma, Docker Compose + Caddy.
 
 ## Запуск
 
-Будет добавлено вместе с каркасом. Секреты — только в `.env` (образец — `.env.example`).
+Нужен Node.js 22 или новее.
+
+```bash
+npm install
+```
+
+```bash
+npm run dev
+```
+
+Приложение откроется на http://localhost:3000. Проверки перед PR:
+
+```bash
+npm run lint && npm run typecheck && npm run build
+```
+
+Секреты — только в `.env` (образец — `.env.example`). База данных и Docker появятся в задачах 3.2–3.3.
