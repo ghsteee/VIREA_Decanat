@@ -1,0 +1,64 @@
+# Деплой на российский VPS
+
+Задача 3.2. Всё приложение — четыре контейнера из `docker-compose.yml`: PostgreSQL 16, приложение Next.js, разовые команды (`tools`) и Caddy с HTTPS.
+
+## Что нужно заранее
+
+- VPS в России с Ubuntu 22.04/24.04, 2 ГБ памяти, 20 ГБ диска (выбирает Алёна, см. `docs/status.md`).
+- Домен с A-записью на адрес VPS — Caddy сам получит сертификат Let's Encrypt.
+- Открытые порты 80 и 443.
+
+## Первый запуск
+
+1. Установить Docker Engine и плагин Compose по официальной инструкции Docker для Ubuntu.
+2. Проверить, что образы скачиваются: `docker pull node:22-bookworm-slim`. Если Docker Hub с сервера недоступен — **нужно уточнить** зеркало реестра у хостинга (многие российские хостинги дают своё) и прописать его в `/etc/docker/daemon.json` (`registry-mirrors`).
+3. Склонировать репозиторий и создать `.env` по образцу `.env.example`:
+   - `DOMAIN` — домен сайта;
+   - `POSTGRES_PASSWORD` — `openssl rand -hex 24`;
+   - `SESSION_SECRET` — `openssl rand -hex 32`;
+   - `SEED_PASSWORD` — пароль тестовых аккаунтов для жюри; в репозиторий, журнал и PR не попадает;
+   - ключи почты, push и GigaChat — по мере готовности задач этапа 4.
+4. Положить сертификат НУЦ Минцифры в `deploy/certs/russian_trusted_root_ca.pem` (для GigaChat).
+5. Собрать и запустить:
+
+```bash
+docker compose up -d --build
+```
+
+6. Применить миграции и загрузить демо:
+
+```bash
+docker compose run --rm tools npx prisma migrate deploy
+```
+
+```bash
+docker compose run --rm tools npm run db:seed
+```
+
+7. Открыть `https://<домен>/login` с телефона без VPN.
+
+## Обновление
+
+```bash
+git pull && docker compose up -d --build && docker compose run --rm tools npx prisma migrate deploy
+```
+
+## Утренний сброс демо
+
+События «сегодня» в демо строятся от текущей даты. Чтобы перед показом жюри всё было свежим, сид можно запускать каждое утро по cron (в 05:00 МСК):
+
+```
+0 5 * * * cd /opt/dekanych && docker compose run --rm tools npm run db:seed >> /var/log/dekanych-seed.log 2>&1
+```
+
+## Что проверено
+
+- 11.11: standalone-сборка запускается локально с PostgreSQL 16, вход по сидам работает (Prisma и argon2 в сборке есть).
+- Сборку Docker-образа в облачной среде Claude Code проверить не удалось: `npm ci` внутри контейнера не достаёт до реестра npm. Проверить на VPS при первом запуске.
+
+## Безопасность
+
+- `.env` только на сервере, права `600`.
+- Caddy не доверяет чужому `X-Forwarded-For` и подставляет адрес клиента — на этом держится лимит попыток входа.
+- Порт базы наружу не открыт: PostgreSQL доступен только контейнерам.
+- `restart: unless-stopped` — автоперезапуск после сбоя и перезагрузки сервера (NF7).
