@@ -59,4 +59,14 @@ npm run dev
 npm run lint && npm run typecheck && npm run build
 ```
 
-Секреты — только в `.env` (образец — `.env.example`). База данных и Docker появятся в задачах 3.2–3.3.
+Для базы нужен PostgreSQL 16 и `DATABASE_URL` в `.env`. Применить миграции и открыть данные:
+
+```bash
+npm run db:migrate
+```
+
+```bash
+npm run db:studio
+```
+
+Секреты — только в `.env` (образец — `.env.example`). Docker появится в задаче 3.2.

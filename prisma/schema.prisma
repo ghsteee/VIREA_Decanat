@@ -1,0 +1,806 @@
+// Схема БД «Деканыча». Источник — docs/data-model.md (владелец — напарник).
+// Все основные сущности — UUID, время — timestamptz, учебные даты считаем в Europe/Moscow.
+// Персональные данные в сидах только вымышленные (NF6).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Вход, профиль и принадлежность ────────────────────────────────────────
+
+enum UserRole {
+  student
+  staff
+}
+
+enum Theme {
+  system
+  light
+  dark
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  /// Нормализованный логин (нижний регистр, без пробелов)
+  login        String    @unique
+  /// Только хэш argon2id
+  passwordHash String
+  role         UserRole
+  disabledAt   DateTime? @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+
+  sessions           Session[]
+  studentProfile     StudentProfile?
+  staffInstitutes    StaffInstitute[]
+  preferences        UserPreferences?
+  notifications      NotificationRecipient[]
+  emailSubscriptions EmailSubscription[]
+  pushSubscriptions  PushSubscription[]
+  emailDigests       EmailDigest[]
+  lessonChanges      LessonChange[]
+  deadlines          Deadline[]
+  announcements      Announcement[]
+  statusEvents       ApplicationStatusEvent[]
+}
+
+model Session {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 от случайного токена; сам токен — только в cookie
+  tokenHash String    @unique
+  expiresAt DateTime  @db.Timestamptz(6)
+  revokedAt DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([userId])
+}
+
+model Institute {
+  id   String @id @default(uuid()) @db.Uuid
+  /// Короткий код: ИКБ, ИИИ…
+  code String @unique
+  name String
+
+  groups      Group[]
+  staff       StaffInstitute[]
+  pickupSlots PickupSlot[]
+}
+
+model Group {
+  id          String    @id @default(uuid()) @db.Uuid
+  instituteId String    @db.Uuid
+  institute   Institute @relation(fields: [instituteId], references: [id])
+  /// Код группы, например БИСО-03-25
+  code        String    @unique
+  course      Int
+
+  students      StudentProfile[]
+  head          GroupHead?
+  lessons       Lesson[]
+  assessments   Assessment[]
+  deadlines     DeadlineGroup[]
+  announcements AnnouncementGroup[]
+  applications  Application[]
+
+  @@index([instituteId, course])
+}
+
+enum StudyForm {
+  full_time
+  part_time
+  extramural
+}
+
+enum Funding {
+  budget
+  paid
+}
+
+model StudentProfile {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @unique @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId       String    @db.Uuid
+  group         Group     @relation(fields: [groupId], references: [id])
+  lastName      String
+  firstName     String
+  middleName    String?
+  programme     String
+  studyForm     StudyForm @default(full_time)
+  funding       Funding   @default(budget)
+  /// Номер студенческого билета (вымышленный)
+  studentCardNo String    @unique
+
+  headOf           GroupHead?
+  results          AssessmentResult[]
+  standings        StudentTermStanding[]
+  admissionItems   AdmissionItem[]
+  deadlineProgress DeadlineProgress[]
+  applications     Application[]
+
+  @@index([groupId])
+}
+
+model GroupHead {
+  groupId   String         @id @db.Uuid
+  group     Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  /// Староста — студент этой же группы; сервер проверяет членство
+  studentId String         @unique @db.Uuid
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model StaffInstitute {
+  userId      String    @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instituteId String    @db.Uuid
+  institute   Institute @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  @@id([userId, instituteId])
+}
+
+model UserPreferences {
+  userId String @id @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme  Theme  @default(system)
+}
+
+// ─── Расписание и учебные результаты ───────────────────────────────────────
+
+model AcademicTerm {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String
+  startsOn        DateTime  @db.Date
+  endsOn          DateTime  @db.Date
+  /// Начало сессии — для статуса допуска (демо-положение, п. 3.3)
+  sessionStartsOn DateTime? @db.Date
+
+  weeks       AcademicWeek[]
+  lessons     Lesson[]
+  assessments Assessment[]
+  standings   StudentTermStanding[]
+  admission   AdmissionItem[]
+}
+
+model AcademicWeek {
+  id       String       @id @default(uuid()) @db.Uuid
+  termId   String       @db.Uuid
+  term     AcademicTerm @relation(fields: [termId], references: [id], onDelete: Cascade)
+  number   Int
+  startsOn DateTime     @db.Date
+
+  @@unique([termId, number])
+}
+
+model Subject {
+  id        String  @id @default(uuid()) @db.Uuid
+  name      String  @unique
+  /// Короткое название для табло
+  shortName String?
+
+  lessons     Lesson[]
+  assessments Assessment[]
+  deadlines   Deadline[]
+  admission   AdmissionItem[]
+}
+
+model Teacher {
+  id       String @id @default(uuid()) @db.Uuid
+  /// Только вымышленное ФИО (NF6)
+  fullName String
+
+  lessons LessonTeacher[]
+}
+
+model Campus {
+  id      String  @id @default(uuid()) @db.Uuid
+  /// Буква корпуса на табло: А, Б, В…
+  code    String  @unique
+  name    String
+  address String
+  mapUrl  String?
+
+  rooms Room[]
+}
+
+model Room {
+  id       String @id @default(uuid()) @db.Uuid
+  campusId String @db.Uuid
+  campus   Campus @relation(fields: [campusId], references: [id])
+  number   String
+  floor    Int?
+
+  lessons Lesson[]
+
+  @@unique([campusId, number])
+}
+
+enum LessonKind {
+  lecture
+  practice
+  lab
+}
+
+enum LessonFormat {
+  offline
+  online
+}
+
+enum LessonStatus {
+  scheduled
+  cancelled
+}
+
+model Lesson {
+  id        String       @id @default(uuid()) @db.Uuid
+  groupId   String       @db.Uuid
+  group     Group        @relation(fields: [groupId], references: [id])
+  subjectId String       @db.Uuid
+  subject   Subject      @relation(fields: [subjectId], references: [id])
+  termId    String       @db.Uuid
+  term      AcademicTerm @relation(fields: [termId], references: [id])
+  kind      LessonKind
+  subgroup  Int?
+  roomId    String?      @db.Uuid
+  room      Room?        @relation(fields: [roomId], references: [id])
+  startsAt  DateTime     @db.Timestamptz(6)
+  endsAt    DateTime     @db.Timestamptz(6)
+  format    LessonFormat @default(offline)
+  onlineUrl String?
+  status    LessonStatus @default(scheduled)
+  /// Оптимистическая блокировка: правка проверяет ожидаемую версию
+  version   Int          @default(1)
+
+  teachers LessonTeacher[]
+  changes  LessonChange[]
+
+  @@index([groupId, startsAt])
+}
+
+model LessonTeacher {
+  lessonId  String  @db.Uuid
+  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  teacherId String  @db.Uuid
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+
+  @@id([lessonId, teacherId])
+}
+
+enum LessonChangeKind {
+  moved
+  cancelled
+  room_changed
+  format_changed
+  restored
+}
+
+enum AuthorRole {
+  student
+  group_head
+  staff
+}
+
+model LessonChange {
+  id          String           @id @default(uuid()) @db.Uuid
+  lessonId    String           @db.Uuid
+  lesson      Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  version     Int
+  kind        LessonChangeKind
+  authorId    String           @db.Uuid
+  author      User             @relation(fields: [authorId], references: [id])
+  authorRole  AuthorRole
+  publishedAt DateTime         @default(now()) @db.Timestamptz(6)
+  reason      String?
+
+  previousStartsAt  DateTime     @db.Timestamptz(6)
+  newStartsAt       DateTime     @db.Timestamptz(6)
+  previousEndsAt    DateTime     @db.Timestamptz(6)
+  newEndsAt         DateTime     @db.Timestamptz(6)
+  previousFormat    LessonFormat
+  newFormat         LessonFormat
+  previousRoomId    String?      @db.Uuid
+  newRoomId         String?      @db.Uuid
+  previousOnlineUrl String?
+  newOnlineUrl      String?
+  previousStatus    LessonStatus
+  newStatus         LessonStatus
+
+  notifications Notification[]
+
+  @@unique([lessonId, version])
+  @@index([previousStartsAt, lessonId])
+  @@index([newStartsAt, lessonId])
+}
+
+enum AssessmentKind {
+  lab
+  practice
+  test
+  essay
+  exam
+  credit
+  attendance
+}
+
+model Assessment {
+  id        String         @id @default(uuid()) @db.Uuid
+  groupId   String         @db.Uuid
+  group     Group          @relation(fields: [groupId], references: [id])
+  subjectId String         @db.Uuid
+  subject   Subject        @relation(fields: [subjectId], references: [id])
+  termId    String         @db.Uuid
+  term      AcademicTerm   @relation(fields: [termId], references: [id])
+  kind      AssessmentKind
+  title     String
+  heldOn    DateTime?      @db.Date
+  /// Максимум баллов в рейтинге за семестр (демо-положение, раздел 2)
+  maxPoints Int?
+
+  results AssessmentResult[]
+
+  @@index([groupId, termId])
+}
+
+enum ResultScale {
+  points100
+  grade5
+  pass_fail
+}
+
+model AssessmentResult {
+  id           String         @id @default(uuid()) @db.Uuid
+  studentId    String         @db.Uuid
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assessmentId String         @db.Uuid
+  assessment   Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  scale        ResultScale
+  /// Баллы (points100) или оценка 2–5 (grade5)
+  value        Int?
+  /// Для pass_fail
+  passed       Boolean?
+  publishedAt  DateTime       @default(now()) @db.Timestamptz(6)
+
+  @@unique([studentId, assessmentId])
+  @@index([studentId, publishedAt(sort: Desc)])
+}
+
+enum AdmissionStatus {
+  admitted
+  at_risk
+  not_admitted
+}
+
+model StudentTermStanding {
+  studentId String          @db.Uuid
+  student   StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  termId    String          @db.Uuid
+  term      AcademicTerm    @relation(fields: [termId], references: [id], onDelete: Cascade)
+  status    AdmissionStatus
+  updatedAt DateTime        @updatedAt @db.Timestamptz(6)
+
+  @@id([studentId, termId])
+}
+
+enum AdmissionItemStatus {
+  done
+  pending
+  overdue
+}
+
+model AdmissionItem {
+  id        String              @id @default(uuid()) @db.Uuid
+  studentId String              @db.Uuid
+  student   StudentProfile      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId String              @db.Uuid
+  subject   Subject             @relation(fields: [subjectId], references: [id])
+  termId    String              @db.Uuid
+  term      AcademicTerm        @relation(fields: [termId], references: [id], onDelete: Cascade)
+  title     String
+  dueAt     DateTime?           @db.Timestamptz(6)
+  status    AdmissionItemStatus @default(pending)
+  sortOrder Int                 @default(0)
+
+  @@index([studentId, termId, subjectId])
+}
+
+// ─── Дедлайны, объявления и заявки ─────────────────────────────────────────
+
+model Deadline {
+  id          String     @id @default(uuid()) @db.Uuid
+  authorId    String     @db.Uuid
+  author      User       @relation(fields: [authorId], references: [id])
+  authorRole  AuthorRole
+  title       String
+  body        String?
+  subjectId   String?    @db.Uuid
+  subject     Subject?   @relation(fields: [subjectId], references: [id])
+  dueAt       DateTime   @db.Timestamptz(6)
+  /// Растёт при переносе срока: старые напоминания отменяются
+  dueVersion  Int        @default(1)
+  publishedAt DateTime   @default(now()) @db.Timestamptz(6)
+
+  groups        DeadlineGroup[]
+  progress      DeadlineProgress[]
+  reminders     DeadlineReminder[]
+  notifications Notification[]
+
+  @@index([dueAt, id])
+}
+
+model DeadlineGroup {
+  deadlineId String   @db.Uuid
+  deadline   Deadline @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+  groupId    String   @db.Uuid
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([deadlineId, groupId])
+  @@index([groupId, deadlineId])
+}
+
+model DeadlineProgress {
+  deadlineId  String         @db.Uuid
+  deadline    Deadline       @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+  studentId   String         @db.Uuid
+  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  completedAt DateTime       @db.Timestamptz(6)
+
+  @@id([deadlineId, studentId])
+}
+
+model Announcement {
+  id          String     @id @default(uuid()) @db.Uuid
+  authorId    String     @db.Uuid
+  author      User       @relation(fields: [authorId], references: [id])
+  authorRole  AuthorRole
+  title       String
+  body        String
+  publishedAt DateTime   @default(now()) @db.Timestamptz(6)
+
+  groups        AnnouncementGroup[]
+  notifications Notification[]
+}
+
+model AnnouncementGroup {
+  announcementId String       @db.Uuid
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  groupId        String       @db.Uuid
+  group          Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, groupId])
+  @@index([groupId, announcementId])
+}
+
+enum DeliveryMethod {
+  electronic
+  pickup
+}
+
+model ApplicationType {
+  id              String           @id @default(uuid()) @db.Uuid
+  /// study_certificate, military_certificate…
+  code            String           @unique
+  title           String
+  /// Описание полей формы: [{ key, label, type, required, max }]
+  fields          Json
+  /// Допустимые способы получения
+  deliveryMethods DeliveryMethod[]
+  /// Обычный срок изготовления для подсказки «2–3 дня»
+  leadTime        String?
+  sortOrder       Int              @default(0)
+
+  applications Application[]
+}
+
+enum ApplicationStatus {
+  submitted
+  in_progress
+  ready
+  issued
+  rejected
+}
+
+model Application {
+  id                String            @id @default(uuid()) @db.Uuid
+  /// Короткий номер для табло: 0187
+  number            Int               @unique @default(autoincrement())
+  studentId         String            @db.Uuid
+  student           StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  typeId            String            @db.Uuid
+  type              ApplicationType   @relation(fields: [typeId], references: [id])
+  submissionGroupId String            @db.Uuid
+  submissionGroup   Group             @relation(fields: [submissionGroupId], references: [id])
+  /// Проверенные поля формы
+  formData          Json
+  /// Минимальный снимок профиля на момент подачи
+  profileSnapshot   Json
+  deliveryMethod    DeliveryMethod
+  status            ApplicationStatus @default(submitted)
+  submittedAt       DateTime          @default(now()) @db.Timestamptz(6)
+  version           Int               @default(1)
+  /// Повторная подача после отказа ссылается на свою прежнюю заявку
+  previousId        String?           @unique @db.Uuid
+  previous          Application?      @relation("Resubmission", fields: [previousId], references: [id])
+  resubmission      Application?      @relation("Resubmission")
+
+  events      ApplicationStatusEvent[]
+  reservation PickupReservation?
+
+  @@index([studentId, status, submittedAt(sort: Desc)])
+  @@index([submissionGroupId, status, submittedAt(sort: Desc)])
+}
+
+model ApplicationStatusEvent {
+  id            String             @id @default(uuid()) @db.Uuid
+  applicationId String             @db.Uuid
+  application   Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  version       Int
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  authorId      String             @db.Uuid
+  author        User               @relation(fields: [authorId], references: [id])
+  createdAt     DateTime           @default(now()) @db.Timestamptz(6)
+  /// Обязательна для rejected — проверяется сервером
+  rejectReason  String?
+  /// Где и когда забрать — для ready
+  pickupNote    String?
+
+  notifications Notification[]
+
+  @@unique([applicationId, version])
+}
+
+model PickupSlot {
+  id          String    @id @default(uuid()) @db.Uuid
+  instituteId String    @db.Uuid
+  institute   Institute @relation(fields: [instituteId], references: [id])
+  place       String
+  startsAt    DateTime  @db.Timestamptz(6)
+  endsAt      DateTime  @db.Timestamptz(6)
+
+  reservation PickupReservation?
+
+  @@index([instituteId, startsAt])
+}
+
+model PickupReservation {
+  id            String      @id @default(uuid()) @db.Uuid
+  /// Один слот — одна заявка
+  slotId        String      @unique @db.Uuid
+  slot          PickupSlot  @relation(fields: [slotId], references: [id])
+  applicationId String      @unique @db.Uuid
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now()) @db.Timestamptz(6)
+}
+
+// ─── Лента, доставка и помощник ────────────────────────────────────────────
+
+enum NotificationKind {
+  lesson_change
+  deadline
+  deadline_reminder
+  announcement
+  application_status
+}
+
+enum Importance {
+  urgent
+  normal
+}
+
+model Notification {
+  id          String           @id @default(uuid()) @db.Uuid
+  kind        NotificationKind
+  importance  Importance       @default(normal)
+  publishedAt DateTime         @default(now()) @db.Timestamptz(6)
+  /// Ключ события: повторная публикация не создаёт вторую запись
+  eventKey    String           @unique
+  title       String
+  body        String?
+
+  lessonChangeId String?                 @db.Uuid
+  lessonChange   LessonChange?           @relation(fields: [lessonChangeId], references: [id], onDelete: Cascade)
+  deadlineId     String?                 @db.Uuid
+  deadline       Deadline?               @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+  announcementId String?                 @db.Uuid
+  announcement   Announcement?           @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  statusEventId  String?                 @db.Uuid
+  statusEvent    ApplicationStatusEvent? @relation(fields: [statusEventId], references: [id], onDelete: Cascade)
+
+  recipients NotificationRecipient[]
+
+  @@index([publishedAt(sort: Desc), id])
+}
+
+model NotificationRecipient {
+  id             String       @id @default(uuid()) @db.Uuid
+  notificationId String       @db.Uuid
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  userId         String       @db.Uuid
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt         DateTime?    @db.Timestamptz(6)
+
+  deliveries NotificationDelivery[]
+
+  @@unique([notificationId, userId])
+  @@index([userId, readAt])
+}
+
+enum DeliveryChannel {
+  webPush
+  email
+}
+
+enum DeliveryStatus {
+  pending
+  leased
+  accepted
+  failed
+  cancelled
+}
+
+enum EmailMode {
+  immediate
+  digest
+}
+
+model NotificationDelivery {
+  id                  String                @id @default(uuid()) @db.Uuid
+  recipientId         String                @db.Uuid
+  recipient           NotificationRecipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  channel             DeliveryChannel
+  pushSubscriptionId  String?               @db.Uuid
+  pushSubscription    PushSubscription?     @relation(fields: [pushSubscriptionId], references: [id], onDelete: Cascade)
+  emailSubscriptionId String?               @db.Uuid
+  emailSubscription   EmailSubscription?    @relation(fields: [emailSubscriptionId], references: [id], onDelete: Cascade)
+  /// Идентификатор назначения для уникальности: id подписки push или e-mail
+  destinationKey      String
+  mode                EmailMode?
+  digestId            String?               @db.Uuid
+  digest              EmailDigest?          @relation(fields: [digestId], references: [id], onDelete: SetNull)
+  status              DeliveryStatus        @default(pending)
+  attempts            Int                   @default(0)
+  nextAttemptAt       DateTime              @default(now()) @db.Timestamptz(6)
+  leaseExpiresAt      DateTime?             @db.Timestamptz(6)
+  acceptedAt          DateTime?             @db.Timestamptz(6)
+  lastErrorCode       String?
+
+  @@unique([recipientId, channel, destinationKey])
+  @@index([status, nextAttemptAt])
+}
+
+enum DigestStatus {
+  pending
+  sent
+  failed
+}
+
+model EmailDigest {
+  id             String            @id @default(uuid()) @db.Uuid
+  userId         String            @db.Uuid
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId String            @db.Uuid
+  subscription   EmailSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  /// Учебная дата в МСК
+  date           DateTime          @db.Date
+  status         DigestStatus      @default(pending)
+  sentAt         DateTime?         @db.Timestamptz(6)
+
+  deliveries NotificationDelivery[]
+
+  @@unique([userId, date])
+}
+
+enum ReminderOffset {
+  d3
+  d1
+}
+
+enum ReminderStatus {
+  scheduled
+  sent
+  cancelled
+}
+
+model DeadlineReminder {
+  id          String         @id @default(uuid()) @db.Uuid
+  deadlineId  String         @db.Uuid
+  deadline    Deadline       @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+  dueVersion  Int
+  offset      ReminderOffset
+  scheduledAt DateTime       @db.Timestamptz(6)
+  status      ReminderStatus @default(scheduled)
+
+  @@unique([deadlineId, dueVersion, offset])
+  @@index([status, scheduledAt])
+}
+
+model EmailSubscription {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @db.Uuid
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Адрес, зашифрованный EMAIL_ENCRYPTION_KEY (AES-256-GCM), base64
+  addressEncrypted String
+  verifiedAt       DateTime? @db.Timestamptz(6)
+  revokedAt        DateTime? @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+
+  verifications EmailVerification[]
+  deliveries    NotificationDelivery[]
+  digests       EmailDigest[]
+
+  // Частичный уникальный индекс «одна неотозванная подписка на пользователя» — в SQL миграции
+  @@index([userId])
+}
+
+model EmailVerification {
+  id             String            @id @default(uuid()) @db.Uuid
+  subscriptionId String            @db.Uuid
+  subscription   EmailSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  /// HMAC-SHA256 кода с ключом EMAIL_CODE_HMAC_KEY
+  codeHmac       String
+  expiresAt      DateTime          @db.Timestamptz(6)
+  attempts       Int               @default(0)
+  usedAt         DateTime?         @db.Timestamptz(6)
+  revokedAt      DateTime?         @db.Timestamptz(6)
+  createdAt      DateTime          @default(now()) @db.Timestamptz(6)
+
+  @@index([subscriptionId])
+}
+
+model PushSubscription {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint     String
+  /// SHA-256 от endpoint
+  endpointHash String    @unique
+  p256dh       String
+  auth         String
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  revokedAt    DateTime? @db.Timestamptz(6)
+
+  deliveries NotificationDelivery[]
+
+  @@index([userId])
+}
+
+model RateLimitBucket {
+  key         String
+  windowStart DateTime @db.Timestamptz(6)
+  count       Int      @default(0)
+  expiresAt   DateTime @db.Timestamptz(6)
+
+  @@id([key, windowStart])
+  @@index([expiresAt])
+}
+
+model HelpDocument {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String
+  /// Откуда: docs/knowledge/polozhenie-demo.md
+  source      String
+  version     String
+  publishedAt DateTime? @db.Timestamptz(6)
+
+  sections HelpDocumentSection[]
+
+  @@unique([source, version])
+}
+
+model HelpDocumentSection {
+  id         String       @id @default(uuid()) @db.Uuid
+  documentId String       @db.Uuid
+  document   HelpDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  /// Номер пункта: «3.1»
+  number     String
+  heading    String?
+  text       String
+  sortOrder  Int
+
+  @@unique([documentId, number])
+}
