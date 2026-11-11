@@ -14,8 +14,8 @@
   --border: #e2ded5;
   --border-strong: #7e7a72;
   --primary: #064f6e;
-  --action: #f9c1ce;
-  --on-action: #1d1b18;
+  --action: #064f6e;
+  --on-action: #ffffff;
   --danger-text: #a62c37;
 
   --board: #e8dab8;
@@ -64,8 +64,8 @@
   --border: #36332e;
   --border-strong: #7e7a72;
   --primary: #7db1d5;
-  --action: #7db1d5;
-  --on-action: #062f42;
+  --action: #f9c1ce;
+  --on-action: #1d1b18;
   --danger-text: #f8b6ba;
   --board: #062f42;
   --board-row: #0a3b52;
@@ -102,8 +102,8 @@
     --border: #36332e;
     --border-strong: #7e7a72;
     --primary: #7db1d5;
-    --action: #7db1d5;
-    --on-action: #062f42;
+    --action: #f9c1ce;
+    --on-action: #1d1b18;
     --danger-text: #f8b6ba;
     --board: #062f42;
     --board-row: #0a3b52;
@@ -240,7 +240,7 @@
   color: var(--board-change);
 }
 
-/* Знак: розовый в светлой теме, синий в тёмной (решение 11.11) */
+/* Знак: синий в светлой теме, розовый в тёмной (решение Алёны 12.11) */
 .only-dark {
   display: none;
 }
