@@ -28,7 +28,7 @@ sudo bash setup-server.sh <домен>
    - `SESSION_SECRET` — `openssl rand -hex 32`;
    - `SEED_PASSWORD` — пароль тестовых аккаунтов для жюри; в репозиторий, журнал и PR не попадает;
    - ключи почты, push и GigaChat — по мере готовности задач этапа 4.
-4. Положить сертификат НУЦ Минцифры в `deploy/certs/russian_trusted_root_ca.pem` (для GigaChat).
+4. Положить сертификаты НУЦ Минцифры в `deploy/certs/russian_trusted_ca.pem` (для GigaChat) — по [`deploy/certs/README.md`](../../deploy/certs/README.md).
 5. Собрать и запустить:
 
 ```bash
