@@ -1,12 +1,176 @@
-import { ComingSoon } from "@/components/coming-soon";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
+import { db } from "@/server/db";
+import { Flaps } from "@/components/board/flaps";
+import { VerticalRoute } from "@/components/board/vertical-route";
+import { ConceptNote } from "@/components/concept-note";
+import { STATUS_LABEL, num } from "@/server/applications";
+import { cn } from "@/lib/utils";
 
-export default async function Page() {
-  await requireUser();
+export const dynamic = "force-dynamic";
+
+const STEP = {
+  submitted: 1,
+  in_progress: 2,
+  ready: 3,
+  issued: 4,
+  rejected: 0,
+} as const;
+
+export default async function RequestsPage() {
+  const user = await requireUser();
+  if (user.role === "staff") redirect("/staff");
+  if (!user.studentProfileId) redirect("/profile");
+
+  const [apps, types] = await Promise.all([
+    db.application.findMany({
+      where: { studentId: user.studentProfileId },
+      include: {
+        type: true,
+        events: { orderBy: { version: "asc" } },
+        resubmission: { select: { id: true } },
+      },
+      orderBy: { submittedAt: "desc" },
+      take: 20,
+    }),
+    db.applicationType.findMany({ orderBy: { sortOrder: "asc" } }),
+  ]);
+  const active = apps.filter(
+    (a) =>
+      a.status !== "issued" && !(a.status === "rejected" && a.resubmission),
+  );
+  const top =
+    active.find((a) => a.status === "ready") ??
+    active.find((a) => a.status !== "rejected");
+  const rest = active.filter((a) => a !== top);
+  const toFix = active.filter((a) => a.status === "rejected").length;
+  const moving = active.length - toFix;
+
   return (
-    <ComingSoon
-      title="Заявки"
-      text="Каталог справок и маршрут заявок появятся в задаче 4.10."
-    />
+    <main className="mx-auto flex max-w-[480px] flex-col">
+      <section
+        aria-labelledby="rq-title"
+        className="flex flex-col gap-4 bg-board px-3.5 pb-3.5 pt-4 text-board-text"
+      >
+        <div>
+          <h1
+            id="rq-title"
+            className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]"
+          >
+            Заявки
+          </h1>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+            {moving ? `${moving} в пути` : "в пути нет"}
+            {toFix ? ` · ${toFix} нужно поправить` : ""}
+          </p>
+        </div>
+
+        {top ? (
+          <article className="flex flex-col gap-3.5 rounded-[10px] bg-board-row px-3 pb-3 pt-3.5">
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="m-0 font-board text-xl font-extrabold uppercase leading-[22px] tracking-[0.03em]">
+                <Link
+                  href={`/requests/${top.id}`}
+                  className="text-board-text no-underline"
+                >
+                  {top.type.title}
+                </Link>
+              </h2>
+              <Flaps
+                value={num(top.number)}
+                label={`Номер ${num(top.number)}`}
+                size="sm"
+              />
+            </div>
+            <VerticalRoute status={top.status} events={top.events} />
+          </article>
+        ) : null}
+
+        {rest.map((a) =>
+          a.status === "rejected" ? (
+            <div
+              key={a.id}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 rounded-[10px] border border-plate-danger bg-board-row p-3"
+            >
+              <span className="font-board text-[17px] font-extrabold uppercase tracking-[0.03em]">
+                {a.type.title}
+              </span>
+              <span className="rounded-[3px] bg-plate-danger px-[5px] font-board text-[15px] font-bold uppercase tracking-[0.06em] text-white">
+                отказ
+              </span>
+              <span className="col-span-2 text-[13px] leading-[18px] text-board-danger-text">
+                {a.events.at(-1)?.rejectReason}
+              </span>
+              <Link
+                href={`/requests/new?type=${a.type.code}&from=${a.id}`}
+                className="col-span-2 flex h-11 items-center justify-center rounded-[10px] bg-action font-semibold text-on-action no-underline"
+              >
+                Подать снова
+              </Link>
+            </div>
+          ) : (
+            <Link
+              key={a.id}
+              href={`/requests/${a.id}`}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 rounded-[10px] bg-board-row p-3 text-board-text no-underline"
+            >
+              <span className="font-board text-[17px] font-extrabold uppercase tracking-[0.03em]">
+                {a.type.title}
+              </span>
+              <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link">
+                {STATUS_LABEL[a.status]}
+              </span>
+              <span
+                aria-hidden
+                className="col-span-2 grid grid-cols-4 gap-[3px]"
+              >
+                {[1, 2, 3, 4].map((i) => (
+                  <i
+                    key={i}
+                    className={cn(
+                      "h-1 rounded-sm bg-board-line",
+                      i < STEP[a.status] && "bg-board-link",
+                      i === STEP[a.status] && "bg-plate-change",
+                    )}
+                  />
+                ))}
+              </span>
+              <span className="col-span-2 text-[12.5px] text-board-muted">
+                № {num(a.number)} · обычно {a.type.leadTime}
+              </span>
+            </Link>
+          ),
+        )}
+        {!active.length ? (
+          <p className="m-0 text-[15px]">
+            Заявок пока нет. Справку закажешь за минуту — и будешь видеть, где
+            она едет.
+          </p>
+        ) : null}
+      </section>
+
+      <div className="flex flex-col px-4 pb-3 pt-4">
+        <h2 className="mb-1 font-board text-[22px] font-extrabold uppercase leading-[26px] tracking-[0.03em]">
+          Заказать
+        </h2>
+        <ul className="m-0 list-none border-b border-border p-0">
+          {types.map((t) => (
+            <li key={t.id}>
+              <Link
+                href={`/requests/new?type=${t.code}`}
+                className="flex min-h-[52px] items-center justify-between border-t border-border text-text no-underline"
+              >
+                <b>{t.title}</b>
+                <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em] text-text-muted">
+                  {t.leadTime} ›
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <ConceptNote className="mt-4 text-[11px] leading-[15px] text-text-muted" />
+      </div>
+    </main>
   );
 }
