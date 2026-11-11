@@ -24,8 +24,11 @@
 
 | Файл | Что | Кто | Статус |
 | --- | --- | --- | --- |
-| `empty-today.png` | Пустое состояние «Сегодня пар нет» | ChatGPT | нужно |
-| `empty-requests.png` | «Заявок пока нет» | ChatGPT | нужно |
+| `empty-today.png` | Пустое состояние «Пар нет — выходной» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
+| `empty-requests.png` | «Заявок пока нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
+| `empty-notifications.png` | «Новых уведомлений нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
+| `empty-deadlines.png` | «Дедлайнов на неделе нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
+| `error-sync.png` | «Расписание не обновилось» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
 | `avatar-*.png` | Аватары-заглушки для 4 тестовых аккаунтов (не фото людей) | ChatGPT | нужно |
 
 Архив: [`vtu-virea-logo.png`](vtu-virea-logo.png) и [`vtu-virea-gorynych-logo.png`](vtu-virea-gorynych-logo.png) — первые логотипы от ChatGPT (08.11), в интерфейсе не используются.
