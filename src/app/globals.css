@@ -239,3 +239,22 @@
 .flaps-change .flap-sep {
   color: var(--board-change);
 }
+
+/* Знак: розовый в светлой теме, синий в тёмной (решение 11.11) */
+.only-dark {
+  display: none;
+}
+:root[data-theme="dark"] .only-dark {
+  display: inline-block;
+}
+:root[data-theme="dark"] .only-light {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .only-dark {
+    display: inline-block;
+  }
+  :root:not([data-theme="light"]) .only-light {
+    display: none;
+  }
+}

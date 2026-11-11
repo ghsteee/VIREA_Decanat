@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth/session";
 import { LoginForm } from "./login-form";
+import { BrandMark } from "@/components/brand-mark";
 
 export const metadata: Metadata = { title: "Вход — Деканыч" };
 
@@ -16,8 +17,7 @@ export default async function LoginPage() {
         Не официальный сервис
       </p>
       <section className="flex flex-col items-center gap-3 px-4 py-10">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/dekanych-mark.svg" alt="" width={84} height={84} />
+        <BrandMark size={84} />
         <h1 className="font-board text-5xl font-extrabold uppercase tracking-wide">
           Деканыч
         </h1>
@@ -25,7 +25,7 @@ export default async function LoginPage() {
           Цифровой деканат ВТУ ВИРЭА
         </p>
       </section>
-      <section className="rounded-t-3xl bg-[#fffefb] px-4 py-6 text-[#1d1b18] dark:bg-[#1d1b19] dark:text-[#f3f0ea]">
+      <section className="rounded-t-3xl bg-surface px-4 py-6 text-text">
         <h2 className="mb-4 font-board text-2xl font-extrabold uppercase">
           Вход
         </h2>
