@@ -1,25 +1,149 @@
+import { QrCode, ChevronRight } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { logout } from "@/app/login/actions";
+import { setTheme } from "./actions";
+import { db } from "@/server/db";
+import { Flaps } from "@/components/board/flaps";
 import { ConceptNote } from "@/components/concept-note";
+import { cn } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
+
+const THEMES = [
+  { value: "light", label: "Светлая" },
+  { value: "dark", label: "Тёмная" },
+  { value: "system", label: "Как система" },
+] as const;
 
 export default async function ProfilePage() {
   const user = await requireUser();
+  const [profile, prefs] = await Promise.all([
+    user.studentProfileId
+      ? db.studentProfile.findUnique({
+          where: { id: user.studentProfileId },
+          include: { group: { include: { institute: true } } },
+        })
+      : null,
+    db.userPreferences.findUnique({ where: { userId: user.id } }),
+  ]);
+  const theme = prefs?.theme ?? "system";
+
   return (
     <main className="mx-auto flex max-w-[480px] flex-col">
-      <section className="bg-board px-3.5 pb-5 pt-4 text-board-text">
+      <section className="flex flex-col gap-3.5 bg-board px-3.5 pb-4 pt-4 text-board-text">
         <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]">
           Профиль
         </h1>
-        <p className="mt-2 text-[15px] text-board-muted">
-          {user.displayName}
-          {user.isGroupHead ? " · староста группы" : ""}
-          {user.role === "staff" ? " · дирекция" : ""}
-        </p>
-        <p className="mt-1 text-[13px] text-board-muted">
-          Студенческий, уведомления и тема появятся в задаче 4.12.
-        </p>
+        {profile ? (
+          <article
+            aria-label="Студенческий билет"
+            className="relative flex flex-col gap-3 rounded-[10px] bg-board-row px-3.5 pb-1 pt-3.5"
+          >
+            <div className="flex items-baseline justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                Студенческий · ВТУ ВИРЭА
+              </span>
+              <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-ok">
+                действует
+              </span>
+            </div>
+            <p className="m-0 font-board text-[26px] font-extrabold uppercase leading-7 tracking-[0.03em]">
+              {profile.lastName}
+              <br />
+              {profile.firstName} {profile.middleName}
+            </p>
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                Группа
+              </span>
+              <Flaps value={profile.group.code} size="md" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                  Номер
+                </span>
+                <Flaps value={profile.studentCardNo} size="md" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                  Институт
+                </span>
+                <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em]">
+                  {profile.group.institute.code} · {profile.group.course} курс
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                Форма
+              </span>
+              <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em]">
+                {profile.studyForm === "full_time" ? "очная" : "заочная"} ·{" "}
+                {profile.funding === "budget" ? "бюджет" : "договор"}
+                {user.isGroupHead ? " · староста" : ""}
+              </span>
+            </div>
+            <div className="mt-1 flex min-h-12 items-center justify-between border-t border-dashed border-board-line font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-dim">
+              <span className="flex items-center gap-2">
+                <QrCode size={18} aria-hidden />
+                QR на проходной — скоро
+              </span>
+              <ChevronRight size={16} aria-hidden />
+            </div>
+          </article>
+        ) : (
+          <p className="m-0 text-[15px] text-board-muted">
+            Сотрудник дирекции · вход {user.displayName}
+          </p>
+        )}
       </section>
-      <div className="flex flex-col gap-4 px-4 py-4">
+
+      <div className="flex flex-col gap-5 px-4 py-4">
+        <section aria-labelledby="ntf" className="flex flex-col gap-1">
+          <h2
+            id="ntf"
+            className="m-0 font-board text-[22px] font-extrabold uppercase leading-[26px] tracking-[0.03em]"
+          >
+            Уведомления
+          </h2>
+          <p className="m-0 text-[14px] leading-5 text-text-muted">
+            Всё важное уже приходит в ленту. Push на телефон и письма на почту
+            включатся здесь — скоро.
+          </p>
+        </section>
+
+        <section aria-labelledby="thm">
+          <h2
+            id="thm"
+            className="m-0 mb-2 font-board text-[22px] font-extrabold uppercase leading-[26px] tracking-[0.03em]"
+          >
+            Тема
+          </h2>
+          <form
+            action={setTheme}
+            role="group"
+            aria-label="Тема"
+            className="grid grid-cols-3 rounded-[10px] bg-surface-muted p-[3px]"
+          >
+            {THEMES.map((t) => (
+              <button
+                key={t.value}
+                type="submit"
+                name="theme"
+                value={t.value}
+                aria-pressed={theme === t.value}
+                className={cn(
+                  "min-h-10 rounded-lg font-board text-[15px] font-bold uppercase tracking-[0.06em]",
+                  theme === t.value ? "bg-text text-bg" : "text-text-muted",
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </form>
+        </section>
+
         <form action={logout}>
           <button
             type="submit"

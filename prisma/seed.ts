@@ -1019,7 +1019,10 @@ async function main() {
     { title: "Работа на практиках", kind: "practice", max: 30, got: 18 },
   ]);
   await rating(group.biso.id, danila.profileId, "programming", [
-    { title: "Лабы 1–4", kind: "lab", max: 80, got: 66 },
+    { title: "Лаба 1", kind: "lab", max: 20, got: 17 },
+    { title: "Лаба 2", kind: "lab", max: 20, got: 17 },
+    { title: "Лаба 3", kind: "lab", max: 20, got: 16 },
+    { title: "Лаба 4", kind: "lab", max: 20, got: 16 },
     { title: "Посещаемость", kind: "attendance", max: 20, got: 15 },
   ]);
   await rating(group.biso.id, danila.profileId, "history", [
@@ -1066,8 +1069,11 @@ async function main() {
 
   // Ксения: S5 — риск по базам данных, «3 из 5 лаб сдано, срок 20.12»
   await rating(group.kmbo.id, ksenia.profileId, "databases", [
-    { title: "Лабы 1–3", kind: "lab", max: 45, got: 36 },
-    { title: "Лабы 4–5", kind: "lab", max: 30, got: null },
+    { title: "Лаба 1", kind: "lab", max: 15, got: 12 },
+    { title: "Лаба 2", kind: "lab", max: 15, got: 12 },
+    { title: "Лаба 3", kind: "lab", max: 15, got: 12 },
+    { title: "Лаба 4", kind: "lab", max: 15, got: null },
+    { title: "Лаба 5", kind: "lab", max: 15, got: null },
     { title: "Контрольная", kind: "test", max: 25, got: 12 },
   ]);
   await rating(group.kmbo.id, ksenia.profileId, "ml", [
@@ -1094,10 +1100,19 @@ async function main() {
         studentId: ksenia.profileId,
         subjectId: subjects.databases,
         termId: term.id,
-        title: "Лабы 4–5",
-        dueAt: at("2026-12-20", "23:59"),
+        title: "Лаба 4",
+        dueAt: at("2026-12-06", "23:59"),
         status: "pending",
         sortOrder: 2,
+      },
+      {
+        studentId: ksenia.profileId,
+        subjectId: subjects.databases,
+        termId: term.id,
+        title: "Лаба 5",
+        dueAt: at("2026-12-20", "23:59"),
+        status: "pending",
+        sortOrder: 3,
       },
     ],
   });
