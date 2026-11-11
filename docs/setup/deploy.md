@@ -47,6 +47,16 @@ docker compose run --rm tools npm run db:seed
 
 7. Открыть `https://<домен>/login` с телефона без VPN.
 
+## Push-уведомления (VAPID)
+
+Новый сервер получает ключи VAPID автоматически (`deploy/setup-server.sh` вызывает `deploy/gen-vapid.sh`). На уже настроенном сервере — один раз:
+
+```bash
+cd /opt/dekanych && sudo bash deploy/gen-vapid.sh .env && sudo docker compose up -d
+```
+
+Ключи — только в `.env`. Если их поменять, старые подписки браузеров перестанут работать — студентам придётся включить push заново.
+
 ## Обновление
 
 ```bash

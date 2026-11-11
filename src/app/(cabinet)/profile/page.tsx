@@ -6,6 +6,8 @@ import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
 import { ConceptNote } from "@/components/concept-note";
 import { cn } from "@/lib/utils";
+import { PushToggle } from "@/components/push-toggle";
+import { vapidPublicKey } from "@/server/push";
 
 export const dynamic = "force-dynamic";
 
@@ -107,9 +109,10 @@ export default async function ProfilePage() {
           >
             Уведомления
           </h2>
-          <p className="m-0 text-[14px] leading-5 text-text-muted">
-            Всё важное уже приходит в ленту. Push на телефон и письма на почту
-            включатся здесь — скоро.
+          <PushToggle publicKey={vapidPublicKey()} />
+          <p className="m-0 border-t border-border pt-2.5 text-[13px] leading-[18px] text-text-muted">
+            Письма на почту включатся здесь — скоро. Всё важное в любом случае
+            есть в ленте.
           </p>
         </section>
 

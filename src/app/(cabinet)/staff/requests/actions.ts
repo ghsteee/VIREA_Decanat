@@ -9,6 +9,7 @@ import {
   requireStaffApplication,
   STATUS_LABEL,
 } from "@/server/applications";
+import { afterPublish } from "@/server/delivery";
 
 export type StatusState = { error?: string };
 
@@ -48,6 +49,7 @@ export async function changeStatus(
     select: { userId: true },
   });
 
+  let notificationId = "";
   try {
     await db.$transaction(async (tx) => {
       const res = await tx.application.updateMany({
@@ -66,7 +68,7 @@ export async function changeStatus(
           pickupNote: to === "ready" ? pickup : null,
         },
       });
-      await tx.notification.create({
+      const n = await tx.notification.create({
         data: {
           kind: "application_status",
           importance: to === "ready" || to === "rejected" ? "urgent" : "normal",
@@ -77,12 +79,14 @@ export async function changeStatus(
           recipients: { create: [{ userId: owner.userId }] },
         },
       });
+      notificationId = n.id;
     });
   } catch (e) {
     if (e instanceof Error && e.message === "conflict")
       return { error: "Заявку уже обновили. Обнови страницу." };
     throw e;
   }
+  await afterPublish([notificationId]);
   revalidatePath("/staff");
   redirect(`/staff/requests/${app.id}?done=1`);
 }
