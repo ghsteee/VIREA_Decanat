@@ -89,7 +89,7 @@ if [[ ! -f .env ]]; then
   sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 24)|" .env
   sed -i "s|^SESSION_SECRET=.*|SESSION_SECRET=$(openssl rand -hex 32)|" .env
   sed -i "s|^SEED_PASSWORD=.*|SEED_PASSWORD=$SEED_PW|" .env
-  sed -i "s|^GIGACHAT_CA_BUNDLE=.*|GIGACHAT_CA_BUNDLE=/certs/russian_trusted_root_ca.pem|" .env
+  sed -i "s|^GIGACHAT_CA_BUNDLE=.*|GIGACHAT_CA_BUNDLE=/certs/russian_trusted_ca.pem|" .env
   chmod 600 .env
   echo "Создан .env (права 600). Пароль тестовых аккаунтов: $SEED_PW"
   echo "Сохрани его в менеджер паролей — он нужен для комментария к работе. В репозиторий и чат его не отправляй."

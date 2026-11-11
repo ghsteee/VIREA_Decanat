@@ -36,7 +36,7 @@
 1. **Ключ авторизации** — Base64 от `Client ID:Client Secret`, берётся в личном кабинете: проект GigaChat API → «Настройки API». Хранится только в `.env` на сервере (`GIGACHAT_AUTH_KEY`).
 2. **Токен доступа** — `POST https://ngw.devices.sberbank.ru:9443/api/v2/oauth`, заголовки `Authorization: Basic <ключ>`, `RqUID: <uuid4>`, тело `scope=GIGACHAT_API_PERS`. Токен живёт 30 минут — кешируем на сервере и обновляем заранее.
 3. **Запросы к модели** — `https://api.giga.chat/v1/...` с заголовком `Authorization: Bearer <токен>` (единый адрес с 17.07.2026; старый `gigachat.devices.sberbank.ru` ещё работает, но для новых подключений не используется).
-4. **Сертификат.** Серверы Сбера используют сертификат НУЦ Минцифры (Russian Trusted Root CA). На VPS его нужно добавить в доверенные (`GIGACHAT_CA_BUNDLE` или системное хранилище), иначе TLS не проходит. Отключать проверку сертификата нельзя.
+4. **Сертификат.** Серверы Сбера используют сертификаты НУЦ Минцифры (корневой Russian Trusted Root CA и выпускающий Russian Trusted Sub CA). На VPS они лежат в `deploy/certs/russian_trusted_ca.pem` и подключаются **только к клиенту GigaChat** через `GIGACHAT_CA_BUNDLE`, а не ко всему приложению и не в системное хранилище. Отключать проверку сертификата нельзя. Инструкция — [`deploy/certs/README.md`](../../deploy/certs/README.md).
 
 Проверка из облачной среды Claude Code 11.11 не прошла: `api.giga.chat` — «unable to get local issuer certificate», `ngw.devices.sberbank.ru:9443` — обрыв соединения. Обе ошибки — из-за сертификата Минцифры и сетевого прокси облака, а не из-за ключа. Поэтому проверку на 5 вопросах делаем на нашем VPS после деплоя каркаса.
 
