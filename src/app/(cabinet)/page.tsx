@@ -130,31 +130,12 @@ export default async function TodayPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2.5 border-t border-board-line px-0.5 pb-1.5 pt-[18px] text-center">
-            {lessons.length ? (
-              <Flaps value="––:––" label="Пар нет" tone="dim" />
-            ) : (
-              <div className="size-28">
-                <Image
-                  src="/brand/empty-today-light.webp"
-                  alt=""
-                  width={112}
-                  height={112}
-                  className="only-light"
-                  unoptimized
-                />
-                <Image
-                  src="/brand/empty-today-dark.webp"
-                  alt=""
-                  width={112}
-                  height={112}
-                  className="only-dark"
-                  unoptimized
-                />
-              </div>
+            <Flaps value="––:––" label="Пар нет" tone="dim" />
+            {lessons.length > 0 && (
+              <p className="font-board text-2xl font-extrabold uppercase">
+                Пар больше нет
+              </p>
             )}
-            <p className="font-board text-2xl font-extrabold uppercase">
-              {lessons.length ? "Пар больше нет" : "Сегодня пар нет"}
-            </p>
           </div>
         )}
 
@@ -167,6 +148,31 @@ export default async function TodayPage() {
             <ChevronRight size={16} aria-hidden />
           </Link>
         ) : null}
+        {lessons.length === 0 && (
+          <div className="flex flex-col items-center gap-1 border-t border-board-line pb-2 pt-2 text-center">
+            <div className="size-28">
+              <Image
+                src="/brand/empty-today-light.webp"
+                alt=""
+                width={112}
+                height={112}
+                className="only-light"
+                unoptimized
+              />
+              <Image
+                src="/brand/empty-today-dark.webp"
+                alt=""
+                width={112}
+                height={112}
+                className="only-dark"
+                unoptimized
+              />
+            </div>
+            <p className="m-0 font-board text-2xl font-extrabold uppercase">
+              Сегодня пар нет
+            </p>
+          </div>
+        )}
       </section>
 
       <div className="flex flex-col gap-5 px-4 pb-3 pt-4">
