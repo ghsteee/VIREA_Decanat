@@ -45,3 +45,43 @@ export async function getTopApplication(studentId: string) {
 export async function getUnreadCount(userId: string) {
   return db.notificationRecipient.count({ where: { userId, readAt: null } });
 }
+
+export function getTodayChanges(groupId: string, from: Date, to: Date) {
+  const range = { gte: from, lt: to };
+  return db.lessonChange.findMany({
+    where: {
+      lesson: { groupId },
+      OR: [{ previousStartsAt: range }, { newStartsAt: range }],
+    },
+    select: {
+      id: true,
+      lessonId: true,
+      kind: true,
+      reason: true,
+      previousStartsAt: true,
+      newStartsAt: true,
+      lesson: { select: { subject: { select: { name: true } } } },
+    },
+    orderBy: [{ publishedAt: "desc" }, { version: "desc" }],
+  });
+}
+
+export function getNewResults(studentId: string, now: Date) {
+  return db.assessmentResult.findMany({
+    where: {
+      studentId,
+      publishedAt: { gte: new Date(now.getTime() - 7 * 86_400_000), lte: now },
+    },
+    select: {
+      id: true,
+      scale: true,
+      value: true,
+      passed: true,
+      assessment: {
+        select: { title: true, subject: { select: { name: true } } },
+      },
+    },
+    orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
+    take: 3,
+  });
+}

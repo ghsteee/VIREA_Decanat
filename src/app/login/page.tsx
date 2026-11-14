@@ -5,6 +5,7 @@ import { LoginForm } from "./login-form";
 import { demoLogin } from "./actions";
 import { demoLoginEnabled } from "@/server/demo";
 import { BrandMark } from "@/components/brand-mark";
+import { ConceptNote } from "@/components/concept-note";
 
 export const metadata: Metadata = { title: "Вход — Деканыч" };
 
@@ -37,10 +38,7 @@ export default async function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col">
-      <p className="px-4 pt-4 text-xs text-text-muted">
-        Концепт для хакатона. ВТУ ВИРЭА — вымышленный вуз, прообраз — РТУ МИРЭА.
-        Не официальный сервис
-      </p>
+      <ConceptNote className="px-4 pt-4 text-xs text-text-muted" />
       <section className="flex flex-col items-center gap-3 px-4 py-10">
         <BrandMark size={84} />
         <h1 className="font-board text-5xl font-extrabold uppercase tracking-wide">

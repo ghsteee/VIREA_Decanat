@@ -177,7 +177,7 @@ async function wipe() {
 
 /** Разбор демо-положения на пункты для помощника (AI1). */
 function parseRegulations(markdown: string) {
-  const lines = markdown.split("\n");
+  const lines = markdown.split(/\r?\n/);
   const sections: { number: string; heading: string; text: string }[] = [];
   let heading = "";
   let current: { number: string; heading: string; lines: string[] } | null =
@@ -216,6 +216,10 @@ function parseRegulations(markdown: string) {
 // ─── Основной сценарий ───────────────────────────────────────────────────
 
 async function main() {
+  const regulationsPath = join(process.cwd(), "docs/knowledge/polozhenie-demo.md");
+  const sections = parseRegulations(readFileSync(regulationsPath, "utf8"));
+  if (!sections.length) throw new Error("В демо-положении не найдено ни одного пункта");
+
   const today = todayMsk();
   const tomorrow = addDays(today, 1);
   if (today < TERM.startsOn || today > TERM.lastTeachingDay) {
@@ -1614,11 +1618,6 @@ async function main() {
   }
 
   // ─── Документ помощника ──────────────────────────────────────────────
-  const regulationsPath = join(
-    process.cwd(),
-    "docs/knowledge/polozhenie-demo.md",
-  );
-  const sections = parseRegulations(readFileSync(regulationsPath, "utf8"));
   await db.helpDocument.create({
     data: {
       title: "Положение об учёбе и услугах дирекции ВТУ ВИРЭА (демо)",

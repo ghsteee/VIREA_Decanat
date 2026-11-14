@@ -8,6 +8,7 @@ import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { getLessons } from "@/server/queries/schedule";
 import { pairByStart } from "@/lib/pairs";
 import { mskDate, mskTime } from "@/lib/time";
+import { ConceptNote } from "@/components/concept-note";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,7 @@ export default async function EditLessonPage({
           }))}
         />
       </section>
+      <ConceptNote className="text-[11px] text-board-muted" />
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConceptNote } from "@/components/concept-note";
 import { requireStaff } from "@/server/auth/guards";
 import {
   NEXT,
@@ -116,6 +117,7 @@ export default async function StaffRequestPage({
           </ol>
         </div>
       </section>
+      <ConceptNote className="text-[11px] text-board-muted" />
     </main>
   );
 }

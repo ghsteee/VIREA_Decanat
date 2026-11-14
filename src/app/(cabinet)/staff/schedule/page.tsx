@@ -42,8 +42,8 @@ export default async function StaffSchedulePage({
             Опубликовано. Группа уже видит изменение.
           </p>
         ) : null}
-        <form className="grid grid-cols-[minmax(0,1fr)_150px_auto] items-end gap-2">
-          <label className="flex flex-col gap-1.5 text-[13px] text-board-muted">
+        <form className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-end gap-2 sm:grid-cols-[minmax(0,1fr)_150px_auto]">
+          <label className="col-span-2 flex min-w-0 flex-col gap-1.5 text-[13px] text-board-muted sm:col-span-1">
             Группа
             <select
               name="group"
@@ -57,13 +57,13 @@ export default async function StaffSchedulePage({
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1.5 text-[13px] text-board-muted">
+          <label className="flex min-w-0 flex-col gap-1.5 text-[13px] text-board-muted">
             День
             <input
               type="date"
               name="date"
               defaultValue={date}
-              className="h-11 rounded-[10px] border border-board-line bg-surface px-2 text-[15px] text-text"
+              className="h-11 min-w-0 rounded-[10px] border border-board-line bg-surface px-2 text-[15px] text-text"
             />
           </label>
           <button
@@ -83,7 +83,7 @@ export default async function StaffSchedulePage({
                 {l.state.kind !== "cancelled" ? (
                   <Link
                     href={`/staff/schedule/${l.id}`}
-                    className="mb-2 ml-[100px] inline-flex min-h-9 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link"
+                    className="mb-2 ml-[100px] inline-flex min-h-11 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link"
                   >
                     Изменить ›
                   </Link>

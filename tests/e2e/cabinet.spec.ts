@@ -1,0 +1,174 @@
+import { expect, test, type Browser, type Page } from "@playwright/test";
+import { PrismaClient } from "@prisma/client";
+import { addDays, mskDate, mskDayStart, mskTime } from "../../src/lib/time";
+
+const danila = /Студент — Данила/;
+const ksenia = /Студентка — Ксения/;
+const irina = /Дирекция — Ирина/;
+const concept = /Концепт для хакатона\. ВТУ ВИРЭА/;
+const db = new PrismaClient();
+
+test.afterAll(() => db.$disconnect());
+
+function newPage(browser: Browser, baseURL: string | undefined) {
+  return browser.newPage({ baseURL, viewport: { width: 360, height: 640 } });
+}
+
+async function login(page: Page, account: RegExp) {
+  await page.goto("/login");
+  await expect(page.getByText(concept)).toBeVisible();
+  await page.getByRole("button", { name: account }).click();
+  await expect(page).not.toHaveURL(/\/login$/);
+}
+
+async function expectMobileLayout(page: Page) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    )
+    .toBe(true);
+}
+
+test("S1: расписание открывается сразу после входа на телефоне", async ({
+  page,
+}) => {
+  await login(page, danila);
+  await page.goto("/");
+  const board = page.getByRole("table", { name: "Ближайшая пара" });
+  await expect(board).toBeVisible();
+  await expect(board.getByRole("row").nth(1)).toBeInViewport();
+  await expect(page.getByText(concept)).toBeVisible();
+  await expectMobileLayout(page);
+  await page.goto("/schedule");
+  await expect(page.getByRole("heading", { name: "Расписание" })).toBeVisible();
+  await expectMobileLayout(page);
+});
+
+test("S2: перенос виден в расписании и ленте только нужной группы", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const day = addDays(mskDate(), 1);
+  const lesson = await db.lesson.findFirstOrThrow({
+    where: {
+      group: { code: "БИСО-03-25" },
+      startsAt: {
+        gte: mskDayStart(mskDate()),
+        lt: mskDayStart(addDays(day, 7)),
+      },
+      status: "scheduled",
+      format: "offline",
+    },
+    orderBy: { startsAt: "asc" },
+  });
+  const reason = `Перенос для проверки ${Date.now()}`;
+  await login(page, irina);
+  await page.goto(`/staff/schedule/${lesson.id}`);
+  await expect(page.getByText(concept)).toBeVisible();
+  await expectMobileLayout(page);
+  const newPair =
+    mskDate(lesson.startsAt) === day && mskTime(lesson.startsAt) === "18:00"
+      ? "5"
+      : "6";
+  await page.getByLabel("Дата", { exact: true }).fill(day);
+  await page.locator('select[name="pair"]').selectOption(newPair);
+  await page.getByLabel(/Причина/).fill(reason);
+  await page.getByRole("button", { name: "Опубликовать изменение" }).click();
+  await expect(page.getByRole("status")).toContainText("Группа уже видит");
+
+  const student = await newPage(browser, baseURL);
+  await login(student, danila);
+  await student.goto(`/schedule?date=${day}`);
+  await expect(student.locator(`#lesson-${lesson.id}`)).toContainText(
+    /перенос/i,
+  );
+  await student.goto("/feed");
+  await expect(student.getByText(reason, { exact: false })).toBeVisible();
+  await student.close();
+
+  const otherGroup = await newPage(browser, baseURL);
+  await login(otherGroup, ksenia);
+  await otherGroup.goto("/feed");
+  await expect(otherGroup.getByText(reason, { exact: false })).toHaveCount(0);
+  await otherGroup.close();
+});
+
+test("S3: новый дедлайн виден группе и получает два напоминания", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const title = `Дедлайн для проверки ${Date.now()}`;
+  await login(page, irina);
+  await page.goto("/staff/announcements");
+  await page.getByRole("radio", { name: "Дедлайн" }).check();
+  await page.getByLabel("Что сдать").fill(title);
+  await page.getByLabel("Срок").fill(`${addDays(mskDate(), 4)}T12:00`);
+  await page.getByRole("checkbox", { name: /БИСО-03-25/ }).check();
+  await page.getByRole("button", { name: "Опубликовать", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Опубликовано");
+  const deadline = await db.deadline.findFirstOrThrow({
+    where: { title },
+    include: { reminders: true },
+  });
+  expect(deadline.reminders.map((item) => item.offset).sort()).toEqual([
+    "d1",
+    "d3",
+  ]);
+  expect(
+    deadline.reminders
+      .map(
+        (item) =>
+          (deadline.dueAt.getTime() - item.scheduledAt.getTime()) / 86_400_000,
+      )
+      .sort(),
+  ).toEqual([1, 3]);
+
+  const student = await newPage(browser, baseURL);
+  await login(student, danila);
+  await expect(student.getByText(title, { exact: true })).toBeVisible();
+  await student.close();
+});
+
+test("S4 и S9: подача заявки, смена статуса и 404 для другого студента", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const destination = `Учебная проверка ${Date.now()}`;
+  await login(page, danila);
+  await page.goto("/requests/new?type=study_certificate");
+  await page.getByLabel("Куда нужна справка").fill(destination);
+  await page.getByRole("button", { name: "Отправить заявку" }).click();
+  await expect(page.getByRole("status")).toContainText("Заявка отправлена");
+  const requestPath = new URL(page.url()).pathname;
+  const id = requestPath.split("/").at(-1);
+  expect(id).toMatch(/^[0-9a-f-]{36}$/);
+
+  const staff = await newPage(browser, baseURL);
+  await login(staff, irina);
+  await staff.goto(`/staff/requests/${id}`);
+  await expect(staff.getByText(concept)).toBeVisible();
+  await staff.getByRole("radio", { name: "в работе" }).check();
+  await staff.getByRole("button", { name: "Сохранить и уведомить" }).click();
+  await expect
+    .poll(
+      async () =>
+        (await db.application.findUniqueOrThrow({ where: { id } })).status,
+    )
+    .toBe("in_progress");
+  await staff.close();
+  await page.reload();
+  await expect(page.locator('[aria-current="step"]')).toContainText("В работе");
+
+  const other = await newPage(browser, baseURL);
+  await login(other, ksenia);
+  const response = await other.goto(requestPath);
+  expect(response?.status()).toBe(404);
+  expect(await response?.text()).not.toContain(destination);
+  expect((await other.goto("/staff"))?.status()).toBe(404);
+  await other.close();
+});
