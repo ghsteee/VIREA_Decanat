@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { Bell, ChevronRight, Navigation } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
@@ -129,7 +130,28 @@ export default async function TodayPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2.5 border-t border-board-line px-0.5 pb-1.5 pt-[18px] text-center">
-            <Flaps value="––:––" label="Пар нет" tone="dim" />
+            {lessons.length ? (
+              <Flaps value="––:––" label="Пар нет" tone="dim" />
+            ) : (
+              <div className="size-28">
+                <Image
+                  src="/brand/empty-today-light.webp"
+                  alt=""
+                  width={112}
+                  height={112}
+                  className="only-light"
+                  unoptimized
+                />
+                <Image
+                  src="/brand/empty-today-dark.webp"
+                  alt=""
+                  width={112}
+                  height={112}
+                  className="only-dark"
+                  unoptimized
+                />
+              </div>
+            )}
             <p className="font-board text-2xl font-extrabold uppercase">
               {lessons.length ? "Пар больше нет" : "Сегодня пар нет"}
             </p>
