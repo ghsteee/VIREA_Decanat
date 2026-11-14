@@ -68,7 +68,7 @@ def main() -> None:
         "",
     ]
     OUT.write_text("\n".join(out), encoding="utf-8")
-    print(f"{len(files)} записей, {len(errors)} ошибок → {OUT.relative_to(ROOT)}")
+    print(f"{len(files)} записей, {len(errors)} ошибок. Файл {OUT.relative_to(ROOT)}.")
 
 
 if __name__ == "__main__":
