@@ -10,7 +10,7 @@ import {
   staffInstituteIds,
 } from "@/server/staff";
 import { PAIRS } from "@/lib/pairs";
-import { afterPublish } from "@/server/delivery";
+import { enqueueDeliveries, startDeliveries } from "@/server/delivery";
 import { addDays, dayMonth, mskDate, mskTime, weekdayShort } from "@/lib/time";
 
 export type FormState = { error?: string };
@@ -114,7 +114,6 @@ export async function updateLesson(
   const urgent = soon.includes(oldDate) || soon.includes(newDate);
   const recipients = await groupRecipientUserIds([lesson.groupId]);
 
-  let notificationId = "";
   try {
     await db.$transaction(async (tx) => {
       const res = await tx.lesson.updateMany({
@@ -160,7 +159,6 @@ export async function updateLesson(
           newStatus: cancel ? "cancelled" : "scheduled",
         },
       });
-      // Push уходит после коммита (afterPublish); письма — задача 4.7
       const n = await tx.notification.create({
         data: {
           kind: "lesson_change",
@@ -172,7 +170,7 @@ export async function updateLesson(
           recipients: { create: recipients.map((userId) => ({ userId })) },
         },
       });
-      notificationId = n.id;
+      await enqueueDeliveries(tx, n.id);
     });
   } catch (e) {
     if (e instanceof Error && e.message === "conflict") {
@@ -180,7 +178,7 @@ export async function updateLesson(
     }
     throw e;
   }
-  await afterPublish([notificationId]);
+  startDeliveries();
 
   revalidatePath("/staff/schedule");
   redirect(
@@ -226,7 +224,7 @@ export async function publishPost(
   }
 
   const recipients = await groupRecipientUserIds(ids);
-  const notificationId = await db.$transaction(async (tx) => {
+  await db.$transaction(async (tx) => {
     if (type === "deadline" && dueAt) {
       const d = await tx.deadline.create({
         data: {
@@ -255,6 +253,10 @@ export async function publishPost(
       const n = await tx.notification.create({
         data: {
           kind: "deadline",
+          importance:
+            dueAt.getTime() - Date.now() <= 3 * 86_400_000
+              ? "urgent"
+              : "normal",
           eventKey: `deadline:${d.id}:v1`,
           title,
           body: `До ${weekdayShort(mskDate(dueAt))} ${dayMonth(mskDate(dueAt))}, ${mskTime(dueAt)}.${body ? ` ${body}` : ""}`,
@@ -262,7 +264,7 @@ export async function publishPost(
           recipients: { create: recipients.map((userId) => ({ userId })) },
         },
       });
-      return n.id;
+      await enqueueDeliveries(tx, n.id);
     } else {
       const a = await tx.announcement.create({
         data: {
@@ -283,10 +285,10 @@ export async function publishPost(
           recipients: { create: recipients.map((userId) => ({ userId })) },
         },
       });
-      return n.id;
+      await enqueueDeliveries(tx, n.id);
     }
   });
-  await afterPublish([notificationId]);
+  startDeliveries();
 
   revalidatePath("/staff/announcements");
   redirect("/staff/announcements?done=1");
