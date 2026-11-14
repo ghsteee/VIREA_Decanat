@@ -8,6 +8,8 @@ import { ConceptNote } from "@/components/concept-note";
 import { cn } from "@/lib/utils";
 import { PushToggle } from "@/components/push-toggle";
 import { vapidPublicKey } from "@/server/push";
+import { EmailSettings } from "@/components/email-settings";
+import { emailConfigured } from "@/server/email";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +21,7 @@ const THEMES = [
 
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [profile, prefs] = await Promise.all([
+  const [profile, prefs, email] = await Promise.all([
     user.studentProfileId
       ? db.studentProfile.findUnique({
           where: { id: user.studentProfileId },
@@ -27,6 +29,12 @@ export default async function ProfilePage() {
         })
       : null,
     db.userPreferences.findUnique({ where: { userId: user.id } }),
+    user.studentProfileId
+      ? db.emailSubscription.findFirst({
+          where: { userId: user.id, revokedAt: null },
+          select: { id: true, verifiedAt: true },
+        })
+      : null,
   ]);
   const theme = prefs?.theme ?? "system";
 
@@ -110,10 +118,17 @@ export default async function ProfilePage() {
             Уведомления
           </h2>
           <PushToggle publicKey={vapidPublicKey()} />
-          <p className="m-0 border-t border-border pt-2.5 text-[13px] leading-[18px] text-text-muted">
-            Письма на почту включатся здесь — скоро. Всё важное в любом случае
-            есть в ленте.
-          </p>
+          {profile && (
+            <EmailSettings
+              available={emailConfigured()}
+              subscription={
+                email && {
+                  id: email.id,
+                  verified: Boolean(email.verifiedAt),
+                }
+              }
+            />
+          )}
         </section>
 
         <section aria-labelledby="thm">
