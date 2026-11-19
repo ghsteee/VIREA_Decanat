@@ -1,4 +1,4 @@
-// Фоновые задачи: напоминания о дедлайнах (4.8) и повторы доставки push (4.6).
+// Фоновые напоминания о дедлайнах и доставка push и e-mail.
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { processDeliveries } = await import("@/server/delivery");
@@ -6,9 +6,13 @@ export async function register() {
   const tick = async () => {
     try {
       await processReminders();
-      await processDeliveries();
     } catch (e) {
-      console.error("background worker", e);
+      console.error("reminder worker", e);
+    }
+    try {
+      await processDeliveries();
+    } catch {
+      console.error("notification delivery worker failed");
     }
   };
   const timer = setInterval(tick, 15_000);
