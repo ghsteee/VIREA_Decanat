@@ -265,7 +265,10 @@ export default async function FeedPage({
         ) : null}
         <p className="mt-3.5 text-[13px] leading-[18px] text-text-muted">
           Важное дублируем в push и на почту — включается в{" "}
-          <Link href="/profile">профиле</Link>.
+          <Link href="/profile" className="underline underline-offset-2">
+            профиле
+          </Link>
+          .
         </p>
         <ConceptNote className="mt-3 text-[11px] leading-[15px] text-text-muted" />
       </div>

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Flaps } from "@/components/board/flaps";
 import { StatusWord } from "@/components/board/status";
 import { kindLabel, type LessonView } from "@/server/queries/schedule";
@@ -85,6 +86,17 @@ export function BoardHead() {
       <span role="columnheader" className="text-right">
         Ауд.
       </span>
+    </div>
+  );
+}
+
+/** Дополнительная строка под основной, на все три колонки табло. */
+export function BoardDetailRow({ children }: { children: ReactNode }) {
+  return (
+    <div role="row">
+      <div role="cell" aria-colspan={3}>
+        {children}
+      </div>
     </div>
   );
 }

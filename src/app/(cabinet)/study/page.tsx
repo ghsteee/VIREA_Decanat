@@ -1,3 +1,4 @@
+import { BoardDetailRow } from "@/components/board/lesson-row";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
 import { getStudy, type SubjectStanding } from "@/server/queries/study";
@@ -203,16 +204,18 @@ export default async function StudyPage() {
                 <div key={s.subjectId} role="rowgroup">
                   {row}
                   {s.checklist.length ? (
-                    <details className="mb-1 px-0.5 text-[13px]">
-                      <summary className="flex min-h-11 cursor-pointer items-center text-board-link">
-                        Чек-лист допуска · выполнен
-                      </summary>
-                      <ul className="m-0 pb-2 pl-5 text-board-muted">
-                        {s.checklist.map((item, index) => (
-                          <li key={index}>{item.title} — сдано</li>
-                        ))}
-                      </ul>
-                    </details>
+                    <BoardDetailRow>
+                      <details className="mb-1 px-0.5 text-[13px]">
+                        <summary className="flex min-h-11 cursor-pointer items-center text-board-link">
+                          Чек-лист допуска · выполнен
+                        </summary>
+                        <ul className="m-0 pb-2 pl-5 text-board-muted">
+                          {s.checklist.map((item, index) => (
+                            <li key={index}>{item.title} — сдано</li>
+                          ))}
+                        </ul>
+                      </details>
+                    </BoardDetailRow>
                   ) : null}
                 </div>
               );
@@ -224,57 +227,59 @@ export default async function StudyPage() {
                 className="-mx-1 mb-1.5 rounded-[10px] bg-board-soon-row px-1 pb-2"
               >
                 {row}
-                <div className="mx-0.5 flex flex-col gap-2.5 rounded-lg bg-board-row p-3">
-                  <div className="flex items-baseline justify-between">
-                    <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link">
-                      Чек-лист допуска
-                    </span>
-                    <span className="text-xs text-board-muted">
-                      {done} из {s.checklist.length}
-                    </span>
-                  </div>
-                  <div
-                    aria-hidden
-                    className="grid gap-[3px]"
-                    style={{
-                      gridTemplateColumns: `repeat(${Math.max(s.checklist.length, 1)}, minmax(0,1fr))`,
-                    }}
-                  >
-                    {s.checklist.map((c, i) => (
-                      <i
-                        key={i}
-                        className={cn(
-                          "h-1.5 rounded-sm",
-                          c.done ? "bg-board-link" : "bg-board-line",
-                        )}
-                      />
-                    ))}
-                  </div>
-                  {s.missingPoints ? (
-                    <p className="m-0 text-[13.5px] text-board-soon">
-                      До 50 баллов не хватает {s.missingPoints}.
-                    </p>
-                  ) : null}
-                  <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-[13.5px] leading-[18px]">
-                    {s.checklist.map((c, i) => (
-                      <li key={i} className="flex gap-2">
-                        <span
+                <BoardDetailRow>
+                  <div className="mx-0.5 flex flex-col gap-2.5 rounded-lg bg-board-row p-3">
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link">
+                        Чек-лист допуска
+                      </span>
+                      <span className="text-xs text-board-muted">
+                        {done} из {s.checklist.length}
+                      </span>
+                    </div>
+                    <div
+                      aria-hidden
+                      className="grid gap-[3px]"
+                      style={{
+                        gridTemplateColumns: `repeat(${Math.max(s.checklist.length, 1)}, minmax(0,1fr))`,
+                      }}
+                    >
+                      {s.checklist.map((c, i) => (
+                        <i
+                          key={i}
                           className={cn(
-                            "w-[60px] flex-none font-board text-[15px] font-bold uppercase tracking-[0.06em]",
-                            c.done ? "text-board-ok" : "text-board-soon",
+                            "h-1.5 rounded-sm",
+                            c.done ? "bg-board-link" : "bg-board-line",
                           )}
-                        >
-                          {c.done
-                            ? "сдано"
-                            : c.dueAt
-                              ? `до ${dayMonth(mskDate(c.dueAt))}`
-                              : "нужно"}
-                        </span>
-                        {c.title}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                        />
+                      ))}
+                    </div>
+                    {s.missingPoints ? (
+                      <p className="m-0 text-[13.5px] text-board-soon">
+                        До 50 баллов не хватает {s.missingPoints}.
+                      </p>
+                    ) : null}
+                    <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-[13.5px] leading-[18px]">
+                      {s.checklist.map((c, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span
+                            className={cn(
+                              "w-[60px] flex-none font-board text-[15px] font-bold uppercase tracking-[0.06em]",
+                              c.done ? "text-board-ok" : "text-board-soon",
+                            )}
+                          >
+                            {c.done
+                              ? "сдано"
+                              : c.dueAt
+                                ? `до ${dayMonth(mskDate(c.dueAt))}`
+                                : "нужно"}
+                          </span>
+                          {c.title}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </BoardDetailRow>
               </div>
             );
           })}
