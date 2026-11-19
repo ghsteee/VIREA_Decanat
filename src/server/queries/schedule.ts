@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/server/db";
+import type { CalendarLesson } from "@/server/lesson-calendar";
 import { dayMonth, mskDate, mskDayStart, mskTime } from "@/lib/time";
 import type { LessonState } from "@/components/board/status";
 
@@ -165,6 +166,59 @@ export async function getLessons(
         : null,
     };
   });
+}
+
+/** Актуальные реквизиты будущей или текущей пары только для группы студента. */
+export async function getCalendarLesson(
+  groupId: string,
+  lessonId: string,
+  now = new Date(),
+): Promise<CalendarLesson | null> {
+  const lesson = await db.lesson.findFirst({
+    where: {
+      id: lessonId,
+      groupId,
+      status: "scheduled",
+      endsAt: { gt: now },
+    },
+    select: {
+      id: true,
+      startsAt: true,
+      endsAt: true,
+      version: true,
+      kind: true,
+      format: true,
+      subject: { select: { name: true } },
+      room: {
+        select: {
+          number: true,
+          campus: { select: { code: true, address: true } },
+        },
+      },
+      changes: {
+        orderBy: { version: "desc" },
+        take: 1,
+        select: { publishedAt: true },
+      },
+    },
+  });
+  if (!lesson) return null;
+  const room = roomCode(lesson.room);
+  return {
+    id: lesson.id,
+    startsAt: lesson.startsAt,
+    endsAt: lesson.endsAt,
+    updatedAt: lesson.changes[0]?.publishedAt ?? now,
+    version: lesson.version,
+    subject: lesson.subject.name,
+    kind: kindLabel(lesson.kind),
+    location:
+      lesson.format === "online"
+        ? "Онлайн"
+        : lesson.room && room
+          ? `${room}, ${lesson.room.campus.address}`
+          : null,
+  };
 }
 
 export function slotLabel(date: Date): string {

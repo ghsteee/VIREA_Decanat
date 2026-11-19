@@ -40,8 +40,8 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
-      - name: Проверка подписок push
-        run: npx tsx --test tests/unit/push-subscription.test.ts
+      - name: Модульные тесты
+        run: npx tsx --test tests/unit/*.test.ts
       - name: Подготовка тестовой базы
         run: |
           printf 'SESSION_SECRET=%s\nSEED_PASSWORD=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" >> "$GITHUB_ENV"

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronLeft, ChevronRight, Navigation, Video } from "lucide-react";
+import {
+  CalendarPlus,
+  ChevronLeft,
+  ChevronRight,
+  Navigation,
+  Video,
+} from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { ConceptNote } from "@/components/concept-note";
@@ -35,15 +41,13 @@ function validDate(s?: string) {
 }
 
 function WhereIs({ lesson }: { lesson: LessonView }) {
-  if (lesson.state.kind === "cancelled" || lesson.state.kind === "past")
-    return null;
   if (lesson.onlineUrl && !lesson.roomLabel) {
     return (
       <a
         href={lesson.onlineUrl}
         rel="noopener noreferrer"
         target="_blank"
-        className="mx-0.5 mb-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-board-row font-semibold text-board-link no-underline"
+        className="ml-0.5 flex h-11 items-center justify-center gap-2 rounded-xl bg-board-row font-semibold text-board-link no-underline"
       >
         <Video size={18} aria-hidden />
         Подключиться
@@ -52,7 +56,7 @@ function WhereIs({ lesson }: { lesson: LessonView }) {
   }
   if (!lesson.room || !lesson.roomLabel) return null;
   return (
-    <details className="mx-0.5 mb-2 rounded-lg bg-board-row px-3 py-2">
+    <details className="ml-0.5 rounded-lg bg-board-row px-3 py-2">
       <summary className="flex min-h-9 cursor-pointer items-center gap-1.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link">
         <Navigation size={14} aria-hidden />
         Где {lesson.roomLabel}
@@ -234,18 +238,44 @@ export default async function SchedulePage({
           <>
             <MovedOut items={movedOut} />
             {lessons.length ? (
-              <div
-                role="table"
-                aria-label={`Пары, ${weekdayFull(date)} ${dayMonth(date)}`}
-              >
-                <BoardHead />
-                {lessons.map((l) => (
-                  <div key={l.id}>
-                    <LessonRow lesson={l} details />
-                    <WhereIs lesson={l} />
-                  </div>
-                ))}
-              </div>
+              <>
+                <div
+                  role="table"
+                  aria-label={`Пары, ${weekdayFull(date)} ${dayMonth(date)}`}
+                >
+                  <BoardHead />
+                  {lessons.map((l) => (
+                    <div key={l.id}>
+                      <LessonRow lesson={l} details />
+                      {l.state.kind !== "cancelled" &&
+                      l.state.kind !== "past" ? (
+                        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1.5">
+                          <div>
+                            <WhereIs lesson={l} />
+                          </div>
+                          <a
+                            href={`/schedule/calendar/${l.id}`}
+                            download
+                            aria-label={`В календарь: ${l.subject}`}
+                            title="Скачать пару в календарь"
+                            className="mr-0.5 flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-board-row px-3 text-sm font-semibold text-board-link no-underline"
+                          >
+                            <CalendarPlus size={16} aria-hidden />В календарь
+                          </a>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+                {lessons.some(
+                  (l) =>
+                    l.state.kind !== "past" && l.state.kind !== "cancelled",
+                ) ? (
+                  <p className="mb-2 text-xs text-board-muted">
+                    В календаре останется время на момент скачивания.
+                  </p>
+                ) : null}
+              </>
             ) : (
               <p className="border-t border-board-line py-6 text-center font-board text-2xl font-extrabold uppercase">
                 Пар нет
