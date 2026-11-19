@@ -57,6 +57,8 @@ test("R1: на 360 px свайп переключает дни, включая �
   await swipe(75, 270);
   await expect(page).toHaveURL(new RegExp(`date=${sunday}$`));
 
+  // Новый документ отделяет проверки кнопок от последовательности CDP-касаний.
+  await page.reload();
   const dayLinks = page
     .getByRole("navigation", { name: "Дни недели" })
     .getByRole("link");
@@ -66,8 +68,8 @@ test("R1: на 360 px свайп переключает дни, включая �
     expect(box?.width).toBeGreaterThanOrEqual(44);
     expect(box?.height).toBeGreaterThanOrEqual(44);
   }
-  await dayLinks.first().tap();
+  await dayLinks.first().click();
   await expect(page).toHaveURL(new RegExp(`date=${weekStart(sunday)}$`));
-  await page.getByRole("link", { name: "Следующая неделя" }).tap();
+  await page.getByRole("link", { name: "Следующая неделя" }).click();
   await expect(page).toHaveURL(new RegExp(`date=${monday}$`));
 });
