@@ -43,8 +43,11 @@ async function load(userId: string, kinds: readonly NotificationKind[] | null) {
           title: true,
           body: true,
           publishedAt: true,
-          lessonChange: { select: { kind: true, newStartsAt: true } },
+          lessonChange: {
+            select: { kind: true, newStartsAt: true, authorRole: true },
+          },
           deadline: { select: { authorRole: true } },
+          announcement: { select: { authorRole: true } },
         },
       },
     },
@@ -55,15 +58,20 @@ function plate(n: Row["notification"]) {
   switch (n.kind) {
     case "lesson_change": {
       const k = n.lessonChange?.kind;
-      if (k === "cancelled") return <Plate tone="danger">отмена</Plate>;
-      if (k === "format_changed") return <Plate tone="info">дистант</Plate>;
-      if (k === "room_changed") return <Plate tone="change">аудитория</Plate>;
-      return <Plate tone="change">перенос</Plate>;
+      const source =
+        n.lessonChange?.authorRole === "group_head" ? " · от старосты" : "";
+
+      if (k === "cancelled") return <Plate tone="danger">отмена{source}</Plate>;
+      if (k === "format_changed")
+        return <Plate tone="info">дистант{source}</Plate>;
+      if (k === "room_changed")
+        return <Plate tone="change">аудитория{source}</Plate>;
+      return <Plate tone="change">перенос{source}</Plate>;
     }
     case "deadline":
     case "deadline_reminder":
       return n.deadline?.authorRole === "group_head" ? (
-        <Plate tone="head">дедлайн · староста</Plate>
+        <Plate tone="head">дедлайн · от старосты</Plate>
       ) : (
         <Plate tone="warning">
           {n.kind === "deadline_reminder" ? "напоминание" : "дедлайн"}
@@ -72,7 +80,11 @@ function plate(n: Row["notification"]) {
     case "application_status":
       return <Plate tone="info">заявка</Plate>;
     case "announcement":
-      return <Plate tone="neutral">объявление</Plate>;
+      return n.announcement?.authorRole === "group_head" ? (
+        <Plate tone="head">объявление · от старосты</Plate>
+      ) : (
+        <Plate tone="neutral">объявление</Plate>
+      );
   }
 }
 

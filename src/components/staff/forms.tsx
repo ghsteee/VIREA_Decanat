@@ -1,11 +1,13 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import {
-  publishPost,
-  updateLesson,
-  type FormState,
-} from "@/app/(cabinet)/staff/actions";
+import { publishPost, updateLesson } from "@/app/(cabinet)/staff/actions";
+
+import type { FormState } from "@/server/publications";
+type PublicationAction = (
+  state: FormState,
+  form: FormData,
+) => Promise<FormState>;
 
 const input =
   "h-11 w-full rounded-[10px] border border-board-line bg-surface px-3 text-[15px] text-text";
@@ -21,9 +23,10 @@ export function LessonForm(props: {
   format: "offline" | "online";
   onlineUrl: string;
   rooms: { id: string; label: string }[];
+  publishAction?: PublicationAction;
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
-    updateLesson,
+    props.publishAction ?? updateLesson,
     {},
   );
   const [format, setFormat] = useState(props.format);
@@ -151,11 +154,13 @@ export function LessonForm(props: {
 
 export function PostForm({
   groups,
+  publishAction = publishPost,
 }: {
-  groups: { id: string; label: string }[];
+  groups?: { id: string; label: string }[];
+  publishAction?: PublicationAction;
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
-    publishPost,
+    publishAction,
     {},
   );
   const [type, setType] = useState<"deadline" | "announcement">("deadline");
@@ -166,7 +171,7 @@ export function PostForm({
         {(["deadline", "announcement"] as const).map((t) => (
           <label
             key={t}
-            className={`flex h-10 cursor-pointer items-center rounded-full px-3.5 text-[13.5px] font-semibold ${type === t ? "" : "bg-board text-board-text"}`}
+            className={`flex min-h-11 cursor-pointer items-center rounded-full px-3.5 text-[13.5px] font-semibold focus-within:ring-2 focus-within:ring-board-link ${type === t ? "" : "bg-board text-board-text"}`}
             style={
               type === t
                 ? { background: "var(--board-text)", color: "var(--board)" }
@@ -209,25 +214,29 @@ export function PostForm({
           className="w-full rounded-[10px] border border-board-line bg-surface p-3 text-[15px] text-text"
         />
       </label>
-      <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-1.5 text-[13px] text-board-muted">Группы</legend>
-        <div className="flex flex-wrap gap-x-4">
-          {groups.map((g) => (
-            <label
-              key={g.id}
-              className="flex min-h-11 items-center gap-2 text-[15px]"
-            >
-              <input
-                type="checkbox"
-                name="groups"
-                value={g.id}
-                className="size-5 accent-primary"
-              />
-              {g.label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {groups && (
+        <fieldset className="m-0 border-0 p-0">
+          <legend className="mb-1.5 text-[13px] text-board-muted">
+            Группы
+          </legend>
+          <div className="flex flex-wrap gap-x-4">
+            {groups.map((g) => (
+              <label
+                key={g.id}
+                className="flex min-h-11 items-center gap-2 text-[15px]"
+              >
+                <input
+                  type="checkbox"
+                  name="groups"
+                  value={g.id}
+                  className="size-5 accent-primary"
+                />
+                {g.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
       {state.error ? (
         <p
           role="alert"
