@@ -8,12 +8,13 @@ import { mskDate } from "@/lib/time";
  * «риск» — пока сессия не началась (п. 3.3), средний балл — по экзаменам (п. 4.5).
  */
 const ADMISSION_POINTS = 50;
-const MANDATORY = new Set(["lab", "test", "essay"]);
+const MANDATORY = new Set(["lab", "practice", "test", "essay"]);
 
 export type SubjectStanding = {
   subjectId: string;
   name: string;
   points: number;
+  missingPoints: number;
   works: { done: number; total: number; kind: string };
   status: "admitted" | "at_risk" | "not_admitted";
   checklist: { title: string; done: boolean; dueAt: Date | null }[];
@@ -49,31 +50,45 @@ export async function getStudy(
 
   const subjects: SubjectStanding[] = [...bySubject.values()].map((list) => {
     const subject = list[0].subject;
-    const points = list.reduce((s, a) => s + (a.results[0]?.value ?? 0), 0);
+    const points = list.reduce((sum, assessment) => {
+      const result = assessment.results[0];
+      return sum + (result?.scale === "points100" ? (result.value ?? 0) : 0);
+    }, 0);
+    const missingPoints = Math.max(0, ADMISSION_POINTS - points);
     const mandatory = list.filter((a) => MANDATORY.has(a.kind));
     const labs = list.filter((a) => a.kind === "lab");
     const shown = labs.length ? labs : mandatory;
-    const done = shown.filter((a) => a.results.length).length;
-    const mandatoryDone = mandatory.every((a) => a.results.length);
-    const ok = points >= ADMISSION_POINTS && mandatoryDone;
     const own = items.filter((i) => i.subjectId === subject.id);
+    const titled = new Set(own.map((i) => i.title));
+    const checklist = [
+      ...own.map((i) => ({
+        title: i.title,
+        done: i.status === "done",
+        dueAt: i.dueAt,
+      })),
+      ...mandatory
+        .filter(
+          (a) => !titled.has(a.title) && (!own.length || !a.results.length),
+        )
+        .map((a) => ({
+          title: a.title,
+          done: a.results.length > 0,
+          dueAt: null,
+        })),
+    ];
+    const ok = missingPoints === 0 && checklist.every((item) => item.done);
     return {
       subjectId: subject.id,
       name: subject.shortName ?? subject.name,
       points,
-      works: { done, total: shown.length, kind: labs.length ? "лаб" : "работ" },
+      missingPoints,
+      works: {
+        done: shown.filter((a) => a.results.length).length,
+        total: shown.length,
+        kind: labs.length ? "лаб" : "работ",
+      },
       status: ok ? "admitted" : sessionStarted ? "not_admitted" : "at_risk",
-      checklist: own.length
-        ? own.map((i) => ({
-            title: i.title,
-            done: i.status === "done",
-            dueAt: i.dueAt,
-          }))
-        : mandatory.map((a) => ({
-            title: a.title,
-            done: a.results.length > 0,
-            dueAt: null,
-          })),
+      checklist,
     };
   });
   subjects.sort(
