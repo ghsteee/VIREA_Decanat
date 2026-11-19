@@ -5,7 +5,7 @@ export type LessonState =
   | { kind: "now" }
   | { kind: "soon"; minutes: number }
   | { kind: "planned" }
-  | { kind: "moved"; from: string }
+  | { kind: "moved"; from: string; to: string }
   | { kind: "online"; from?: string }
   | { kind: "room"; from: string }
   | { kind: "cancelled" };
@@ -42,7 +42,7 @@ export function StatusWord({
     case "moved":
       return (
         <span className={cn(base, "text-board-change", className)}>
-          перенос · было {state.from}
+          перенос · {state.from} → {state.to}
         </span>
       );
     case "online":
