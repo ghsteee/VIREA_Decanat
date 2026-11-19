@@ -40,11 +40,14 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
-      - name: Проверка подписок push
-        run: npx tsx --test tests/unit/push-subscription.test.ts
+      - name: Модульные тесты
+        run: npx tsx --test tests/unit/*.test.ts
       - name: Подготовка тестовой базы
         run: |
-          printf 'SESSION_SECRET=%s\nSEED_PASSWORD=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          session_secret="$(openssl rand -hex 32)"
+          seed_password="$(openssl rand -hex 32)"
+          printf '::add-mask::%s\n' "$session_secret" "$seed_password"
+          printf 'SESSION_SECRET=%s\nSEED_PASSWORD=%s\n' "$session_secret" "$seed_password" >> "$GITHUB_ENV"
           npm run db:deploy
       - run: npm run db:seed
       - run: npm run build
