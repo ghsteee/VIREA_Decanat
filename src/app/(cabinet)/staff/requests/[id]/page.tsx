@@ -1,3 +1,4 @@
+import { pickupLabel } from "@/server/pickup";
 import Link from "next/link";
 import { ConceptNote } from "@/components/concept-note";
 import { requireStaff } from "@/server/auth/guards";
@@ -84,7 +85,11 @@ export default async function StaffRequestPage({
           )}
           <dt className="text-board-muted">Получение</dt>
           <dd className="m-0">
-            {app.deliveryMethod === "pickup" ? "в дирекции" : "электронно"}
+            {app.deliveryMethod === "pickup"
+              ? app.reservation
+                ? pickupLabel(app.reservation.slot)
+                : "в дирекции"
+              : "электронно"}
           </dd>
           <dt className="text-board-muted">Статус</dt>
           <dd className="m-0 font-board text-[15px] font-bold uppercase tracking-[0.06em]">
@@ -96,7 +101,14 @@ export default async function StaffRequestPage({
             <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
               Сменить статус
             </span>
-            <StatusForm id={app.id} version={app.version} options={options} />
+            <StatusForm
+              id={app.id}
+              version={app.version}
+              options={options}
+              readyNote={
+                app.reservation ? pickupLabel(app.reservation.slot) : undefined
+              }
+            />
           </div>
         ) : null}
         <div className="flex flex-col gap-1.5">

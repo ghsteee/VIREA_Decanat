@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
+import { pickupLabel } from "@/server/pickup";
 import { requireStaff } from "@/server/auth/guards";
 import {
   NEXT,
@@ -30,9 +31,11 @@ export async function changeStatus(
   const version = Number(form.get("version"));
   const to = String(form.get("to") ?? "") as keyof typeof STATUS_LABEL;
   const reason = String(form.get("reason") ?? "").trim();
-  const pickup = String(form.get("pickup") ?? "").trim();
 
   const app = await requireStaffApplication(user.id, id);
+  const pickup =
+    String(form.get("pickup") ?? "").trim() ||
+    (app.reservation ? pickupLabel(app.reservation.slot) : "");
   if (!NEXT[app.status].includes(to))
     return { error: "Такой переход статуса недоступен." };
   if (to === "rejected" && (!reason || reason.length > 300)) {
@@ -56,6 +59,10 @@ export async function changeStatus(
         data: { status: to, version: { increment: 1 } },
       });
       if (res.count !== 1) throw new Error("conflict");
+      if (to === "rejected")
+        await tx.pickupReservation.deleteMany({
+          where: { applicationId: app.id },
+        });
       const ev = await tx.applicationStatusEvent.create({
         data: {
           applicationId: app.id,

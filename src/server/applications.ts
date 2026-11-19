@@ -32,6 +32,7 @@ export const NEXT: Record<
 };
 
 const include = {
+  reservation: { include: { slot: true } },
   type: true,
   events: { orderBy: { version: "asc" as const } },
   submissionGroup: { select: { code: true, instituteId: true } },

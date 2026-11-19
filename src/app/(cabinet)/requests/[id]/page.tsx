@@ -1,3 +1,4 @@
+import { pickupLabel } from "@/server/pickup";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
@@ -87,7 +88,9 @@ export default async function RequestPage({
           <dt className="text-text-muted">Получение</dt>
           <dd className="m-0">
             {app.deliveryMethod === "pickup"
-              ? "в дирекции, кабинет 214"
+              ? app.reservation
+                ? pickupLabel(app.reservation.slot)
+                : "в дирекции, кабинет 214"
               : "электронно"}
           </dd>
         </dl>
