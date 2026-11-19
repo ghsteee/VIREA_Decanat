@@ -160,9 +160,18 @@ export async function getAcademicWeek(date: string) {
 
 /** Дни недели, в которых у группы есть изменения (розовая точка на вкладке дня). */
 export async function getChangedDays(groupId: string, from: Date, to: Date) {
+  const range = { gte: from, lt: to };
   const changes = await db.lessonChange.findMany({
-    where: { lesson: { groupId }, newStartsAt: { gte: from, lt: to } },
-    select: { newStartsAt: true },
+    where: {
+      lesson: { groupId },
+      OR: [{ previousStartsAt: range }, { newStartsAt: range }],
+    },
+    select: { previousStartsAt: true, newStartsAt: true },
   });
-  return new Set(changes.map((c) => mskDate(c.newStartsAt)));
+  return new Set(
+    changes
+      .flatMap((change) => [change.previousStartsAt, change.newStartsAt])
+      .filter((date) => date >= from && date < to)
+      .map(mskDate),
+  );
 }

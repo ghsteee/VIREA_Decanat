@@ -16,6 +16,8 @@ import {
 } from "@/server/queries/schedule";
 import {
   getTopApplication,
+  getTodayChanges,
+  getNewResults,
   getUnreadCount,
   getWeekDeadlines,
 } from "@/server/queries/today";
@@ -24,6 +26,7 @@ import {
   dayMonth,
   daysBetween,
   mskDate,
+  mskDayStart,
   mskTime,
   pluralDays,
   weekdayShort,
@@ -39,20 +42,36 @@ export default async function TodayPage() {
   const now = new Date();
   const today = mskDate(now);
   const tomorrow = addDays(today, 1);
-  const [lessons, nextDay, week, deadlines, app, unread] = await Promise.all([
-    getLessons(user.groupId, ...dayRange(today), now),
-    getLessons(user.groupId, ...dayRange(tomorrow), now),
-    getAcademicWeek(today),
-    getWeekDeadlines(user.groupId, user.studentProfileId, now),
-    getTopApplication(user.studentProfileId),
-    getUnreadCount(user.id),
-  ]);
+  const [lessons, nextDay, week, deadlines, app, unread, changes, results] =
+    await Promise.all([
+      getLessons(user.groupId, ...dayRange(today), now),
+      getLessons(user.groupId, ...dayRange(tomorrow), now),
+      getAcademicWeek(today),
+      getWeekDeadlines(user.groupId, user.studentProfileId, now),
+      getTopApplication(user.studentProfileId),
+      getUnreadCount(user.id),
+      getTodayChanges(
+        user.groupId,
+        mskDayStart(today),
+        mskDayStart(addDays(today, 2)),
+      ),
+      getNewResults(user.studentProfileId, now),
+    ]);
 
   const next = lessons.find(
-    (l) =>
-      l.state.kind !== "past" && l.state.kind !== "cancelled" && l.roomLabel,
+    (l) => l.state.kind !== "past" && l.state.kind !== "cancelled",
   );
   const tomorrowFirst = nextDay.find((l) => l.state.kind !== "cancelled");
+  const closest = next ?? tomorrowFirst;
+  const closestDate = next ? today : tomorrow;
+  const when = (date: Date) => `${dayMonth(mskDate(date))}, ${mskTime(date)}`;
+  const changeLabels = {
+    moved: "Перенос",
+    cancelled: "Отмена",
+    room_changed: "Другая аудитория",
+    format_changed: "Изменился формат",
+    restored: "Пара восстановлена",
+  };
   const appDates = app
     ? Object.fromEntries(
         app.events.map((e) => [e.toStatus, dayMonth(mskDate(e.createdAt))]),
@@ -89,7 +108,7 @@ export default async function TodayPage() {
               id="today-title"
               className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]"
             >
-              Расписание
+              Сегодня
             </h1>
             <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
               {weekdayShort(today)} {dayMonth(today)}
@@ -103,35 +122,62 @@ export default async function TodayPage() {
           />
         </div>
 
-        {lessons.length ? (
-          <div role="table" aria-label="Пары сегодня">
+        {closest ? (
+          <div role="table" aria-label="Ближайшая пара">
             <BoardHead />
-            {lessons.map((l) => (
-              <LessonRow key={l.id} lesson={l} />
-            ))}
+            <LessonRow lesson={closest} details />
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2.5 border-t border-board-line px-0.5 pb-1.5 pt-[18px] text-center">
             <Flaps value="––:––" label="Пар нет" tone="dim" />
             <p className="font-board text-2xl font-extrabold uppercase">
-              Пар нет — выходной
+              {lessons.length ? "Пар больше нет" : "Сегодня пар нет"}
             </p>
           </div>
         )}
 
-        {tomorrowFirst ? (
+        {closest ? (
           <Link
-            href={`/schedule?date=${tomorrow}`}
+            href={`/schedule?date=${closestDate}#lesson-${closest.id}`}
             className="flex min-h-11 items-center justify-between border-t border-board-line px-0.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
           >
-            Завтра {tomorrowFirst.start} · {tomorrowFirst.subjectShort}
-            {tomorrowFirst.state.kind === "online" ? " · онлайн" : ""}
+            {next ? "Всё расписание на сегодня" : "Расписание на завтра"}
             <ChevronRight size={16} aria-hidden />
           </Link>
         ) : null}
       </section>
 
       <div className="flex flex-col gap-5 px-4 pb-3 pt-4">
+        {changes.length > 0 && (
+          <section aria-labelledby="changes-title">
+            <h2
+              id="changes-title"
+              className="mb-1 font-board text-[22px] font-extrabold uppercase"
+            >
+              Изменения сегодня и завтра
+            </h2>
+            <ul className="m-0 list-none p-0">
+              {changes.map((change) => (
+                <li
+                  key={change.id}
+                  className="border-t border-border py-2 text-sm"
+                >
+                  <Link
+                    href={`/schedule?date=${mskDate(change.newStartsAt)}#lesson-${change.lessonId}`}
+                    className="font-semibold"
+                  >
+                    {changeLabels[change.kind]} · {change.lesson.subject.name}
+                  </Link>
+                  <p className="m-0 text-text-muted">
+                    {change.kind === "moved"
+                      ? `${when(change.previousStartsAt)} → ${when(change.newStartsAt)}`
+                      : when(change.newStartsAt)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {next?.roomLabel ? (
           <Link
             href={`/schedule?date=${today}#lesson-${next.id}`}
@@ -197,6 +243,42 @@ export default async function TodayPage() {
             </p>
           )}
         </section>
+
+        {results.length > 0 && (
+          <section aria-labelledby="results-title">
+            <h2
+              id="results-title"
+              className="mb-1 font-board text-[22px] font-extrabold uppercase"
+            >
+              Новые оценки
+            </h2>
+            <ul className="m-0 list-none p-0 text-sm">
+              {results.map((result) => (
+                <li
+                  key={result.id}
+                  className="flex justify-between gap-2 border-t border-border py-2"
+                >
+                  <span>
+                    {result.assessment.subject.name} · {result.assessment.title}
+                  </span>
+                  <b className="shrink-0">
+                    {result.scale === "pass_fail"
+                      ? result.passed
+                        ? "Зачёт"
+                        : "Незачёт"
+                      : result.value}
+                  </b>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/study"
+              className="inline-flex min-h-11 items-center text-sm font-semibold"
+            >
+              Все оценки
+            </Link>
+          </section>
+        )}
 
         {app ? (
           <section aria-labelledby="app-title" className="flex flex-col gap-3">
