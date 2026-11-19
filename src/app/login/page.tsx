@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth/session";
@@ -12,21 +13,25 @@ export const metadata: Metadata = { title: "Вход — Деканыч" };
 const DEMO = [
   {
     key: "student",
+    avatar: "danila",
     title: "Студент — Данила",
     text: "1 курс, перенос пары сегодня, справка готова",
   },
   {
     key: "risk",
+    avatar: "ksenia",
     title: "Студентка — Ксения",
     text: "2 курс, риск недопуска по базам данных",
   },
   {
     key: "head",
+    avatar: "marat",
     title: "Староста — Марат",
     text: "3 курс, публикует для своей группы",
   },
   {
     key: "staff",
+    avatar: "irina",
     title: "Дирекция — Ирина",
     text: "очередь заявок, перенос пар, объявления",
   },
@@ -78,10 +83,20 @@ export default async function LoginPage() {
                 type="submit"
                 className="flex min-h-14 w-full items-center justify-between gap-3 rounded-xl border border-border-strong bg-surface px-3.5 py-2 text-left"
               >
-                <span className="flex flex-col">
-                  <b className="text-[15px]">{d.title}</b>
-                  <span className="text-[12.5px] text-text-muted">
-                    {d.text}
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <Image
+                    src={`/brand/avatar-${d.avatar}.webp`}
+                    alt=""
+                    width={40}
+                    height={40}
+                    unoptimized
+                    className="size-10 shrink-0"
+                  />
+                  <span className="flex min-w-0 flex-col">
+                    <b className="text-[15px]">{d.title}</b>
+                    <span className="text-[12.5px] text-text-muted">
+                      {d.text}
+                    </span>
                   </span>
                 </span>
                 <span className="flex-none whitespace-nowrap font-board text-[15px] font-bold uppercase tracking-[0.06em] text-primary">
