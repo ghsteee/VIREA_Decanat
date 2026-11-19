@@ -8,7 +8,12 @@ import {
   Video,
 } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
-import { BoardHead, LessonRow } from "@/components/board/lesson-row";
+import {
+  BoardDetailRow,
+  BoardHead,
+  LessonRow,
+} from "@/components/board/lesson-row";
+import { ScheduleSwipe } from "@/components/board/schedule-swipe";
 import { ConceptNote } from "@/components/concept-note";
 import {
   dayRange,
@@ -57,7 +62,7 @@ function WhereIs({ lesson }: { lesson: LessonView }) {
   if (!lesson.room || !lesson.roomLabel) return null;
   return (
     <details className="ml-0.5 rounded-lg bg-board-row px-3 py-2">
-      <summary className="flex min-h-9 cursor-pointer items-center gap-1.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link">
+      <summary className="flex min-h-11 cursor-pointer items-center gap-1.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link">
         <Navigation size={14} aria-hidden />
         Где {lesson.roomLabel}
       </summary>
@@ -111,7 +116,7 @@ export default async function SchedulePage({
   const date = validDate(sp.date) ?? today;
   const view = sp.view === "week" ? "week" : "day";
   const monday = weekStart(date);
-  const days = Array.from({ length: 6 }, (_, i) => addDays(monday, i));
+  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
   const weekFrom = mskDayStart(monday);
   const weekTo = mskDayStart(addDays(monday, 7));
 
@@ -157,7 +162,7 @@ export default async function SchedulePage({
                 href={link(date, v)}
                 aria-current={view === v ? "true" : undefined}
                 className={cn(
-                  "flex min-h-[38px] items-center rounded-md px-2.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] no-underline",
+                  "flex min-h-11 items-center rounded-md px-2.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] no-underline",
                   view === v
                     ? "bg-nav text-nav-active-text"
                     : "text-board-muted",
@@ -174,17 +179,32 @@ export default async function SchedulePage({
           </div>
         </div>
 
-        <nav
-          aria-label="Дни недели"
-          className="grid grid-cols-[30px_repeat(6,minmax(0,1fr))_30px] items-center gap-1"
-        >
+        <div className="flex items-center justify-between rounded-lg bg-board-row px-1">
           <Link
             href={link(addDays(monday, -7))}
             aria-label="Предыдущая неделя"
-            className="grid h-11 place-items-center text-board-muted"
+            className="grid size-11 place-items-center text-board-muted"
           >
             <ChevronLeft size={18} aria-hidden />
           </Link>
+          <Link
+            href={link(today, "day")}
+            className="flex min-h-11 items-center px-3 font-semibold text-board-link no-underline"
+          >
+            Сегодня
+          </Link>
+          <Link
+            href={link(addDays(monday, 7))}
+            aria-label="Следующая неделя"
+            className="grid size-11 place-items-center text-board-muted"
+          >
+            <ChevronRight size={18} aria-hidden />
+          </Link>
+        </div>
+        <nav
+          aria-label="Дни недели"
+          className="grid grid-cols-7 items-center gap-[3px]"
+        >
           {days.map((d) => {
             const selected = view === "day" && d === date;
             return (
@@ -215,40 +235,39 @@ export default async function SchedulePage({
                 </b>
                 {changedDays.has(d) ? (
                   <i
-                    aria-label="есть изменения"
+                    aria-hidden
                     className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-plate-change"
                   />
                 ) : null}
-                {d === today ? <span className="sr-only">сегодня</span> : null}
+                <span className="sr-only">
+                  {weekdayFull(d)}, {dayMonth(d)}
+                  {d === today ? ", сегодня" : ""}
+                  {changedDays.has(d) ? ", есть изменения" : ""}
+                </span>
               </Link>
             );
           })}
-          <Link
-            href={link(addDays(monday, 7))}
-            aria-label="Следующая неделя"
-            className="grid h-11 place-items-center text-board-muted"
-          >
-            <ChevronRight size={18} aria-hidden />
-          </Link>
         </nav>
       </header>
 
       <div className="flex flex-1 flex-col px-3 pb-3">
         {view === "day" ? (
-          <>
+          <ScheduleSwipe
+            previous={link(addDays(date, -1), "day")}
+            next={link(addDays(date, 1), "day")}
+          >
             <MovedOut items={movedOut} />
             {lessons.length ? (
-              <>
-                <div
-                  role="table"
-                  aria-label={`Пары, ${weekdayFull(date)} ${dayMonth(date)}`}
-                >
-                  <BoardHead />
-                  {lessons.map((l) => (
-                    <div key={l.id}>
-                      <LessonRow lesson={l} details />
-                      {l.state.kind !== "cancelled" &&
-                      l.state.kind !== "past" ? (
+              <div
+                role="table"
+                aria-label={`Пары, ${weekdayFull(date)} ${dayMonth(date)}`}
+              >
+                <BoardHead />
+                {lessons.map((l) => (
+                  <div key={l.id} role="rowgroup">
+                    <LessonRow lesson={l} details />
+                    {l.state.kind !== "cancelled" && l.state.kind !== "past" ? (
+                      <BoardDetailRow>
                         <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1.5">
                           <div>
                             <WhereIs lesson={l} />
@@ -263,25 +282,24 @@ export default async function SchedulePage({
                             <CalendarPlus size={16} aria-hidden />В календарь
                           </a>
                         </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-                {lessons.some(
-                  (l) =>
-                    l.state.kind !== "past" && l.state.kind !== "cancelled",
-                ) ? (
-                  <p className="mb-2 text-xs text-board-muted">
-                    В календаре останется время на момент скачивания.
-                  </p>
-                ) : null}
-              </>
+                      </BoardDetailRow>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
             ) : (
               <p className="border-t border-board-line py-6 text-center font-board text-2xl font-extrabold uppercase">
                 Пар нет
               </p>
             )}
-          </>
+            {lessons.some(
+              (l) => l.state.kind !== "past" && l.state.kind !== "cancelled",
+            ) ? (
+              <p className="mb-2 text-xs text-board-muted">
+                В календаре останется время на момент скачивания.
+              </p>
+            ) : null}
+          </ScheduleSwipe>
         ) : (
           days.map((d) => {
             const dayLessons = lessons.filter((l) => mskDate(l.startsAt) === d);
@@ -297,7 +315,10 @@ export default async function SchedulePage({
                 </h2>
                 <MovedOut items={movedOut.filter((move) => move.date === d)} />
                 {dayLessons.length ? (
-                  <div role="table">
+                  <div
+                    role="table"
+                    aria-label={`Пары, ${weekdayFull(d)} ${dayMonth(d)}`}
+                  >
                     {dayLessons.map((l) => (
                       <LessonRow key={l.id} lesson={l} />
                     ))}

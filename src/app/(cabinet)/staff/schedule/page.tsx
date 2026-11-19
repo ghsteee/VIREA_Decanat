@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { requireStaff } from "@/server/auth/guards";
 import { requireStaffGroup, staffGroups } from "@/server/staff";
-import { BoardHead, LessonRow } from "@/components/board/lesson-row";
+import {
+  BoardDetailRow,
+  BoardHead,
+  LessonRow,
+} from "@/components/board/lesson-row";
 import { ReadStats } from "@/components/staff/read-stats";
 import { ConceptNote } from "@/components/concept-note";
 import { dayRange, getLessons } from "@/server/queries/schedule";
@@ -78,15 +82,17 @@ export default async function StaffSchedulePage({
           <div role="table" aria-label="Пары группы">
             <BoardHead />
             {lessons.map((l) => (
-              <div key={l.id} className="relative">
+              <div key={l.id} role="rowgroup">
                 <LessonRow lesson={l} details />
                 {l.state.kind !== "cancelled" ? (
-                  <Link
-                    href={`/staff/schedule/${l.id}`}
-                    className="mb-2 ml-[100px] inline-flex min-h-11 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link"
-                  >
-                    Изменить ›
-                  </Link>
+                  <BoardDetailRow>
+                    <Link
+                      href={`/staff/schedule/${l.id}`}
+                      className="mb-2 ml-[100px] inline-flex min-h-11 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link"
+                    >
+                      Изменить ›
+                    </Link>
+                  </BoardDetailRow>
                 ) : null}
               </div>
             ))}
