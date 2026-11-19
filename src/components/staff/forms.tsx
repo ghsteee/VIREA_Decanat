@@ -171,7 +171,7 @@ export function PostForm({
         {(["deadline", "announcement"] as const).map((t) => (
           <label
             key={t}
-            className={`flex h-10 cursor-pointer items-center rounded-full px-3.5 text-[13.5px] font-semibold ${type === t ? "" : "bg-board text-board-text"}`}
+            className={`flex min-h-11 cursor-pointer items-center rounded-full px-3.5 text-[13.5px] font-semibold focus-within:ring-2 focus-within:ring-board-link ${type === t ? "" : "bg-board text-board-text"}`}
             style={
               type === t
                 ? { background: "var(--board-text)", color: "var(--board)" }

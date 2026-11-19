@@ -215,7 +215,8 @@ test("S6: староста публикует только для своей г�
     (await page.goto(`/group-head/schedule/${foreign.id}`))?.status(),
   ).toBe(404);
   await page.goto("/group-head");
-  await page.getByRole("radio", { name: "Объявление" }).check();
+  await page.getByText("Объявление", { exact: true }).click();
+  await expect(page.getByRole("radio", { name: "Объявление" })).toBeChecked();
   await page.getByLabel("Заголовок").fill(title);
   await page.getByLabel("Текст").fill("Собираемся после пары.");
   await page.getByRole("button", { name: "Опубликовать", exact: true }).click();
