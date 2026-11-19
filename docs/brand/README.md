@@ -24,7 +24,7 @@
 
 | Файл | Что | Кто | Статус |
 | --- | --- | --- | --- |
-| `empty-today-light.png`, `empty-today-dark.png` | Пустое состояние «Пар нет — выходной» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
+| [Светлая](empty-today-light.png), [тёмная](empty-today-dark.png) | Пустое состояние «Сегодня пар нет» | ChatGPT | готово, версии WebP в `public/brand/` |
 | `empty-requests-light.png`, `empty-requests-dark.png` | «Заявок пока нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
 | `empty-notifications-light.png`, `empty-notifications-dark.png` | «Новых уведомлений нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
 | `empty-deadlines-light.png`, `empty-deadlines-dark.png` | «Дедлайнов на неделе нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
@@ -34,6 +34,8 @@
 Архив: [`vtu-virea-logo.png`](vtu-virea-logo.png) и [`vtu-virea-gorynych-logo.png`](vtu-virea-gorynych-logo.png) — первые логотипы от ChatGPT (08.11), в интерфейсе не используются.
 
 ## Промпты и выбранные варианты
+
+- 2026-11-14 — Деканыч отдыхает на подушке рядом с табло и чашкой. Светлая версия с синим телом, тёмная повторяет композицию с розовым телом по актуальным цветам. Выбрана одна композиция для двух тем. [Запись журнала](../ai-log/entries/2026-11-14_2328_chatgpt_empty-today.md).
 
 Записывать сюда: дата, файл, промпт (коротко), какой вариант выбрали и почему.
 
