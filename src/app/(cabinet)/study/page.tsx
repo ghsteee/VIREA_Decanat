@@ -18,32 +18,36 @@ function plural(n: number, one: string, few: string, many: string) {
 
 /** G2: сводка одной фразой. */
 function summary(subjects: SubjectStanding[]) {
+  if (!subjects.length) return <>Дисциплины семестра пока не опубликованы.</>;
   const risky = subjects.filter((s) => s.status !== "admitted");
   if (!risky.length)
     return <>Допуск к сессии есть по всем дисциплинам. Так держать.</>;
   const s = risky[0];
-  const pending = s.checklist.filter((c) => !c.done);
+  const pending = s.checklist.filter((item) => !item.done);
   const due = pending
-    .map((c) => c.dueAt)
+    .flatMap((item) => (item.dueAt ? [item.dueAt] : []))
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+  const count = pending.length;
+  const requirements = [
+    count ? `сдать ${count} ${plural(count, "работу", "работы", "работ")}` : "",
+    s.missingPoints
+      ? `набрать ${s.missingPoints} ${plural(s.missingPoints, "балл", "балла", "баллов")}`
+      : "",
+  ]
     .filter(Boolean)
-    .sort((a, b) => b!.getTime() - a!.getTime())[0];
-  const n = pending.length;
-  const what =
-    s.works.kind === "лаб"
-      ? `${n} ${plural(n, "лаба", "лабы", "лаб")}`
-      : `${n} ${plural(n, "работа", "работы", "работ")}`;
+    .join(" и ");
   return (
     <>
       {s.status === "not_admitted"
         ? "Допуска нет по дисциплине "
-        : "Допуск к сессии почти есть: осталось "}
-      <b className="text-board-soon">
-        {s.status === "not_admitted"
-          ? s.name.toLowerCase()
-          : `${n ? what : `${50 - s.points} баллов`} по дисциплине «${s.name}»${due ? ` до ${dayMonth(mskDate(due))}` : ""}`}
-      </b>
+        : "Для допуска по дисциплине "}
+      <b className="text-board-soon">«{s.name}»</b>
+      {s.status === "at_risk" ? ` осталось ${requirements}` : ""}
+      {s.status === "at_risk" && due
+        ? `. Ближайший срок — ${dayMonth(mskDate(due))}`
+        : ""}
       {risky.length > 1
-        ? ` и ещё ${risky.length - 1} ${plural(risky.length - 1, "дисциплина", "дисциплины", "дисциплин")}`
+        ? `. Проверить нужно ещё ${risky.length - 1} ${plural(risky.length - 1, "дисциплину", "дисциплины", "дисциплин")}`
         : ""}
       .
     </>
@@ -194,7 +198,24 @@ export default async function StudyPage() {
                 </div>
               </div>
             );
-            if (!open) return <div key={s.subjectId}>{row}</div>;
+            if (!open)
+              return (
+                <div key={s.subjectId} role="rowgroup">
+                  {row}
+                  {s.checklist.length ? (
+                    <details className="mb-1 px-0.5 text-[13px]">
+                      <summary className="flex min-h-11 cursor-pointer items-center text-board-link">
+                        Чек-лист допуска · выполнен
+                      </summary>
+                      <ul className="m-0 pb-2 pl-5 text-board-muted">
+                        {s.checklist.map((item, index) => (
+                          <li key={index}>{item.title} — сдано</li>
+                        ))}
+                      </ul>
+                    </details>
+                  ) : null}
+                </div>
+              );
             const done = s.checklist.filter((c) => c.done).length;
             return (
               <div
@@ -229,6 +250,11 @@ export default async function StudyPage() {
                       />
                     ))}
                   </div>
+                  {s.missingPoints ? (
+                    <p className="m-0 text-[13.5px] text-board-soon">
+                      До 50 баллов не хватает {s.missingPoints}.
+                    </p>
+                  ) : null}
                   <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-[13.5px] leading-[18px]">
                     {s.checklist.map((c, i) => (
                       <li key={i} className="flex gap-2">
