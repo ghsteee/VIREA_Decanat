@@ -3,42 +3,36 @@
 import { createHash } from "node:crypto";
 import { db } from "@/server/db";
 import { requireUser } from "@/server/auth/guards";
+import { parsePushTarget, pushEndpoint } from "@/server/push-subscription";
+import { hitRateLimit } from "@/server/rate-limit";
 
 type Sub = { endpoint: string; keys: { p256dh: string; auth: string } };
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 
-function valid(sub: Sub) {
-  return (
-    typeof sub?.endpoint === "string" &&
-    sub.endpoint.startsWith("https://") &&
-    sub.endpoint.length < 1000 &&
-    typeof sub.keys?.p256dh === "string" &&
-    typeof sub.keys?.auth === "string" &&
-    sub.keys.p256dh.length < 200 &&
-    sub.keys.auth.length < 100
-  );
-}
-
 /** Сохранить подписку браузера за пользователем из сессии. */
 export async function savePushSubscription(sub: Sub): Promise<{ ok: boolean }> {
   const user = await requireUser();
-  if (!valid(sub)) return { ok: false };
-  const endpointHash = hash(sub.endpoint);
+  const target = parsePushTarget({
+    endpoint: sub?.endpoint,
+    p256dh: sub?.keys?.p256dh,
+    auth: sub?.keys?.auth,
+  });
+  if (!target) return { ok: false };
+  const limit = await hitRateLimit(`push-subscription:${user.id}`, 20, 3600);
+  if (!limit.allowed) return { ok: false };
+  const endpointHash = hash(target.endpoint);
   await db.pushSubscription.upsert({
     where: { endpointHash },
     create: {
       userId: user.id,
-      endpoint: sub.endpoint,
+      ...target,
       endpointHash,
-      p256dh: sub.keys.p256dh,
-      auth: sub.keys.auth,
     },
     // Тот же браузер мог раньше принадлежать другому входу — переписываем на текущего
     update: {
       userId: user.id,
-      p256dh: sub.keys.p256dh,
-      auth: sub.keys.auth,
+      ...target,
       revokedAt: null,
     },
   });
@@ -50,9 +44,15 @@ export async function removePushSubscription(
   endpoint: string,
 ): Promise<{ ok: boolean }> {
   const user = await requireUser();
-  if (typeof endpoint !== "string") return { ok: false };
+  if (typeof endpoint !== "string" || endpoint.length >= 1000)
+    return { ok: false };
+  const canonical = pushEndpoint(endpoint)?.href ?? endpoint;
   await db.pushSubscription.updateMany({
-    where: { endpointHash: hash(endpoint), userId: user.id, revokedAt: null },
+    where: {
+      endpointHash: { in: [hash(endpoint), hash(canonical)] },
+      userId: user.id,
+      revokedAt: null,
+    },
     data: { revokedAt: new Date() },
   });
   return { ok: true };

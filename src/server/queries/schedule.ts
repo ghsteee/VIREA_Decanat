@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/server/db";
-import { mskDate, mskDayStart, mskTime } from "@/lib/time";
+import { dayMonth, mskDate, mskDayStart, mskTime } from "@/lib/time";
 import type { LessonState } from "@/components/board/status";
 
 export type LessonView = {
@@ -26,6 +26,7 @@ export type LessonView = {
   onlineUrl: string | null;
   state: LessonState;
   changed: boolean;
+  move: { from: string; to: string } | null;
   change: { at: Date; reason: string | null; byStaff: boolean } | null;
 };
 
@@ -72,17 +73,37 @@ export async function getLessons(
   const prevRoomIds = rows.flatMap((l) =>
     l.changes[0]?.previousRoomId ? [l.changes[0].previousRoomId] : [],
   );
-  const prevRooms = prevRoomIds.length
-    ? await db.room.findMany({
-        where: { id: { in: prevRoomIds } },
-        include: { campus: true },
-      })
-    : [];
+  const [prevRooms, moves] = await Promise.all([
+    prevRoomIds.length
+      ? db.room.findMany({
+          where: { id: { in: prevRoomIds } },
+          include: { campus: true },
+        })
+      : [],
+    rows.length
+      ? db.lessonChange.findMany({
+          where: {
+            lessonId: { in: rows.map((lesson) => lesson.id) },
+            kind: "moved",
+          },
+          orderBy: { version: "desc" },
+          distinct: ["lessonId"],
+          select: { lessonId: true, previousStartsAt: true },
+        })
+      : [],
+  ]);
+  const moveByLesson = new Map(
+    moves.map((move) => [move.lessonId, move.previousStartsAt]),
+  );
   const prevRoomById = new Map(prevRooms.map((r) => [r.id, roomCode(r)]));
 
   return rows.map((l): LessonView => {
     const ch = l.changes[0] ?? null;
     const code = roomCode(l.room);
+    const from = moveByLesson.get(l.id);
+    const move = from
+      ? { from: slotLabel(from), to: slotLabel(l.startsAt) }
+      : null;
     let state: LessonState = { kind: "planned" };
     const mins = Math.round((l.startsAt.getTime() - now.getTime()) / 60000);
 
@@ -90,7 +111,11 @@ export async function getLessons(
     else if (l.endsAt <= now) state = { kind: "past" };
     else if (l.startsAt <= now) state = { kind: "now" };
     else if (ch && ch.previousStartsAt.getTime() !== ch.newStartsAt.getTime())
-      state = { kind: "moved", from: mskTime(ch.previousStartsAt) };
+      state = {
+        kind: "moved",
+        from: slotLabel(ch.previousStartsAt),
+        to: slotLabel(l.startsAt),
+      };
     else if (ch && ch.newFormat === "online" && ch.previousFormat !== "online")
       state = {
         kind: "online",
@@ -130,6 +155,7 @@ export async function getLessons(
       onlineUrl: l.onlineUrl,
       state,
       changed: Boolean(ch),
+      move,
       change: ch
         ? {
             at: ch.publishedAt,
@@ -138,6 +164,48 @@ export async function getLessons(
           }
         : null,
     };
+  });
+}
+
+export function slotLabel(date: Date): string {
+  return `${dayMonth(mskDate(date))} ${mskTime(date)}`;
+}
+
+/** На исходной дате оставляем ссылку на текущее место перенесённой пары. */
+export async function getMovedOut(groupId: string, from: Date, to: Date) {
+  const rows = await db.lessonChange.findMany({
+    where: {
+      kind: "moved",
+      previousStartsAt: { gte: from, lt: to },
+      lesson: { groupId },
+    },
+    orderBy: { version: "desc" },
+    select: {
+      lessonId: true,
+      previousStartsAt: true,
+      lesson: {
+        select: { startsAt: true, subject: { select: { name: true } } },
+      },
+    },
+  });
+  const seen = new Set<string>();
+  return rows.flatMap(({ lessonId, previousStartsAt, lesson }) => {
+    const date = mskDate(previousStartsAt);
+    const toDate = mskDate(lesson.startsAt);
+    const key = `${date}:${lessonId}`;
+    if (date === toDate || seen.has(key)) return [];
+    seen.add(key);
+    return [
+      {
+        key,
+        lessonId,
+        date,
+        toDate,
+        subject: lesson.subject.name,
+        from: slotLabel(previousStartsAt),
+        to: slotLabel(lesson.startsAt),
+      },
+    ];
   });
 }
 

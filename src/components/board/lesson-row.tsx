@@ -26,7 +26,7 @@ export function LessonRow({
         <Flaps
           value={lesson.start}
           label={`${lesson.start}–${lesson.end}`}
-          tone={s === "moved" ? "change" : dim ? "dim" : "default"}
+          tone={dim ? "dim" : lesson.move ? "change" : "default"}
         />
       </div>
       <div role="cell" className="min-w-0">
@@ -46,6 +46,11 @@ export function LessonRow({
           </div>
         ) : null}
         <StatusWord state={lesson.state} />
+        {lesson.move && s !== "moved" ? (
+          <div>
+            <StatusWord state={{ kind: "moved", ...lesson.move }} />
+          </div>
+        ) : null}
         {details &&
         lesson.change?.reason &&
         (s === "moved" ||

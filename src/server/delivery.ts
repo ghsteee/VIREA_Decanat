@@ -6,6 +6,8 @@ import { sendPush } from "@/server/push";
 
 const MAX_ATTEMPTS = 5;
 const LEASE_MS = 60_000;
+const MAX_BATCHES = 12;
+const CLAIM_WINDOW_MS = 35_000;
 const EMAIL_SUBJECTS: Partial<Record<NotificationKind, string>> = {
   lesson_change: "Изменилось расписание",
   deadline: "Новый срочный дедлайн",
@@ -259,29 +261,37 @@ function deliveryResult(
 
 let running = false;
 
-/** Один пакет на процесс. Другие процессы пропускают захваченные задания. */
+/** Освобождаем очередь сразу после каждого пакета, с ограничением нагрузки. */
 export async function processDeliveries(limit = 10) {
   if (running) return;
   running = true;
+  const claimUntil = performance.now() + CLAIM_WINDOW_MS;
   try {
-    const leaseExpiresAt = new Date(Date.now() + LEASE_MS);
-    const leased = await db.$queryRaw<{ id: string }[]>`
-      UPDATE "NotificationDelivery" SET "status" = 'leased', "leaseExpiresAt" = ${leaseExpiresAt}
-      WHERE "id" IN (
-        SELECT "id" FROM "NotificationDelivery"
-        WHERE ("channel" = 'webPush' OR ("channel" = 'email' AND "mode" = 'immediate'))
-          AND ("status" = 'pending' OR ("status" = 'leased' AND "leaseExpiresAt" < now()))
-          AND "nextAttemptAt" <= now()
-        ORDER BY "nextAttemptAt", "id"
-        LIMIT ${limit}
-        FOR UPDATE SKIP LOCKED
-      )
-      RETURNING "id"`;
-    const results = await Promise.allSettled(
-      leased.map(({ id }) => deliver(id, leaseExpiresAt)),
-    );
-    if (results.some((result) => result.status === "rejected"))
-      console.error("notification delivery attempt failed");
+    for (
+      let batch = 0;
+      batch < MAX_BATCHES && performance.now() < claimUntil;
+      batch++
+    ) {
+      const leaseExpiresAt = new Date(Date.now() + LEASE_MS);
+      const leased = await db.$queryRaw<{ id: string }[]>`
+        UPDATE "NotificationDelivery" SET "status" = 'leased', "leaseExpiresAt" = ${leaseExpiresAt}
+        WHERE "id" IN (
+          SELECT "id" FROM "NotificationDelivery"
+          WHERE ("channel" = 'webPush' OR ("channel" = 'email' AND "mode" = 'immediate'))
+            AND ("status" = 'pending' OR ("status" = 'leased' AND "leaseExpiresAt" < now()))
+            AND "nextAttemptAt" <= now()
+          ORDER BY "nextAttemptAt", "id"
+          LIMIT ${limit}
+          FOR UPDATE SKIP LOCKED
+        )
+        RETURNING "id"`;
+      if (!leased.length) return;
+      const results = await Promise.allSettled(
+        leased.map(({ id }) => deliver(id, leaseExpiresAt)),
+      );
+      if (results.some((result) => result.status === "rejected"))
+        console.error("notification delivery attempt failed");
+    }
   } finally {
     running = false;
   }

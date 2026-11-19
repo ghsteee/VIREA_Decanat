@@ -9,6 +9,7 @@ import {
   getAcademicWeek,
   getChangedDays,
   getLessons,
+  getMovedOut,
   type LessonView,
 } from "@/server/queries/schedule";
 import { db } from "@/server/db";
@@ -65,6 +66,33 @@ function WhereIs({ lesson }: { lesson: LessonView }) {
   );
 }
 
+function MovedOut({
+  items,
+}: {
+  items: Awaited<ReturnType<typeof getMovedOut>>;
+}) {
+  if (!items.length) return null;
+  return (
+    <section
+      aria-label="Перенесённые пары"
+      className="flex flex-col gap-2 py-2"
+    >
+      {items.map((move) => (
+        <Link
+          key={move.key}
+          href={`/schedule?date=${move.toDate}#lesson-${move.lessonId}`}
+          className="flex min-h-11 flex-col justify-center rounded-lg bg-board-row px-3 py-2 text-board-link"
+        >
+          <span className="font-semibold">{move.subject}</span>
+          <span className="text-sm">
+            Перенос · {move.from} → {move.to}
+          </span>
+        </Link>
+      ))}
+    </section>
+  );
+}
+
 export default async function SchedulePage({
   searchParams,
 }: {
@@ -83,16 +111,17 @@ export default async function SchedulePage({
   const weekFrom = mskDayStart(monday);
   const weekTo = mskDayStart(addDays(monday, 7));
 
-  const [group, week, changedDays, lessons] = await Promise.all([
+  const range =
+    view === "week" ? ([weekFrom, weekTo] as const) : dayRange(date);
+  const [group, week, changedDays, lessons, movedOut] = await Promise.all([
     db.group.findUnique({
       where: { id: user.groupId },
       select: { code: true },
     }),
     getAcademicWeek(date),
     getChangedDays(user.groupId, weekFrom, weekTo),
-    view === "week"
-      ? getLessons(user.groupId, weekFrom, weekTo)
-      : getLessons(user.groupId, ...dayRange(date)),
+    getLessons(user.groupId, ...range),
+    getMovedOut(user.groupId, ...range),
   ]);
 
   const link = (d: string, v = view) =>
@@ -202,24 +231,27 @@ export default async function SchedulePage({
 
       <div className="flex flex-1 flex-col px-3 pb-3">
         {view === "day" ? (
-          lessons.length ? (
-            <div
-              role="table"
-              aria-label={`Пары, ${weekdayFull(date)} ${dayMonth(date)}`}
-            >
-              <BoardHead />
-              {lessons.map((l) => (
-                <div key={l.id}>
-                  <LessonRow lesson={l} details />
-                  <WhereIs lesson={l} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="border-t border-board-line py-6 text-center font-board text-2xl font-extrabold uppercase">
-              Пар нет
-            </p>
-          )
+          <>
+            <MovedOut items={movedOut} />
+            {lessons.length ? (
+              <div
+                role="table"
+                aria-label={`Пары, ${weekdayFull(date)} ${dayMonth(date)}`}
+              >
+                <BoardHead />
+                {lessons.map((l) => (
+                  <div key={l.id}>
+                    <LessonRow lesson={l} details />
+                    <WhereIs lesson={l} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="border-t border-board-line py-6 text-center font-board text-2xl font-extrabold uppercase">
+                Пар нет
+              </p>
+            )}
+          </>
         ) : (
           days.map((d) => {
             const dayLessons = lessons.filter((l) => mskDate(l.startsAt) === d);
@@ -233,6 +265,7 @@ export default async function SchedulePage({
                   {weekdayFull(d)} · {dayMonth(d)}
                   {d === today ? " · сегодня" : ""}
                 </h2>
+                <MovedOut items={movedOut.filter((move) => move.date === d)} />
                 {dayLessons.length ? (
                   <div role="table">
                     {dayLessons.map((l) => (

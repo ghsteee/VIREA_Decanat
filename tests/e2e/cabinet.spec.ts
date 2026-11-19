@@ -1,6 +1,13 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { PrismaClient } from "@prisma/client";
-import { addDays, mskDate, mskDayStart, mskTime } from "../../src/lib/time";
+import {
+  addDays,
+  dayMonth,
+  mskDate,
+  mskDayStart,
+  mskTime,
+} from "../../src/lib/time";
+import { PAIRS } from "../../src/lib/pairs";
 
 const danila = /Студент — Данила/;
 const ksenia = /Студентка — Ксения/;
@@ -51,13 +58,13 @@ test("S2: перенос виден в расписании и ленте тол
   browser,
   baseURL,
 }) => {
-  const day = addDays(mskDate(), 1);
+  const tomorrow = addDays(mskDate(), 1);
   const lesson = await db.lesson.findFirstOrThrow({
     where: {
       group: { code: "БИСО-03-25" },
       startsAt: {
         gte: mskDayStart(mskDate()),
-        lt: mskDayStart(addDays(day, 7)),
+        lt: mskDayStart(addDays(tomorrow, 7)),
       },
       status: "scheduled",
       format: "offline",
@@ -69,22 +76,28 @@ test("S2: перенос виден в расписании и ленте тол
   await page.goto(`/staff/schedule/${lesson.id}`);
   await expect(page.getByText(concept)).toBeVisible();
   await expectMobileLayout(page);
-  const newPair =
-    mskDate(lesson.startsAt) === day && mskTime(lesson.startsAt) === "18:00"
-      ? "5"
-      : "6";
+  const from = mskDate(lesson.startsAt);
+  const day = addDays(from, 1);
+  const time = mskTime(lesson.startsAt);
+  const pair = Object.entries(PAIRS).find(([, slot]) => slot.start === time);
+  if (!pair) throw new Error("В расписании нет номера выбранной пары");
   await page.getByLabel("Дата", { exact: true }).fill(day);
-  await page.locator('select[name="pair"]').selectOption(newPair);
+  await page.locator('select[name="pair"]').selectOption(pair[0]);
   await page.getByLabel(/Причина/).fill(reason);
   await page.getByRole("button", { name: "Опубликовать изменение" }).click();
   await expect(page.getByRole("status")).toContainText("Группа уже видит");
 
   const student = await newPage(browser, baseURL);
   await login(student, danila);
-  await student.goto(`/schedule?date=${day}`);
-  await expect(student.locator(`#lesson-${lesson.id}`)).toContainText(
-    /перенос/i,
-  );
+  const move = `${dayMonth(from)} ${time} → ${dayMonth(day)} ${time}`;
+  await student.goto(`/schedule?date=${from}`);
+  const link = student
+    .getByRole("region", { name: "Перенесённые пары" })
+    .getByRole("link")
+    .filter({ hasText: move });
+  await expect(link).toBeVisible();
+  await link.click();
+  await expect(student.locator(`#lesson-${lesson.id}`)).toContainText(move);
   await student.goto("/feed");
   await expect(student.getByText(reason, { exact: false })).toBeVisible();
   await student.close();
