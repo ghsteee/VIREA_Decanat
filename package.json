@@ -55,5 +55,13 @@
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.33"
+    },
+    "@prisma/config": {
+      "effect": "3.22.1"
+    }
   }
 }
