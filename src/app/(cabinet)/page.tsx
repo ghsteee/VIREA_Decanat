@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { EmptyIllustration } from "@/components/empty-illustration";
 import { redirect } from "next/navigation";
 import { Bell, ChevronRight, Navigation } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
@@ -150,24 +150,7 @@ export default async function TodayPage() {
         ) : null}
         {lessons.length === 0 && (
           <div className="flex flex-col items-center gap-1 border-t border-board-line pb-2 pt-2 text-center">
-            <div className="size-28">
-              <Image
-                src="/brand/empty-today-light.webp"
-                alt=""
-                width={112}
-                height={112}
-                className="only-light"
-                unoptimized
-              />
-              <Image
-                src="/brand/empty-today-dark.webp"
-                alt=""
-                width={112}
-                height={112}
-                className="only-dark"
-                unoptimized
-              />
-            </div>
+            <EmptyIllustration scene="today" />
             <p className="m-0 font-board text-2xl font-extrabold uppercase">
               Сегодня пар нет
             </p>
@@ -266,9 +249,12 @@ export default async function TodayPage() {
               })}
             </ul>
           ) : (
-            <p className="text-[14px] text-text-muted">
-              Дедлайнов на неделе нет. Можно выдохнуть.
-            </p>
+            <div className="flex items-center gap-2">
+              <EmptyIllustration scene="deadlines" />
+              <p className="text-[14px] text-text-muted">
+                Дедлайнов на неделе нет. Можно выдохнуть.
+              </p>
+            </div>
           )}
         </section>
 

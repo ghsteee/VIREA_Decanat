@@ -24,16 +24,18 @@
 
 | Файл | Что | Кто | Статус |
 | --- | --- | --- | --- |
-| [Светлая](empty-today-light.png), [тёмная](empty-today-dark.png) | Пустое состояние «Сегодня пар нет» | ChatGPT | готово, версии WebP в `public/brand/` |
-| `empty-requests-light.png`, `empty-requests-dark.png` | «Заявок пока нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
-| `empty-notifications-light.png`, `empty-notifications-dark.png` | «Новых уведомлений нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
-| `empty-deadlines-light.png`, `empty-deadlines-dark.png` | «Дедлайнов на неделе нет» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
+| [Светлая](empty-today-light.png), [тёмная](empty-today-dark.png) | Пустое состояние «Сегодня пар нет» | ChatGPT | утверждено, WebP в `public/brand/` |
+| [Светлая](empty-requests-light.png), [тёмная](empty-requests-dark.png) | «Заявок пока нет» | ChatGPT | утверждено, WebP в `public/brand/` |
+| [Светлая](empty-notifications-light.png), [тёмная](empty-notifications-dark.png) | «Новых уведомлений нет» | ChatGPT | утверждено, WebP в `public/brand/` |
+| [Светлая](empty-deadlines-light.png), [тёмная](empty-deadlines-dark.png) | «Дедлайнов на неделе нет» | ChatGPT | утверждено, WebP в `public/brand/` |
 | `error-sync-light.png`, `error-sync-dark.png` | «Расписание не обновилось» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
 | `avatar-danila.png`, `avatar-ksenia.png`, `avatar-marat.png`, `avatar-irina.png` | Аватары-заглушки для 4 тестовых аккаунтов (не фото людей) | ChatGPT | нужно, [промпт](empty-states-prompts.md#аватары-заглушки-4-тестовых-аккаунта) |
 
 Архив: [`vtu-virea-logo.png`](vtu-virea-logo.png) и [`vtu-virea-gorynych-logo.png`](vtu-virea-gorynych-logo.png) — первые логотипы от ChatGPT (08.11), в интерфейсе не используются.
 
 ## Промпты и выбранные варианты
+
+- 2026-11-20: подключены утверждённые в чате сцены. Выходной — Деканыч на подушке с добрым прищуром. Заявки — папка по центру и четыре точки внизу. Уведомления — сон, луна и колокольчик, хвост убран в обеих темах. Дедлайны — Деканыч слева с поднятой лапкой, флажок и календарь справа. [Запись журнала](../ai-log/entries/2026-11-20_0138_chatgpt_approved-empty-states.md).
 
 - 2026-11-14 — Деканыч отдыхает на подушке рядом с табло и чашкой. Светлая версия с синим телом, тёмная повторяет композицию с розовым телом по актуальным цветам. Выбрана одна композиция для двух тем. [Запись журнала](../ai-log/entries/2026-11-14_2328_chatgpt_empty-today.md).
 

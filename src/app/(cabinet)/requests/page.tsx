@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmptyIllustration } from "@/components/empty-illustration";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
@@ -143,10 +144,12 @@ export default async function RequestsPage() {
           ),
         )}
         {!active.length ? (
-          <p className="m-0 text-[15px]">
-            Заявок пока нет. Справку закажешь за минуту — и будешь видеть, где
-            она едет.
-          </p>
+          <div className="flex items-center gap-2">
+            <EmptyIllustration scene="requests" />
+            <p className="m-0 text-[15px]">
+              Заявок пока нет. Можно заказать справку и следить за её статусом.
+            </p>
+          </div>
         ) : null}
       </section>
 
