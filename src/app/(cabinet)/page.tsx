@@ -178,6 +178,7 @@ export default async function TodayPage() {
                     className="font-semibold"
                   >
                     {changeLabels[change.kind]} · {change.lesson.subject.name}
+                    {change.authorRole === "group_head" ? " · от старосты" : ""}
                   </Link>
                   <p className="m-0 text-text-muted">
                     {change.kind === "moved"

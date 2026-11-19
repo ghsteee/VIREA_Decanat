@@ -106,7 +106,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   return {
     id: user.id,
     role: user.role,
-    isGroupHead: Boolean(profile?.headOf),
+    isGroupHead: Boolean(
+      profile?.headOf && profile.headOf.groupId === profile.groupId,
+    ),
     studentProfileId: profile?.id ?? null,
     groupId: profile?.groupId ?? null,
     displayName: profile

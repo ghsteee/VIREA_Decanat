@@ -15,3 +15,10 @@ export async function requireStaff(): Promise<CurrentUser> {
   if (user.role !== "staff") notFound();
   return user;
 }
+
+/** Староста публикует только в группе, закреплённой за его профилем. */
+export async function requireGroupHead() {
+  const user = await requireUser();
+  if (user.role !== "student" || !user.isGroupHead || !user.groupId) notFound();
+  return { id: user.id, groupId: user.groupId, role: "group_head" as const };
+}

@@ -5,17 +5,40 @@ import { mskDate, mskTime, weekdayShort, dayMonth } from "@/lib/time";
 export async function ReadStats({
   authorId,
   kinds,
+  groupId,
 }: {
   authorId: string;
+  groupId?: string;
   kinds: ("lesson_change" | "deadline" | "announcement")[];
 }) {
   const items = await db.notification.findMany({
     where: {
       kind: { in: kinds },
       OR: [
-        { lessonChange: { authorId } },
-        { deadline: { authorId } },
-        { announcement: { authorId } },
+        {
+          lessonChange: {
+            authorId,
+            ...(groupId
+              ? { authorRole: "group_head", lesson: { groupId } }
+              : {}),
+          },
+        },
+        {
+          deadline: {
+            authorId,
+            ...(groupId
+              ? { authorRole: "group_head", groups: { some: { groupId } } }
+              : {}),
+          },
+        },
+        {
+          announcement: {
+            authorId,
+            ...(groupId
+              ? { authorRole: "group_head", groups: { some: { groupId } } }
+              : {}),
+          },
+        },
       ],
     },
     orderBy: { publishedAt: "desc" },

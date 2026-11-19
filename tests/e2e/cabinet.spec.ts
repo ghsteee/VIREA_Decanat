@@ -12,6 +12,7 @@ import { PAIRS } from "../../src/lib/pairs";
 const danila = /Студент — Данила/;
 const ksenia = /Студентка — Ксения/;
 const irina = /Дирекция — Ирина/;
+const marat = /Староста — Марат/;
 const concept = /Концепт для хакатона\. ВТУ ВИРЭА/;
 const db = new PrismaClient();
 
@@ -184,4 +185,71 @@ test("S4 и S9: подача заявки, смена статуса и 404 дл
   expect(await response?.text()).not.toContain(destination);
   expect((await other.goto("/staff"))?.status()).toBe(404);
   await other.close();
+});
+
+test("S6: староста публикует только для своей группы и видит счётчик", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const title = `Объявление старосты ${Date.now()}`;
+  const chief = await db.user.findUniqueOrThrow({
+    where: { login: "m.gainullin" },
+    select: { id: true, studentProfile: { select: { groupId: true } } },
+  });
+  const groupId = chief.studentProfile?.groupId;
+  if (!groupId) throw new Error("У демо-старосты нет группы");
+  const foreign = await db.lesson.findFirstOrThrow({
+    where: { groupId: { not: groupId } },
+    select: { id: true },
+  });
+
+  await login(page, marat);
+  await page.goto("/profile");
+  await page.getByRole("link", { name: "Кабинет старосты" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Староста", exact: true }),
+  ).toBeVisible();
+  await expectMobileLayout(page);
+  expect(
+    (await page.goto(`/group-head/schedule/${foreign.id}`))?.status(),
+  ).toBe(404);
+  await page.goto("/group-head");
+  await page.getByRole("radio", { name: "Объявление" }).check();
+  await page.getByLabel("Заголовок").fill(title);
+  await page.getByLabel("Текст").fill("Собираемся после пары.");
+  await page.getByRole("button", { name: "Опубликовать", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Опубликовано");
+
+  const notice = await db.notification.findFirstOrThrow({
+    where: {
+      title,
+      announcement: { authorId: chief.id, authorRole: "group_head" },
+    },
+    include: {
+      recipients: { include: { user: { include: { studentProfile: true } } } },
+    },
+  });
+  const total = notice.recipients.length;
+  expect(total).toBeGreaterThan(1);
+  expect(
+    notice.recipients.every((r) => r.user.studentProfile?.groupId === groupId),
+  ).toBe(true);
+  const row = page.getByRole("listitem").filter({ hasText: title });
+  await expect(row).toContainText(`0 из ${total}`);
+
+  await page.goto("/feed");
+  await expect(page.getByText(title, { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("объявление · от старосты", { exact: true }).first(),
+  ).toBeVisible();
+  await page.goto("/group-head");
+  await expect(row).toContainText(`1 из ${total}`);
+
+  const outside = await newPage(browser, baseURL);
+  await login(outside, danila);
+  await outside.goto("/feed");
+  await expect(outside.getByText(title, { exact: true })).toHaveCount(0);
+  expect((await outside.goto("/group-head"))?.status()).toBe(404);
+  await outside.close();
 });

@@ -57,6 +57,7 @@ export function getTodayChanges(groupId: string, from: Date, to: Date) {
       id: true,
       lessonId: true,
       kind: true,
+      authorRole: true,
       reason: true,
       previousStartsAt: true,
       newStartsAt: true,

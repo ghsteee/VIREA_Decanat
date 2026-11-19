@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { QrCode, ChevronRight } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { logout } from "@/app/login/actions";
@@ -110,6 +111,14 @@ export default async function ProfilePage() {
       </section>
 
       <div className="flex flex-col gap-5 px-4 py-4">
+        {user.isGroupHead ? (
+          <Link
+            href="/group-head"
+            className="flex min-h-11 items-center justify-between rounded-xl bg-action px-3 font-semibold text-on-action no-underline"
+          >
+            Кабинет старосты <ChevronRight size={16} aria-hidden />
+          </Link>
+        ) : null}
         <section aria-labelledby="ntf" className="flex flex-col gap-1">
           <h2
             id="ntf"
