@@ -29,7 +29,7 @@
 | [Светлая](empty-notifications-light.png), [тёмная](empty-notifications-dark.png) | «Новых уведомлений нет» | ChatGPT | утверждено, WebP в `public/brand/` |
 | [Светлая](empty-deadlines-light.png), [тёмная](empty-deadlines-dark.png) | «Дедлайнов на неделе нет» | ChatGPT | утверждено, WebP в `public/brand/` |
 | `error-sync-light.png`, `error-sync-dark.png` | «Расписание не обновилось» | ChatGPT | нужно, [промпт](empty-states-prompts.md) |
-| `avatar-danila.png`, `avatar-ksenia.png`, `avatar-marat.png`, `avatar-irina.png` | Аватары-заглушки для 4 тестовых аккаунтов (не фото людей) | ChatGPT | нужно, [промпт](empty-states-prompts.md#аватары-заглушки-4-тестовых-аккаунта) |
+| `avatar-danila.png`, `avatar-ksenia.png`, `avatar-marat.png`, `avatar-irina.png` | Аватары-заглушки для 4 тестовых аккаунтов (предметы, без портретов) | Codex Алёны | подключены на входе для жюри, [промпт](empty-states-prompts.md#аватары-заглушки-4-тестовых-аккаунта) |
 
 Архив: [`vtu-virea-logo.png`](vtu-virea-logo.png) и [`vtu-virea-gorynych-logo.png`](vtu-virea-gorynych-logo.png) — первые логотипы от ChatGPT (08.11), в интерфейсе не используются.
 
