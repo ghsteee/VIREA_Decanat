@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function NewRequestPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string; from?: string }>;
+  searchParams: Promise<{ type?: string; from?: string; draft?: string }>;
 }) {
   const user = await requireUser();
   if (!user.studentProfileId) redirect("/staff");
@@ -22,6 +22,15 @@ export default async function NewRequestPage({
     ? await db.applicationType.findUnique({ where: { code: sp.type } })
     : null;
   if (!type) notFound();
+
+  const assistantDraft: Record<string, string | number> | undefined =
+    sp.draft === "assistant"
+      ? type.code === "military_certificate"
+        ? { commissariat: "Военкомат по месту учёта", copies: 1 }
+        : type.code === "study_certificate"
+          ? { destination: "По месту требования", copies: 1 }
+          : undefined
+      : undefined;
 
   const profile = await db.studentProfile.findUniqueOrThrow({
     where: { id: user.studentProfileId },
@@ -93,6 +102,12 @@ export default async function NewRequestPage({
             }
           </p>
         ) : null}
+        {assistantDraft && !prev ? (
+          <p className="m-0 rounded-lg border border-border p-3 text-sm">
+            Черновик помощника. Проверь, куда нужна справка, и отредактируй поля
+            перед отправкой.
+          </p>
+        ) : null}
         <ApplicationForm
           typeId={type.id}
           fields={type.fields as Field[]}
@@ -102,7 +117,7 @@ export default async function NewRequestPage({
           defaults={
             prev
               ? (prev.formData as Record<string, string | number>)
-              : undefined
+              : assistantDraft
           }
         />
         <ConceptNote />

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { PushToggle } from "@/components/push-toggle";
 import { vapidPublicKey } from "@/server/push";
 import { EmailSettings } from "@/components/email-settings";
+import { assistantEnabled } from "@/server/gigachat";
 import { emailConfigured } from "@/server/email";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +118,14 @@ export default async function ProfilePage() {
             className="flex min-h-11 items-center justify-between rounded-xl bg-action px-3 font-semibold text-on-action no-underline"
           >
             Кабинет старосты <ChevronRight size={16} aria-hidden />
+          </Link>
+        ) : null}
+        {user.studentProfileId && assistantEnabled() ? (
+          <Link
+            href="/assistant"
+            className="flex min-h-11 items-center justify-between rounded-xl border border-border-strong px-3 font-semibold text-text no-underline"
+          >
+            ИИ-помощник <ChevronRight size={16} aria-hidden />
           </Link>
         ) : null}
         <section aria-labelledby="ntf" className="flex flex-col gap-1">

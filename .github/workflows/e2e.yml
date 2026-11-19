@@ -28,6 +28,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://dekanych@localhost:5432/dekanych
       NEXT_TELEMETRY_DISABLED: "1"
+      AI_ASSISTANT_ENABLED: "on"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,8 +41,8 @@ jobs:
         run: |
           npm run lint
           npm run typecheck
-      - name: Проверка подписок push
-        run: npx tsx --test tests/unit/push-subscription.test.ts
+      - name: Модульные тесты
+        run: npx tsx --test tests/unit/*.test.ts
       - name: Подготовка тестовой базы
         run: |
           printf 'SESSION_SECRET=%s\nSEED_PASSWORD=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" >> "$GITHUB_ENV"
