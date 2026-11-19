@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmptyIllustration } from "@/components/empty-illustration";
 import { ChevronLeft } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
@@ -90,7 +91,8 @@ export default async function FeedPage({
 }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const f: FilterKey = sp.f && sp.f in FILTERS ? (sp.f as FilterKey) : "all";
+  const f: FilterKey =
+    sp.f && Object.hasOwn(FILTERS, sp.f) ? (sp.f as FilterKey) : "all";
   const rows = await load(user.id, FILTERS[f].kinds);
   const fresh = rows.filter((r) => !r.readAt);
   const earlier = rows.filter((r) => r.readAt);
@@ -193,9 +195,16 @@ export default async function FeedPage({
             })}
           </ul>
         ) : (
-          <p className="border-t border-board-line px-0.5 py-4 text-[15px]">
-            Новых уведомлений нет. Если что-то перенесут — напишем первыми.
-          </p>
+          <div className="flex items-center gap-2 border-t border-board-line px-0.5 py-2">
+            <EmptyIllustration
+              scene={f === "deadlines" ? "deadlines" : "notifications"}
+            />
+            <p className="text-[15px]">
+              {f === "deadlines"
+                ? "Новых уведомлений о дедлайнах нет."
+                : "Новых уведомлений нет. Если что-то перенесут — напишем первыми."}
+            </p>
+          </div>
         )}
       </section>
 
