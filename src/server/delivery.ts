@@ -3,6 +3,8 @@ import type { NotificationKind, Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { decryptEmail, emailConfigured, sendEmail } from "@/server/email";
 import { sendPush } from "@/server/push";
+import { demoLoginEnabled } from "@/server/demo";
+import { demoReminderKey } from "@/server/demo-reminder";
 
 const MAX_ATTEMPTS = 5;
 const LEASE_MS = 60_000;
@@ -134,6 +136,29 @@ async function deliver(id: string, leaseExpiresAt: Date) {
     return;
   }
 
+  const isDemoReminder = n.eventKey.startsWith("demo-deadline:");
+  if (isDemoReminder) {
+    const student = user.studentProfile;
+    const deadline =
+      demoLoginEnabled() && n.deadlineId && student
+        ? await db.deadline.findFirst({
+            where: {
+              id: n.deadlineId,
+              dueAt: { gt: new Date() },
+              groups: { some: { groupId: student.groupId } },
+              progress: { none: { studentId: student.id } },
+            },
+            select: { id: true, dueVersion: true },
+          })
+        : null;
+    if (
+      !deadline ||
+      n.eventKey !== demoReminderKey(deadline.id, deadline.dueVersion)
+    ) {
+      await update({ status: "cancelled" });
+      return;
+    }
+  }
   if (email) {
     const student = user.studentProfile;
     const title = EMAIL_SUBJECTS[n.kind];
@@ -147,7 +172,7 @@ async function deliver(id: string, leaseExpiresAt: Date) {
       await update({ status: "cancelled" });
       return;
     }
-    if (n.deadlineId) {
+    if (n.deadlineId && !isDemoReminder) {
       const deadline = await db.deadline.findFirst({
         where: {
           id: n.deadlineId,
@@ -158,7 +183,9 @@ async function deliver(id: string, leaseExpiresAt: Date) {
         select: { dueVersion: true },
       });
       const reminder =
-        n.kind === "deadline_reminder" && deadline
+        n.kind === "deadline_reminder" &&
+        deadline &&
+        n.eventKey.startsWith("reminder:")
           ? await db.deadlineReminder.findFirst({
               where: {
                 id: n.eventKey.slice("reminder:".length),
