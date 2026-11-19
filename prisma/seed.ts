@@ -216,9 +216,13 @@ function parseRegulations(markdown: string) {
 // ─── Основной сценарий ───────────────────────────────────────────────────
 
 async function main() {
-  const regulationsPath = join(process.cwd(), "docs/knowledge/polozhenie-demo.md");
+  const regulationsPath = join(
+    process.cwd(),
+    "docs/knowledge/polozhenie-demo.md",
+  );
   const sections = parseRegulations(readFileSync(regulationsPath, "utf8"));
-  if (!sections.length) throw new Error("В демо-положении не найдено ни одного пункта");
+  if (!sections.length)
+    throw new Error("В демо-положении не найдено ни одного пункта");
 
   const today = todayMsk();
   const tomorrow = addDays(today, 1);
@@ -1600,22 +1604,24 @@ async function main() {
     `SELECT setval(pg_get_serial_sequence('"Application"', 'number'), (SELECT MAX("number") FROM "Application"))`,
   );
 
-  // Окна выдачи справок (A3): четверг, окно без пар у Данилы
-  for (let i = 0; i < 4; i++) {
-    const day = addDays(today, 1);
-    const start = at(
-      day,
-      `${String(14 + Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "50" : "20"}`,
-    );
-    await db.pickupSlot.create({
-      data: {
-        instituteId: inst.ikb.id,
-        place: "Кабинет 214",
-        startsAt: start,
-        endsAt: new Date(start.getTime() + 25 * 60 * 1000),
-      },
-    });
+  // Окна выдачи справок (A3): будущие будние дни, после обеденного перерыва.
+  const slots = [];
+  for (const institute of [inst.ikb, inst.iii, inst.ith]) {
+    for (let offset = 2; offset <= 9; offset++) {
+      const day = addDays(today, offset);
+      if (new Date(`${day}T12:00:00+03:00`).getUTCDay() % 6 === 0) continue;
+      for (const time of ["14:00", "15:40", "16:30"]) {
+        const startsAt = at(day, time);
+        slots.push({
+          instituteId: institute.id,
+          place: "Кабинет 214",
+          startsAt,
+          endsAt: new Date(startsAt.getTime() + 20 * 60_000),
+        });
+      }
+    }
   }
+  await db.pickupSlot.createMany({ data: slots });
 
   // ─── Документ помощника ──────────────────────────────────────────────
   await db.helpDocument.create({

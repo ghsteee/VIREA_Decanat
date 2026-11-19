@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
+import { listPickupSlots } from "@/server/pickup";
 import { ApplicationForm } from "@/components/application-form";
 import { ConceptNote } from "@/components/concept-note";
 import type { Field } from "@/server/applications";
@@ -26,6 +27,9 @@ export default async function NewRequestPage({
     where: { id: user.studentProfileId },
     include: { group: { include: { institute: true } } },
   });
+  const slots = type.deliveryMethods.includes("pickup")
+    ? await listPickupSlots(profile.group.instituteId, profile.groupId)
+    : [];
   // Повторная подача: берём поля только из своей отклонённой заявки
   const prev =
     sp.from && /^[0-9a-f-]{36}$/i.test(sp.from)
@@ -93,6 +97,7 @@ export default async function NewRequestPage({
           typeId={type.id}
           fields={type.fields as Field[]}
           delivery={type.deliveryMethods}
+          slots={slots}
           previousId={prev?.id}
           defaults={
             prev

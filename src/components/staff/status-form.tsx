@@ -17,10 +17,12 @@ export function StatusForm({
   id,
   version,
   options,
+  readyNote,
 }: {
   id: string;
   version: number;
   options: string[];
+  readyNote?: string;
 }) {
   const [state, action, pending] = useActionState<StatusState, FormData>(
     changeStatus,
@@ -74,7 +76,7 @@ export function StatusForm({
           Где и когда забрать — увидит студент
           <input
             name="pickup"
-            defaultValue="Кабинет 214, пн–пт 10:00–17:00"
+            defaultValue={readyNote ?? "Кабинет 214, пн–пт 10:00–17:00"}
             maxLength={200}
             className={input}
           />
