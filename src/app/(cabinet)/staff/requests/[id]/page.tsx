@@ -1,6 +1,5 @@
 import { pickupLabel } from "@/server/pickup";
 import Link from "next/link";
-import { ConceptNote } from "@/components/concept-note";
 import { requireStaff } from "@/server/auth/guards";
 import {
   NEXT,
@@ -46,7 +45,7 @@ export default async function StaffRequestPage({
   const options = NEXT[app.status];
 
   return (
-    <main className="cabinet-page cabinet-focus flex min-h-dvh flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text md:rounded-3xl">
+    <main className="cabinet-page cabinet-focus flex flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text md:rounded-3xl">
       <Link
         href="/staff"
         className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted"
@@ -129,7 +128,6 @@ export default async function StaffRequestPage({
           </ol>
         </div>
       </section>
-      <ConceptNote className="text-[11px] text-board-muted" />
     </main>
   );
 }

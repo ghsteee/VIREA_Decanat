@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Bell,
   CalendarDays,
   FileText,
   GraduationCap,
@@ -24,6 +25,8 @@ const STUDENT: Item[] = [
   { href: "/profile", label: "Профиль", icon: UserRound },
 ];
 
+const NOTIFICATIONS: Item = { href: "/feed", label: "Уведомления", icon: Bell };
+
 const STAFF: Item[] = [
   { href: "/staff", label: "Заявки", icon: FileText },
   { href: "/staff/schedule", label: "Расписание", icon: CalendarDays },
@@ -32,7 +35,9 @@ const STAFF: Item[] = [
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/" || href === "/staff") return pathname === href;
+  if (href === "/staff")
+    return pathname === href || pathname.startsWith("/staff/requests/");
+  if (href === "/") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -73,10 +78,18 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
 
       <nav
         aria-label="Разделы"
-        className="fixed inset-y-0 left-0 z-20 hidden w-[92px] flex-col items-center gap-1.5 overflow-y-auto bg-[#1d1b18] py-[18px] lg:flex"
+        className="fixed inset-y-0 left-0 z-20 hidden w-[92px] flex-col items-center gap-1.5 overflow-y-auto bg-[#1d1b18] py-[18px] lg:flex xl:w-52 xl:items-stretch xl:px-3"
       >
-        <BrandMark size={40} alt="Деканыч" className="mb-[18px]" />
-        {items.map(({ href, label, icon: Icon }) => {
+        <div className="mb-4 flex items-center gap-3 xl:px-2">
+          <BrandMark size={40} alt="Деканыч" />
+          <span
+            aria-hidden
+            className="hidden font-board text-2xl font-bold uppercase text-[#f3f0ea] xl:inline"
+          >
+            Деканыч
+          </span>
+        </div>
+        {[...items, NOTIFICATIONS].map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (
             <Link
@@ -84,7 +97,7 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-[60px] w-[76px] flex-col items-center justify-center gap-[3px] rounded-[14px] text-center text-[11px] no-underline",
+                "flex min-h-[60px] w-[76px] flex-col items-center justify-center gap-[3px] rounded-[14px] text-center text-[11px] no-underline xl:min-h-12 xl:w-full xl:flex-row xl:justify-start xl:gap-3 xl:px-3 xl:text-sm",
                 active
                   ? "bg-[#f3f0ea] font-bold text-[#1d1b18]"
                   : "text-[#cfcac0]",

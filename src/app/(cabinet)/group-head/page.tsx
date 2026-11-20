@@ -3,7 +3,6 @@ import { requireGroupHead } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { PostForm } from "@/components/staff/forms";
 import { ReadStats } from "@/components/staff/read-stats";
-import { ConceptNote } from "@/components/concept-note";
 import { addDays, dayMonth, mskDate, mskDayStart, mskTime } from "@/lib/time";
 import { publishToGroup } from "./actions";
 
@@ -118,7 +117,6 @@ export default async function GroupHeadPage({
           kinds={["lesson_change", "deadline", "announcement"]}
         />
       </section>
-      <ConceptNote className="lg:col-span-2" />
     </main>
   );
 }

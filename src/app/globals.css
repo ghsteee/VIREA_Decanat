@@ -76,9 +76,9 @@
   --flap-notch: #041f2c;
   --board-text: #f3f0ea;
   --board-muted: #a9c6d6;
-  --board-dim: #8ba7b6;
+  --board-dim: #abc3cf;
   --board-dim-digit: #a9c7d7;
-  --board-head: #7e98a6;
+  --board-head: #abc3cf;
   --board-soon: #fbe6a0;
   --board-soon-row: rgb(251 230 160 / 0.1);
   --board-change: #f9c1ce;
@@ -114,9 +114,9 @@
     --flap-notch: #041f2c;
     --board-text: #f3f0ea;
     --board-muted: #a9c6d6;
-    --board-dim: #8ba7b6;
+    --board-dim: #abc3cf;
     --board-dim-digit: #a9c7d7;
-    --board-head: #7e98a6;
+    --board-head: #abc3cf;
     --board-soon: #fbe6a0;
     --board-soon-row: rgb(251 230 160 / 0.1);
     --board-change: #f9c1ce;
@@ -263,7 +263,7 @@
   .cabinet-page {
     width: 100%;
     min-width: 0;
-    max-width: 30rem;
+    max-width: 45rem;
     margin-inline: auto;
   }
 
@@ -286,7 +286,137 @@
     }
 
     .cabinet-focus {
-      max-width: 54rem;
+      max-width: 58rem;
     }
+  }
+}
+
+@layer components {
+  .cabinet-footer {
+    margin-block: 1rem 0;
+    border-top: 1px solid var(--border);
+    padding: 1rem clamp(1rem, 2vw, 1.5rem);
+  }
+
+  .schedule-page {
+    display: grid;
+    gap: 1rem;
+    align-items: start;
+  }
+  .schedule-picker,
+  .schedule-results {
+    min-width: 0;
+    padding: clamp(0.875rem, 2vw, 1.5rem);
+    background: var(--board);
+    color: var(--board-text);
+  }
+  .schedule-picker {
+    display: grid;
+    gap: 1rem;
+  }
+  .schedule-results {
+    container-type: inline-size;
+  }
+  .schedule-week {
+    display: grid;
+    gap: 0.75rem;
+  }
+  @container (min-width: 44rem) {
+    .schedule-week {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 48rem) {
+    .schedule-picker,
+    .schedule-results {
+      border-radius: 1.25rem;
+    }
+  }
+  @media (min-width: 64rem) {
+    .schedule-page {
+      grid-template-columns: 23.75rem minmax(0, 1fr);
+    }
+  }
+  .skip-link {
+    position: fixed;
+    inset: 0.5rem auto auto 0.5rem;
+    z-index: 50;
+    transform: translateY(-200%);
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    color: var(--primary);
+  }
+  .skip-link:focus {
+    transform: none;
+  }
+}
+@layer base {
+  html {
+    scroll-padding-block: 1rem calc(5.5rem + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-bottom: 1rem;
+    }
+  }
+  :where(input, textarea, select) {
+    max-width: 100%;
+    min-width: 0;
+  }
+  @media (hover: hover) {
+    :where(a, button, summary):hover {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+}
+
+/* На узком экране время и аудитория образуют одну колонку. */
+@media (max-width: 399px) {
+  .lesson-row,
+  .lesson-head {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+  .lesson-row {
+    align-items: start;
+    row-gap: 0.25rem;
+  }
+  .lesson-row > :nth-child(2) {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+  .lesson-row > :last-child {
+    grid-column: 1;
+    text-align: left;
+  }
+  .lesson-head > :last-child {
+    position: absolute;
+    clip-path: inset(50%);
+    width: 1px;
+    height: 1px;
+  }
+}
+@media (max-width: 47.99rem) {
+  input:not([type="checkbox"], [type="radio"]),
+  textarea,
+  select {
+    font-size: 1rem;
+  }
+}
+nav[aria-label="Разделы"] :focus-visible {
+  outline-color: currentColor;
+  outline-offset: -3px;
+}
+
+@media (min-width: 64rem) {
+  .schedule-page[data-view="week"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .schedule-page[data-view="week"] .schedule-picker {
+    grid-template-columns: minmax(14rem, 1fr) minmax(24rem, 2fr);
+    align-items: center;
+  }
+  .schedule-page[data-view="week"] .schedule-picker > :first-child {
+    grid-row: span 2;
   }
 }

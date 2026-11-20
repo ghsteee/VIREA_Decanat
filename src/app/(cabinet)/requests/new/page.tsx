@@ -5,7 +5,6 @@ import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { listPickupSlots } from "@/server/pickup";
 import { ApplicationForm } from "@/components/application-form";
-import { ConceptNote } from "@/components/concept-note";
 import type { Field } from "@/server/applications";
 
 export const dynamic = "force-dynamic";
@@ -105,7 +104,6 @@ export default async function NewRequestPage({
               : undefined
           }
         />
-        <ConceptNote />
       </div>
     </main>
   );

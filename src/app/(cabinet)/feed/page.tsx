@@ -5,7 +5,6 @@ import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
 import { Plate } from "@/components/board/plate";
-import { ConceptNote } from "@/components/concept-note";
 import { mskDate, mskTime, weekdayShort } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { NotificationKind } from "@prisma/client";
@@ -143,17 +142,14 @@ export default async function FeedPage({
             {fresh.length ? `${fresh.length} новых` : "новых нет"}
           </p>
         </div>
-        <nav
-          aria-label="Фильтр"
-          className="-mr-3 flex gap-1.5 overflow-x-auto pr-3"
-        >
+        <nav aria-label="Фильтр" className="flex flex-wrap gap-1.5">
           {(Object.keys(FILTERS) as FilterKey[]).map((key) => (
             <Link
               key={key}
               href={key === "all" ? "/feed" : `/feed?f=${key}`}
               aria-current={f === key ? "true" : undefined}
               className={cn(
-                "flex h-10 flex-none items-center rounded-full px-3 text-[13px] font-semibold no-underline",
+                "flex min-h-11 flex-none items-center rounded-full px-3 text-[13px] font-semibold no-underline",
                 f === key ? "" : "bg-board-row text-board-text",
               )}
               style={
@@ -196,7 +192,7 @@ export default async function FeedPage({
                     {href ? (
                       <Link
                         href={href}
-                        className="flex min-h-8 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
+                        className="flex min-h-11 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
                       >
                         Открыть ›
                       </Link>
@@ -270,7 +266,6 @@ export default async function FeedPage({
           </Link>
           .
         </p>
-        <ConceptNote className="mt-3 text-[11px] leading-[15px] text-text-muted" />
       </div>
     </main>
   );

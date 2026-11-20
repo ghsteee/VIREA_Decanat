@@ -5,7 +5,6 @@ import { logout } from "@/app/login/actions";
 import { setTheme } from "./actions";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
-import { ConceptNote } from "@/components/concept-note";
 import { cn } from "@/lib/utils";
 import { PushToggle } from "@/components/push-toggle";
 import { vapidPublicKey } from "@/server/push";
@@ -161,7 +160,7 @@ export default async function ProfilePage() {
                 value={t.value}
                 aria-pressed={theme === t.value}
                 className={cn(
-                  "min-h-10 rounded-lg font-board text-[15px] font-bold uppercase tracking-[0.06em]",
+                  "min-h-11 rounded-lg font-board text-[15px] font-bold uppercase tracking-[0.06em]",
                   theme === t.value ? "bg-text text-bg" : "text-text-muted",
                 )}
               >
@@ -179,7 +178,6 @@ export default async function ProfilePage() {
             Выйти
           </button>
         </form>
-        <ConceptNote />
       </div>
     </main>
   );

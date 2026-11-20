@@ -5,7 +5,6 @@ import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
 import { VerticalRoute } from "@/components/board/vertical-route";
-import { ConceptNote } from "@/components/concept-note";
 import { STATUS_LABEL, num } from "@/server/applications";
 import { cn } from "@/lib/utils";
 
@@ -172,7 +171,6 @@ export default async function RequestsPage() {
             </li>
           ))}
         </ul>
-        <ConceptNote className="mt-4 text-[11px] leading-[15px] text-text-muted" />
       </div>
     </main>
   );

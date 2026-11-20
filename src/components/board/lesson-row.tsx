@@ -23,7 +23,7 @@ export function LessonRow({
       role="row"
       id={`lesson-${lesson.id}`}
       className={cn(
-        "grid grid-cols-[92px_minmax(0,1fr)_58px] items-center gap-2 border-t border-board-line px-0.5 py-[9px]",
+        "lesson-row grid grid-cols-[92px_minmax(0,1fr)_58px] items-center gap-2 border-t border-board-line px-0.5 py-[9px]",
         wide && wideColumns,
         s === "soon" && "bg-board-soon-row",
       )}
@@ -46,7 +46,7 @@ export function LessonRow({
         <div
           className={cn(
             "font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]",
-            details ? "[overflow-wrap:anywhere]" : "truncate",
+            "[overflow-wrap:anywhere]",
             wide && "md:text-[22px] md:leading-6",
             dim && "text-board-dim",
             s === "cancelled" && "line-through",
@@ -99,11 +99,13 @@ export function BoardHead({ wide }: { wide?: boolean } = {}) {
     <div
       role="row"
       className={cn(
-        "grid grid-cols-[92px_minmax(0,1fr)_58px] gap-2 px-0.5 py-[7px] text-[10px] font-bold uppercase tracking-[0.12em] text-board-head",
+        "lesson-head grid grid-cols-[92px_minmax(0,1fr)_58px] gap-2 px-0.5 py-[7px] text-[10px] font-bold uppercase tracking-[0.12em] text-board-head",
         wide && wideColumns,
       )}
     >
-      <span role="columnheader">Время</span>
+      <span role="columnheader">
+        Время<span className="hidden max-[399px]:inline"> / ауд.</span>
+      </span>
       <span role="columnheader">Пара · статус</span>
       <span role="columnheader" className="text-right">
         Ауд.
