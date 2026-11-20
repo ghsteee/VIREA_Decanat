@@ -21,6 +21,17 @@ verify_login() {
   return 1
 }
 
+verify_database() {
+  local attempt
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    if docker compose exec -T app node -e "fetch('http://127.0.0.1:3000/api/health', {signal: AbortSignal.timeout(4000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"; then
+      return 0
+    fi
+    sleep 3
+  done
+  return 1
+}
+
 if [[ "$(git branch --show-current)" != main || -n "$(git status --porcelain)" ]]; then
   echo "Остановлено: нужна чистая ветка main на сервере." >&2
   exit 1
@@ -50,8 +61,8 @@ image_tag="$(docker inspect --format '{{.Config.Image}}' "$container")"
 git merge --ff-only "$target"
 # Пока образ собирается, работающий контейнер остаётся на месте.
 docker compose build app
-if docker compose up -d --no-deps --no-build app && verify_login; then
-  echo "Обновлено до $(git rev-parse --short HEAD), /login ответил HTTP 200."
+if docker compose up -d --no-deps --no-build app && verify_database && verify_login; then
+  echo "Обновлено до $(git rev-parse --short HEAD), база доступна, /login ответил HTTP 200."
   docker compose ps
   exit 0
 fi

@@ -161,7 +161,7 @@ export default async function ProfilePage() {
                 value={t.value}
                 aria-pressed={theme === t.value}
                 className={cn(
-                  "min-h-10 rounded-lg font-board text-[15px] font-bold uppercase tracking-[0.06em]",
+                  "min-h-11 rounded-lg font-board text-[15px] font-bold uppercase tracking-[0.06em]",
                   theme === t.value ? "bg-text text-bg" : "text-text-muted",
                 )}
               >

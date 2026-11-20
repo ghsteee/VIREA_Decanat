@@ -2,9 +2,7 @@ import "server-only";
 import { db } from "@/server/db";
 import { staffInstituteIds } from "@/server/staff";
 
-export function demoReminderKey(id: string, version: number) {
-  return `demo-deadline:${id}:v${version}`;
-}
+export { demoReminderKey } from "@/lib/notification-keys";
 
 /** Только собственные действующие дедлайны в пределах назначенных институтов. */
 export async function demoReminderDeadlines(authorId: string, id?: string) {

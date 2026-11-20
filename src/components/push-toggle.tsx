@@ -58,7 +58,14 @@ export function PushToggle({ publicKey }: { publicKey: string | null }) {
       if (Notification.permission === "denied") return setState("denied");
       const reg = await navigator.serviceWorker.register("/sw.js");
       const sub = await reg.pushManager.getSubscription();
-      setState(sub ? "on" : "off");
+      if (!sub) return setState("off");
+      const result = await savePushSubscription(
+        sub.toJSON() as {
+          endpoint: string;
+          keys: { p256dh: string; auth: string };
+        },
+      );
+      setState(result.ok ? "on" : "error");
     })().catch(() => setState("error"));
   }, [publicKey]);
 

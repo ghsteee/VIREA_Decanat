@@ -19,9 +19,20 @@ export async function savePushSubscription(sub: Sub): Promise<{ ok: boolean }> {
     auth: sub?.keys?.auth,
   });
   if (!target) return { ok: false };
+  const endpointHash = hash(target.endpoint);
+  const existing = await db.pushSubscription.findUnique({
+    where: { endpointHash },
+  });
+  // Проверка профиля не расходует лимит повторно для уже привязанного устройства.
+  if (
+    existing?.userId === user.id &&
+    !existing.revokedAt &&
+    existing.p256dh === target.p256dh &&
+    existing.auth === target.auth
+  )
+    return { ok: true };
   const limit = await hitRateLimit(`push-subscription:${user.id}`, 20, 3600);
   if (!limit.allowed) return { ok: false };
-  const endpointHash = hash(target.endpoint);
   await db.pushSubscription.upsert({
     where: { endpointHash },
     create: {
