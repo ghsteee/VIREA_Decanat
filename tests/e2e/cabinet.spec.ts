@@ -51,6 +51,20 @@ test("S1: расписание открывается сразу после вх
   await expectMobileLayout(page);
   await page.goto("/schedule");
   await expect(page.getByRole("heading", { name: "Расписание" })).toBeVisible();
+  const lesson = await db.lesson.findFirstOrThrow({
+    where: {
+      group: { code: "БИСО-03-25" },
+      startsAt: {
+        gte: mskDayStart(mskDate()),
+        lt: mskDayStart(addDays(mskDate(), 1)),
+      },
+    },
+    include: { subject: true },
+    orderBy: { startsAt: "asc" },
+  });
+  const row = page.locator(`#lesson-${lesson.id}`);
+  await expect(row).toContainText(lesson.subject.name);
+  await expect(row).toContainText(`до ${mskTime(lesson.endsAt)}`);
   await expectMobileLayout(page);
 });
 
