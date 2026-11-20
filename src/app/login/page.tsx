@@ -42,20 +42,23 @@ export default async function LoginPage() {
   if (user) redirect(user.role === "staff" ? "/staff" : "/");
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-xl lg:grid lg:max-w-[68rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start lg:gap-6 lg:px-6 lg:py-10">
-      <div className="lg:flex lg:sticky lg:top-8 lg:min-h-[320px] lg:flex-col lg:rounded-3xl lg:bg-board lg:text-board-text">
-        <ConceptNote className="px-4 pt-4 text-xs text-text-muted lg:text-board-muted" />
-        <section className="flex flex-col items-center gap-3 px-4 py-10 lg:flex-1 lg:justify-center">
-          <BrandMark size={84} className="lg:size-28" />
-          <h1 className="font-board text-5xl font-extrabold uppercase tracking-wide lg:text-7xl">
-            Деканыч
-          </h1>
-          <p className="font-board text-sm font-bold uppercase tracking-widest text-text-muted lg:text-board-muted">
-            Цифровой деканат ВТУ ВИРЭА
-          </p>
-        </section>
-      </div>
-      <div className="lg:overflow-hidden lg:rounded-3xl">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-xl lg:grid lg:max-w-[68rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:content-start lg:items-stretch lg:gap-6 lg:px-6 lg:py-10">
+      <section
+        aria-labelledby="login-brand"
+        className="flex flex-col items-center justify-center gap-3 px-4 py-10 lg:rounded-3xl lg:bg-board lg:text-board-text"
+      >
+        <BrandMark size={84} className="lg:size-28" />
+        <h1
+          id="login-brand"
+          className="font-board text-5xl font-extrabold uppercase tracking-wide lg:text-7xl"
+        >
+          Деканыч
+        </h1>
+        <p className="font-board text-sm font-bold uppercase tracking-widest text-text-muted lg:text-board-muted">
+          Цифровой деканат ВТУ ВИРЭА
+        </p>
+      </section>
+      <div className="lg:bg-surface lg:overflow-hidden lg:rounded-3xl">
         <section className="rounded-t-3xl bg-surface px-4 py-6 text-text md:px-6 lg:px-8">
           <h2 className="mb-4 font-board text-2xl font-extrabold uppercase">
             Вход
@@ -111,6 +114,9 @@ export default async function LoginPage() {
           </section>
         ) : null}
       </div>
+      <footer className="px-4 py-4 lg:col-span-2 lg:p-0">
+        <ConceptNote />
+      </footer>
     </main>
   );
 }
