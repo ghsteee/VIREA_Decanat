@@ -153,7 +153,7 @@ export default async function FeedPage({
               href={key === "all" ? "/feed" : `/feed?f=${key}`}
               aria-current={f === key ? "true" : undefined}
               className={cn(
-                "flex h-10 flex-none items-center rounded-full px-3 text-[13px] font-semibold no-underline",
+                "flex h-11 flex-none items-center rounded-full px-3 text-[13px] font-semibold no-underline",
                 f === key ? "" : "bg-board-row text-board-text",
               )}
               style={
@@ -196,7 +196,7 @@ export default async function FeedPage({
                     {href ? (
                       <Link
                         href={href}
-                        className="flex min-h-8 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
+                        className="flex min-h-11 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
                       >
                         Открыть ›
                       </Link>

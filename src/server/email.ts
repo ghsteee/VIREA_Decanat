@@ -154,6 +154,9 @@ export async function sendEmail(message: MailMessage) {
     disableFileAccess: true,
     disableUrlAccess: true,
   });
+  // Ограничиваем всю попытку, включая DNS и медленное общение по SMTP.
+  // Попытка должна завершаться раньше аренды задания в очереди (60 секунд).
+  let deadline: ReturnType<typeof setTimeout> | undefined;
   try {
     const mail =
       "code" in message
@@ -166,14 +169,25 @@ export async function sendEmail(message: MailMessage) {
             text: `${message.title}. Подробности в кабинете:\nhttps://${config.domain}${message.path}`,
             messageId: `<${message.deliveryId}@${config.domain}>`,
           };
-    const result = await transport.sendMail({
-      ...mail,
-      from: config.from,
-      to: { address: message.to, name: "" },
-    });
+    const result = await Promise.race([
+      transport.sendMail({
+        ...mail,
+        from: config.from,
+        to: { address: message.to, name: "" },
+      }),
+      new Promise<never>((_, reject) => {
+        deadline = setTimeout(() => {
+          reject(new Error("smtp attempt timed out"));
+        }, 20_000);
+        deadline.unref();
+      }),
+    ]);
     return result.accepted.length === 1 ? "accepted" : "rejected";
   } catch (error) {
     const status = (error as { responseCode?: number }).responseCode;
     return status && status >= 500 && status < 600 ? "rejected" : "retry";
+  } finally {
+    clearTimeout(deadline);
+    transport.close();
   }
 }

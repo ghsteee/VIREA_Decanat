@@ -23,3 +23,5 @@ answers*.json
 *.tsbuildinfo
 next-env.d.ts
 *.pem
+*.dump
+backups/

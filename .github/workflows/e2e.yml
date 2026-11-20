@@ -41,7 +41,7 @@ jobs:
           npm run lint
           npm run typecheck
       - name: Модульные тесты
-        run: npx tsx --test tests/unit/*.test.ts
+        run: npm run test:unit
       - name: Подготовка тестовой базы
         run: |
           session_secret="$(openssl rand -hex 32)"
@@ -50,5 +50,12 @@ jobs:
           printf 'SESSION_SECRET=%s\nSEED_PASSWORD=%s\n' "$session_secret" "$seed_password" >> "$GITHUB_ENV"
           npm run db:deploy
       - run: npm run db:seed
+      - name: Проверка очереди на тестовой базе
+        run: npm run test:integration
+        env:
+          INTEGRATION_TEST_DATABASE: "on"
+      - name: Тестовые ключи push
+        run: |
+          node -e 'const k = require("web-push").generateVAPIDKeys(); for (const [name, value] of Object.entries({VAPID_PUBLIC_KEY:k.publicKey,VAPID_PRIVATE_KEY:k.privateKey,VAPID_SUBJECT:"mailto:test@example.test"})) { console.log("::add-mask::"+value); require("node:fs").appendFileSync(process.env.GITHUB_ENV,name+"="+value+"\n"); }'
       - run: npm run build
       - run: npm run test:e2e

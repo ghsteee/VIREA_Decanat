@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { decryptEmail, emailConfigured, sendEmail } from "@/server/email";
 import { sendPush } from "@/server/push";
 import { demoLoginEnabled } from "@/server/demo";
-import { demoReminderKey } from "@/server/demo-reminder";
+import { demoReminderKey } from "@/lib/notification-keys";
 
 const MAX_ATTEMPTS = 5;
 const LEASE_MS = 60_000;
@@ -137,8 +137,15 @@ async function deliver(id: string, leaseExpiresAt: Date) {
   }
 
   const isDemoReminder = n.eventKey.startsWith("demo-deadline:");
+  const student = user.studentProfile;
+  if (
+    n.lessonChange &&
+    (!student || n.lessonChange.lesson.groupId !== student.groupId)
+  ) {
+    await update({ status: "cancelled" });
+    return;
+  }
   if (isDemoReminder) {
-    const student = user.studentProfile;
     const deadline =
       demoLoginEnabled() && n.deadlineId && student
         ? await db.deadline.findFirst({
@@ -159,47 +166,44 @@ async function deliver(id: string, leaseExpiresAt: Date) {
       return;
     }
   }
-  if (email) {
-    const student = user.studentProfile;
-    const title = EMAIL_SUBJECTS[n.kind];
-    if (
-      !student ||
-      !email.verifiedAt ||
-      !title ||
-      n.importance !== "urgent" ||
-      (n.lessonChange && n.lessonChange.lesson.groupId !== student.groupId)
-    ) {
+  if (n.deadlineId && !isDemoReminder) {
+    if (!student) {
       await update({ status: "cancelled" });
       return;
     }
-    if (n.deadlineId && !isDemoReminder) {
-      const deadline = await db.deadline.findFirst({
-        where: {
-          id: n.deadlineId,
-          dueAt: { gt: new Date() },
-          groups: { some: { groupId: student.groupId } },
-          progress: { none: { studentId: student.id } },
-        },
-        select: { dueVersion: true },
-      });
-      const reminder =
-        n.kind === "deadline_reminder" &&
-        deadline &&
-        n.eventKey.startsWith("reminder:")
-          ? await db.deadlineReminder.findFirst({
-              where: {
-                id: n.eventKey.slice("reminder:".length),
-                deadlineId: n.deadlineId,
-                dueVersion: deadline.dueVersion,
-                status: "sent",
-              },
-              select: { id: true },
-            })
-          : null;
-      if (!deadline || (n.kind === "deadline_reminder" && !reminder)) {
-        await update({ status: "cancelled" });
-        return;
-      }
+    const deadline = await db.deadline.findFirst({
+      where: {
+        id: n.deadlineId,
+        dueAt: { gt: new Date() },
+        groups: { some: { groupId: student.groupId } },
+        progress: { none: { studentId: student.id } },
+      },
+      select: { dueVersion: true },
+    });
+    const reminder =
+      n.kind === "deadline_reminder" &&
+      deadline &&
+      n.eventKey.startsWith("reminder:")
+        ? await db.deadlineReminder.findFirst({
+            where: {
+              id: n.eventKey.slice("reminder:".length),
+              deadlineId: n.deadlineId,
+              dueVersion: deadline.dueVersion,
+              status: "sent",
+            },
+            select: { id: true },
+          })
+        : null;
+    if (!deadline || (n.kind === "deadline_reminder" && !reminder)) {
+      await update({ status: "cancelled" });
+      return;
+    }
+  }
+  if (email) {
+    const title = EMAIL_SUBJECTS[n.kind];
+    if (!student || !email.verifiedAt || !title || n.importance !== "urgent") {
+      await update({ status: "cancelled" });
+      return;
     }
     if (!emailConfigured()) {
       await update({ status: "failed", lastErrorCode: "smtp-not-configured" });

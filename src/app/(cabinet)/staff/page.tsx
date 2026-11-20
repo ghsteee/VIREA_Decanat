@@ -97,7 +97,7 @@ export default async function StaffQueuePage({
             href={href(k, sp.type)}
             aria-current={f === k ? "true" : undefined}
             className={cn(
-              "flex h-9 flex-none items-center rounded-full px-3.5 text-[13px] font-semibold no-underline",
+              "flex h-11 flex-none items-center rounded-full px-3.5 text-[13px] font-semibold no-underline",
               f === k ? "" : "bg-board-row text-board-text",
             )}
             style={
@@ -118,7 +118,7 @@ export default async function StaffQueuePage({
           href={href(f)}
           aria-current={!sp.type ? "true" : undefined}
           className={cn(
-            "flex h-9 flex-none items-center rounded-full px-3 text-[12.5px] no-underline",
+            "flex h-11 flex-none items-center rounded-full px-3 text-[12.5px] no-underline",
             !sp.type
               ? "bg-board-row font-bold text-board-text"
               : "text-board-muted",
@@ -132,7 +132,7 @@ export default async function StaffQueuePage({
             href={href(f, t.code)}
             aria-current={sp.type === t.code ? "true" : undefined}
             className={cn(
-              "flex h-9 flex-none items-center rounded-full px-3 text-[12.5px] no-underline",
+              "flex h-11 flex-none items-center rounded-full px-3 text-[12.5px] no-underline",
               sp.type === t.code
                 ? "bg-board-row font-bold text-board-text"
                 : "text-board-muted",

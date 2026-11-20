@@ -1,0 +1,21 @@
+# Только локальная база, без публичных портов приложения и Caddy.
+name: dekanych-local
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dekanych
+      POSTGRES_USER: dekanych
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?сначала выполни npm run setup:local}
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - local-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dekanych -d dekanych"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  local-db:
