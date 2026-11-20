@@ -40,6 +40,21 @@ for (const size of sizes) {
     await page.setViewportSize(size);
     if (size.width === 1366) await page.emulateMedia({ colorScheme: "dark" });
     await open(page, "/login");
+    const brand = (await page
+      .getByRole("region", { name: "Деканыч" })
+      .boundingBox())!;
+    const formPanel = (await page
+      .getByRole("heading", { name: "Вход", exact: true })
+      .locator("../..")
+      .boundingBox())!;
+    const note = (await page.getByText(/^Концепт для хакатона/).boundingBox())!;
+    expect(note.y).toBeGreaterThanOrEqual(formPanel.y + formPanel.height);
+    if (size.width >= 1024) {
+      expect(brand.y).toBe(formPanel.y);
+      expect(brand.height).toBe(formPanel.height);
+    } else {
+      expect(formPanel.y).toBeGreaterThanOrEqual(brand.y + brand.height);
+    }
     await page.getByRole("button", { name: /Студент — Данила/ }).click();
     await expect(
       page.getByRole("heading", { name: "Сегодня", exact: true }),
