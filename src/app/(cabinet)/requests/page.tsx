@@ -49,10 +49,10 @@ export default async function RequestsPage() {
   const moving = active.length - toFix;
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
+    <main className="cabinet-page flex flex-col lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:items-start lg:gap-6">
       <section
         aria-labelledby="rq-title"
-        className="flex flex-col gap-4 bg-board px-3.5 pb-3.5 pt-4 text-board-text"
+        className="min-w-0 flex flex-col gap-4 bg-board px-3.5 pb-3.5 pt-4 text-board-text md:rounded-3xl md:p-6"
       >
         <div>
           <h1
@@ -153,7 +153,7 @@ export default async function RequestsPage() {
         ) : null}
       </section>
 
-      <div className="flex flex-col px-4 pb-3 pt-4">
+      <div className="flex min-w-0 flex-col px-4 pb-3 pt-4 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
         <h2 className="mb-1 font-board text-[22px] font-extrabold uppercase leading-[26px] tracking-[0.03em]">
           Заказать
         </h2>

@@ -34,7 +34,7 @@ export default async function EditLessonPage({
   });
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[640px] flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text">
+    <main className="cabinet-page cabinet-focus flex min-h-dvh flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text md:rounded-3xl">
       <Link
         href={`/staff/schedule?group=${group.id}&date=${mskDate(lesson.startsAt)}`}
         className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted"

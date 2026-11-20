@@ -71,7 +71,7 @@ export default async function StaffQueuePage({
     `/staff?s=${s}${t ? `&type=${t}` : ""}`;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[1100px] flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text lg:px-8 lg:pt-7">
+    <main className="cabinet-page flex min-h-dvh flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text lg:px-8 lg:pt-7 md:rounded-3xl">
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em] lg:text-[46px] lg:leading-[44px]">

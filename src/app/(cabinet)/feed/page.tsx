@@ -120,10 +120,10 @@ export default async function FeedPage({
   const home = user.role === "staff" ? "/staff" : "/";
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
+    <main className="cabinet-page flex flex-col lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:items-start lg:gap-6">
       <section
         aria-labelledby="feed-title"
-        className="flex flex-col gap-3 bg-board px-3 pb-1 pt-2 text-board-text"
+        className="min-w-0 flex flex-col gap-3 bg-board px-3 pb-1 pt-2 text-board-text md:rounded-3xl md:p-6"
       >
         <Link
           href={home}
@@ -220,7 +220,7 @@ export default async function FeedPage({
         )}
       </section>
 
-      <div className="flex flex-col px-4 pb-3 pt-3.5">
+      <div className="flex min-w-0 flex-col px-4 pb-3 pt-3.5 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
         {earlier.length ? (
           <>
             <h2 className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-text-muted">

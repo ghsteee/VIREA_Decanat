@@ -45,7 +45,7 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
     <>
       <nav
         aria-label="Разделы"
-        className="fixed inset-x-[10px] bottom-[10px] z-20 grid rounded-[18px] bg-nav p-1 lg:hidden"
+        className="fixed inset-x-[10px] bottom-[calc(10px+env(safe-area-inset-bottom))] z-20 grid rounded-[18px] bg-nav p-1 md:mx-auto md:max-w-[680px] lg:hidden"
         style={{
           gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
         }}
@@ -73,7 +73,7 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
 
       <nav
         aria-label="Разделы"
-        className="fixed inset-y-0 left-0 z-20 hidden w-[92px] flex-col items-center gap-1.5 bg-[#1d1b18] py-[18px] lg:flex"
+        className="fixed inset-y-0 left-0 z-20 hidden w-[92px] flex-col items-center gap-1.5 overflow-y-auto bg-[#1d1b18] py-[18px] lg:flex"
       >
         <BrandMark size={40} alt="Деканыч" className="mb-[18px]" />
         {items.map(({ href, label, icon: Icon }) => {

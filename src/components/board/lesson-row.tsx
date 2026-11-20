@@ -4,13 +4,17 @@ import { StatusWord } from "@/components/board/status";
 import { kindLabel, type LessonView } from "@/server/queries/schedule";
 import { cn } from "@/lib/utils";
 
+const wideColumns = "md:grid-cols-[126px_minmax(0,1fr)_82px]";
+
 /** Строка табло с парой: время на плитках, название и статус, аудитория. */
 export function LessonRow({
   lesson,
   details,
+  wide,
 }: {
   lesson: LessonView;
   details?: boolean;
+  wide?: boolean;
 }) {
   const s = lesson.state.kind;
   const dim = s === "past" || s === "cancelled";
@@ -20,6 +24,7 @@ export function LessonRow({
       id={`lesson-${lesson.id}`}
       className={cn(
         "grid grid-cols-[92px_minmax(0,1fr)_58px] items-center gap-2 border-t border-board-line px-0.5 py-[9px]",
+        wide && wideColumns,
         s === "soon" && "bg-board-soon-row",
       )}
     >
@@ -31,6 +36,7 @@ export function LessonRow({
           value={lesson.start}
           label={details ? lesson.start : `${lesson.start}–${lesson.end}`}
           tone={dim ? "dim" : lesson.move ? "change" : "default"}
+          className={wide ? "md:text-[26px]" : undefined}
         />
         {details ? (
           <span className="text-[11px] text-board-muted">до {lesson.end}</span>
@@ -41,6 +47,7 @@ export function LessonRow({
           className={cn(
             "font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]",
             details ? "[overflow-wrap:anywhere]" : "truncate",
+            wide && "md:text-[22px] md:leading-6",
             dim && "text-board-dim",
             s === "cancelled" && "line-through",
           )}
@@ -87,11 +94,14 @@ export function LessonRow({
   );
 }
 
-export function BoardHead() {
+export function BoardHead({ wide }: { wide?: boolean } = {}) {
   return (
     <div
       role="row"
-      className="grid grid-cols-[92px_minmax(0,1fr)_58px] gap-2 px-0.5 py-[7px] text-[10px] font-bold uppercase tracking-[0.12em] text-board-head"
+      className={cn(
+        "grid grid-cols-[92px_minmax(0,1fr)_58px] gap-2 px-0.5 py-[7px] text-[10px] font-bold uppercase tracking-[0.12em] text-board-head",
+        wide && wideColumns,
+      )}
     >
       <span role="columnheader">Время</span>
       <span role="columnheader">Пара · статус</span>

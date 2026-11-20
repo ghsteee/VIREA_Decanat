@@ -36,14 +36,14 @@ export default async function GroupHeadPage({
   ]);
 
   return (
-    <main className="mx-auto flex max-w-[560px] flex-col gap-4 bg-board px-4 py-4 text-board-text">
+    <main className="cabinet-page flex flex-col gap-4 bg-board px-4 py-4 text-board-text md:rounded-3xl md:p-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
       <Link
         href="/profile"
-        className="flex min-h-11 items-center text-board-link"
+        className="flex min-h-11 items-center text-board-link lg:col-span-2"
       >
         ‹ Профиль
       </Link>
-      <div>
+      <div className="lg:col-span-2">
         <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-none">
           Староста
         </h1>
@@ -54,7 +54,7 @@ export default async function GroupHeadPage({
       {done === "1" ? (
         <p
           role="status"
-          className="rounded-lg bg-plate-success px-3 py-2 text-plate-ink"
+          className="rounded-lg bg-plate-success px-3 py-2 text-plate-ink lg:col-span-2"
         >
           Опубликовано.
         </p>
@@ -118,7 +118,7 @@ export default async function GroupHeadPage({
           kinds={["lesson_change", "deadline", "announcement"]}
         />
       </section>
-      <ConceptNote />
+      <ConceptNote className="lg:col-span-2" />
     </main>
   );
 }

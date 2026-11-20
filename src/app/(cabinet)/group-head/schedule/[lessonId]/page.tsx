@@ -30,7 +30,7 @@ export default async function GroupLessonPage({
   });
 
   return (
-    <main className="mx-auto flex max-w-[560px] flex-col gap-4 bg-board px-4 py-4 text-board-text">
+    <main className="cabinet-page cabinet-focus flex flex-col gap-4 bg-board px-4 py-4 text-board-text md:rounded-3xl">
       <Link
         href="/group-head"
         className="flex min-h-11 items-center text-board-link"

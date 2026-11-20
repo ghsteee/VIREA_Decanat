@@ -69,7 +69,7 @@ export default async function StudyPage() {
 
   if (!study) {
     return (
-      <main className="mx-auto max-w-[480px] bg-board px-3.5 py-5 text-board-text">
+      <main className="cabinet-page bg-board px-3.5 py-5 text-board-text md:rounded-3xl md:p-6">
         <h1 className="m-0 font-board text-[34px] font-extrabold uppercase">
           Учёба
         </h1>
@@ -81,10 +81,10 @@ export default async function StudyPage() {
     study.average !== null ? study.average.toFixed(1).replace(".", ",") : null;
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
+    <main className="cabinet-page flex flex-col lg:grid lg:grid-cols-[minmax(0,1.75fr)_minmax(280px,1fr)] lg:items-start lg:gap-6">
       <section
         aria-labelledby="st-title"
-        className="flex flex-col gap-3.5 bg-board px-3 pb-1.5 pt-4 text-board-text"
+        className="min-w-0 flex flex-col gap-3.5 bg-board px-3 pb-1.5 pt-4 text-board-text md:rounded-3xl md:p-6"
       >
         <div className="px-0.5">
           <h1
@@ -286,7 +286,7 @@ export default async function StudyPage() {
         </div>
       </section>
 
-      <div className="flex flex-col gap-3 px-4 pb-3 pt-3.5">
+      <div className="flex min-w-0 flex-col gap-3 px-4 pb-3 pt-3.5 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
         <p className="m-0 text-[12.5px] leading-[17px] text-text-muted">
           Балл — рейтинг за семестр из 100. Допуск — от 50 баллов и все
           обязательные работы; средний — по экзаменам (демо-положение ВТУ ВИРЭА,

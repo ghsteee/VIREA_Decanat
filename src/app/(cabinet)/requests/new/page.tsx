@@ -44,8 +44,8 @@ export default async function NewRequestPage({
       : null;
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
-      <section className="flex flex-col gap-3 bg-board px-3.5 pb-4 pt-2 text-board-text">
+    <main className="cabinet-page cabinet-focus flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <section className="flex flex-col gap-3 bg-board px-3.5 pb-4 pt-2 text-board-text md:rounded-3xl md:p-6">
         <Link
           href="/requests"
           className="-ml-1 flex min-h-11 items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted no-underline"
@@ -80,7 +80,7 @@ export default async function NewRequestPage({
           дирекцию.
         </p>
       </section>
-      <div className="flex flex-col gap-4 px-4 py-4">
+      <div className="flex flex-col gap-4 px-4 py-4 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
         {prev ? (
           <p className="m-0 rounded-lg border border-plate-danger p-3 text-[14px] text-danger-text">
             Прошлый раз вернули:{" "}

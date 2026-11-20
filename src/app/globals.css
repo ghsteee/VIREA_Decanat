@@ -258,3 +258,35 @@
     display: none;
   }
 }
+
+@layer components {
+  .cabinet-page {
+    width: 100%;
+    min-width: 0;
+    max-width: 30rem;
+    margin-inline: auto;
+  }
+
+  .cabinet-focus {
+    max-width: 35rem;
+  }
+
+  @media (min-width: 48rem) {
+    .cabinet-page {
+      width: calc(100% - 3rem);
+      max-width: 45rem;
+      margin-block: 1.5rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .cabinet-page {
+      max-width: 75rem;
+      margin-block: 2rem;
+    }
+
+    .cabinet-focus {
+      max-width: 54rem;
+    }
+  }
+}
