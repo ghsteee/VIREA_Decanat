@@ -8,8 +8,14 @@ test("Фон входа реагирует на указатель и учиты
   const layer = page
     .locator("svg")
     .filter({ has: page.locator("#matrix-cell") });
-  await page.mouse.move(160, 180);
-  await expect(layer).toHaveAttribute("data-active", "");
+  // При загрузке HTML уже виден до подключения обработчика указателя.
+  await expect
+    .poll(async () => {
+      await page.mouse.move(140, 180);
+      await page.mouse.move(160, 180, { steps: 3 });
+      return layer.getAttribute("data-active");
+    })
+    .toBe("");
   await expect(layer).toHaveCSS("pointer-events", "none");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(layer.locator("use").first()).toHaveCSS(
