@@ -43,7 +43,7 @@ export default async function NewRequestPage({
       : null;
 
   return (
-    <main className="cabinet-page cabinet-focus flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-6">
+    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-6">
       <section className="flex flex-col gap-3 bg-board px-3.5 pb-4 pt-2 text-board-text md:rounded-3xl md:p-6">
         <Link
           href="/requests"

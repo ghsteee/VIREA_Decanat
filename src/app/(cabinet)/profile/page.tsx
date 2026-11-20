@@ -39,7 +39,7 @@ export default async function ProfilePage() {
   const theme = prefs?.theme ?? "system";
 
   return (
-    <main className="cabinet-page flex flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-2 lg:gap-6">
       <section className="flex min-w-0 flex-col gap-3.5 bg-board px-3.5 pb-4 pt-4 text-board-text md:rounded-3xl md:p-6">
         <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]">
           Профиль

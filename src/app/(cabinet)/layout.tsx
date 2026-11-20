@@ -9,12 +9,16 @@ export default async function CabinetLayout({
   const user = await requireUser();
 
   return (
-    <div className="min-h-dvh pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-[92px] xl:pl-52">
+    <div className="cabinet-shell flex min-h-dvh flex-col pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
       <a className="skip-link" href="#cabinet-content">
         К содержанию
       </a>
       <CabinetNav role={user.role} />
-      <div id="cabinet-content" tabIndex={-1}>
+      <div
+        id="cabinet-content"
+        className="flex min-w-0 flex-1 flex-col"
+        tabIndex={-1}
+      >
         {children}
       </div>
       <footer className="cabinet-page cabinet-footer">

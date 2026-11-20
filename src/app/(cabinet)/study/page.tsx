@@ -80,7 +80,7 @@ export default async function StudyPage() {
     study.average !== null ? study.average.toFixed(1).replace(".", ",") : null;
 
   return (
-    <main className="cabinet-page flex flex-col lg:grid lg:grid-cols-[minmax(0,1.75fr)_minmax(280px,1fr)] lg:items-start lg:gap-6">
+    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1.75fr)_minmax(280px,1fr)] lg:gap-6">
       <section
         aria-labelledby="st-title"
         className="min-w-0 flex flex-col gap-3.5 bg-board px-3 pb-1.5 pt-4 text-board-text md:rounded-3xl md:p-6"

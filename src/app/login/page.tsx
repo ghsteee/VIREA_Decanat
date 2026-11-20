@@ -43,7 +43,7 @@ export default async function LoginPage() {
   if (user) redirect(user.role === "staff" ? "/staff" : "/");
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-xl lg:grid lg:max-w-[68rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:content-start lg:items-stretch lg:gap-6 lg:px-6 lg:py-10">
+    <main className="flex min-h-dvh w-full flex-col md:px-6 md:py-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:grid-rows-[1fr_auto] lg:items-stretch lg:gap-6 lg:px-6 lg:py-10">
       <section
         aria-labelledby="login-brand"
         className="relative isolate flex min-h-64 flex-col items-center justify-center overflow-hidden bg-board px-4 py-10 text-board-text lg:rounded-3xl"
