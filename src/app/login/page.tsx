@@ -2,7 +2,6 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth/session";
-import { MatrixEyes } from "./matrix-eyes";
 import { LoginForm } from "./login-form";
 import { demoLogin } from "./actions";
 import { demoLoginEnabled } from "@/server/demo";
@@ -43,11 +42,10 @@ export default async function LoginPage() {
   if (user) redirect(user.role === "staff" ? "/staff" : "/");
 
   return (
-    <main className="isolate mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-xl lg:grid lg:max-w-[68rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:content-start lg:items-stretch lg:gap-6 lg:px-6 lg:py-10">
-      <MatrixEyes />
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-xl lg:grid lg:max-w-[68rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:content-start lg:items-stretch lg:gap-6 lg:px-6 lg:py-10">
       <section
         aria-labelledby="login-brand"
-        className="flex flex-col items-center justify-center gap-3 px-4 py-10 [&>*]:relative [&>*]:z-10 lg:rounded-3xl lg:bg-board lg:text-board-text"
+        className="flex flex-col items-center justify-center gap-3 px-4 py-10 lg:rounded-3xl lg:bg-board lg:text-board-text"
       >
         <BrandMark size={84} className="lg:size-28" />
         <h1
@@ -60,7 +58,7 @@ export default async function LoginPage() {
           Цифровой деканат ВТУ ВИРЭА
         </p>
       </section>
-      <div className="relative z-10 lg:bg-surface lg:overflow-hidden lg:rounded-3xl">
+      <div className="lg:bg-surface lg:overflow-hidden lg:rounded-3xl">
         <section className="rounded-t-3xl bg-surface px-4 py-6 text-text md:px-6 lg:px-8">
           <h2 className="mb-4 font-board text-2xl font-extrabold uppercase">
             Вход
@@ -116,7 +114,7 @@ export default async function LoginPage() {
           </section>
         ) : null}
       </div>
-      <footer className="relative z-10 bg-bg px-4 py-4 lg:col-span-2 lg:p-0">
+      <footer className="px-4 py-4 lg:col-span-2 lg:p-0">
         <ConceptNote />
       </footer>
     </main>
