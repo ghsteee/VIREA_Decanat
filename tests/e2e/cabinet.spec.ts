@@ -51,6 +51,20 @@ test("S1: расписание открывается сразу после вх
   await expectMobileLayout(page);
   await page.goto("/schedule");
   await expect(page.getByRole("heading", { name: "Расписание" })).toBeVisible();
+  const lesson = await db.lesson.findFirstOrThrow({
+    where: {
+      group: { code: "БИСО-03-25" },
+      startsAt: {
+        gte: mskDayStart(mskDate()),
+        lt: mskDayStart(addDays(mskDate(), 1)),
+      },
+    },
+    include: { subject: true },
+    orderBy: { startsAt: "asc" },
+  });
+  const row = page.locator(`#lesson-${lesson.id}`);
+  await expect(row).toContainText(lesson.subject.name);
+  await expect(row).toContainText(`до ${mskTime(lesson.endsAt)}`);
   await expectMobileLayout(page);
 });
 
@@ -73,6 +87,8 @@ test("S2: перенос виден в расписании и ленте тол
     orderBy: { startsAt: "asc" },
   });
   const reason = `Перенос для проверки ${Date.now()}`;
+  const calendarPath = `/schedule/calendar/${lesson.id}`;
+  expect((await page.request.get(calendarPath)).status()).toBe(404);
   await login(page, irina);
   await page.goto(`/staff/schedule/${lesson.id}`);
   await expect(page.getByText(concept)).toBeVisible();
@@ -99,14 +115,46 @@ test("S2: перенос виден в расписании и ленте тол
   await expect(link).toBeVisible();
   await link.click();
   await expect(student.locator(`#lesson-${lesson.id}`)).toContainText(move);
+  const calendarLink = student.locator(`a[href="${calendarPath}"]`);
+  await expect(calendarLink).toBeVisible();
+  const downloadPromise = student.waitForEvent("download");
+  await calendarLink.click();
+  expect((await downloadPromise).suggestedFilename()).toBe(
+    "dekanych-lesson.ics",
+  );
+
+  const event = await student.request.get(calendarPath);
+  expect(event.ok()).toBe(true);
+  expect(event.headers()["cache-control"]).toBe("private, no-store");
+  expect(event.headers()["content-type"]).toContain("text/calendar");
+  const startsAt = new Date(`${day}T${time}:00+03:00`)
+    .toISOString()
+    .replace(/[-:]|\.\d{3}/g, "");
+  expect(await event.text()).toContain(`DTSTART:${startsAt}\r\n`);
+
   await student.goto("/feed");
   await expect(student.getByText(reason, { exact: false })).toBeVisible();
+  try {
+    await db.lesson.update({
+      where: { id: lesson.id },
+      data: { status: "cancelled" },
+    });
+    expect((await student.request.get(calendarPath)).status()).toBe(404);
+    await student.goto(`/schedule?date=${day}`);
+    await expect(calendarLink).toHaveCount(0);
+  } finally {
+    await db.lesson.update({
+      where: { id: lesson.id },
+      data: { status: "scheduled" },
+    });
+  }
   await student.close();
 
   const otherGroup = await newPage(browser, baseURL);
   await login(otherGroup, ksenia);
   await otherGroup.goto("/feed");
   await expect(otherGroup.getByText(reason, { exact: false })).toHaveCount(0);
+  expect((await otherGroup.request.get(calendarPath)).status()).toBe(404);
   await otherGroup.close();
 });
 

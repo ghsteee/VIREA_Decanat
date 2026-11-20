@@ -30,7 +30,12 @@ function calendarTime(value, params = {}) {
   }
   const [, year, month, date, hours, minutes, seconds, utc] = match;
   // Число миллисекунд на условной шкале московского местного времени.
-  return Date.UTC(+year, +month - 1, +date, +hours, +minutes, +seconds) + (utc ? moscowOffset : 0);
+  const local = Date.UTC(+year, +month - 1, +date, +hours, +minutes, +seconds);
+  const serialized = new Date(local).toISOString().replace(/[-:]|\.\d{3}Z$/g, '');
+  if (serialized !== value.slice(0, 15)) {
+    throw new Error('Календарь содержит недопустимую дату или время.');
+  }
+  return local + (utc ? moscowOffset : 0);
 }
 
 function parseEvent(block) {
@@ -49,8 +54,8 @@ function parseEvent(block) {
 }
 
 function occurrenceInWeek(event, start, weekStart) {
-  if (event.has('RECURRENCE-ID') || event.has('RDATE')) {
-    throw new Error('Календарь содержит особый перенос или дополнительную дату. Схему пробы надо обновить.');
+  if (event.has('RDATE')) {
+    throw new Error('Календарь содержит дополнительную дату. Схему пробы надо обновить.');
   }
   const rule = event.get('RRULE')?.[0]?.value;
   let occurrence = start;
@@ -79,6 +84,9 @@ function weekCards(ical, weekStart) {
   for (const [, block] of unfolded.matchAll(/^BEGIN:VEVENT\n([\s\S]*?)^END:VEVENT$/gm)) {
     const event = parseEvent(block);
     const first = name => event.get(name)?.[0];
+    if (event.has('RECURRENCE-ID')) {
+      throw new Error('Календарь содержит изменение отдельного занятия серии. Схему пробы надо обновить.');
+    }
     const start = first('DTSTART');
     if (start?.params.VALUE === 'DATE' || first('STATUS')?.value === 'CANCELLED') continue;
     const end = first('DTEND');

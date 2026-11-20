@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Flaps } from "@/components/board/flaps";
 import { StatusWord } from "@/components/board/status";
 import { kindLabel, type LessonView } from "@/server/queries/schedule";
@@ -22,27 +23,36 @@ export function LessonRow({
         s === "soon" && "bg-board-soon-row",
       )}
     >
-      <div role="cell" className="whitespace-nowrap">
+      <div
+        role="cell"
+        className="flex flex-col items-start gap-0.5 whitespace-nowrap"
+      >
         <Flaps
           value={lesson.start}
-          label={`${lesson.start}–${lesson.end}`}
+          label={details ? lesson.start : `${lesson.start}–${lesson.end}`}
           tone={dim ? "dim" : lesson.move ? "change" : "default"}
         />
+        {details ? (
+          <span className="text-[11px] text-board-muted">до {lesson.end}</span>
+        ) : null}
       </div>
       <div role="cell" className="min-w-0">
         <div
           className={cn(
-            "truncate font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]",
+            "font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]",
+            details ? "[overflow-wrap:anywhere]" : "truncate",
             dim && "text-board-dim",
             s === "cancelled" && "line-through",
           )}
         >
-          {lesson.subjectShort}
+          {details ? lesson.subject : lesson.subjectShort}
         </div>
         {details ? (
-          <div className="truncate text-[12.5px] leading-4 text-board-muted">
+          <div className="text-[12.5px] leading-4 text-board-muted [overflow-wrap:anywhere]">
             {kindLabel(lesson.kind)}
-            {lesson.teachers[0] ? ` · ${lesson.teachers[0]}` : ""}
+            {lesson.teachers.length
+              ? ` · ${lesson.teachers.map((name) => name.replace(/ (?=\S\.)/g, "\u00a0")).join(", ")}`
+              : ""}
           </div>
         ) : null}
         <StatusWord state={lesson.state} />
@@ -65,7 +75,10 @@ export function LessonRow({
       <div role="cell" className="whitespace-nowrap text-right">
         <Flaps
           value={lesson.roomFlaps}
-          label={lesson.roomLabel ?? "онлайн"}
+          label={
+            lesson.roomLabel ??
+            (lesson.roomFlaps === "ОНЛ" ? "онлайн" : "аудитория уточняется")
+          }
           size="sm"
           tone={dim ? "dim" : "default"}
         />
@@ -85,6 +98,17 @@ export function BoardHead() {
       <span role="columnheader" className="text-right">
         Ауд.
       </span>
+    </div>
+  );
+}
+
+/** Дополнительная строка под основной, на все три колонки табло. */
+export function BoardDetailRow({ children }: { children: ReactNode }) {
+  return (
+    <div role="row">
+      <div role="cell" aria-colspan={3}>
+        {children}
+      </div>
     </div>
   );
 }
