@@ -88,9 +88,23 @@ test("N3: существующая подписка привязывается �
     await page.goto("/login");
     await page.getByRole("button", { name: /Студент — Данила/ }).click();
     await expect(page).not.toHaveURL(/\/login$/);
+    await expect
+      .poll(
+        async () =>
+          (await db.pushSubscription.findFirst({ where: { endpoint } }))
+            ?.userId,
+      )
+      .toBe(danila.id);
     await page.goto("/profile");
     const toggle = page.getByRole("switch", { name: "Push-уведомления" });
     await expect(toggle).toHaveAttribute("aria-checked", "true");
+    const initialBuckets = await db.rateLimitBucket.findMany({
+      where: { key: `push-subscription:${danila.id}` },
+    });
+    const initialCount = initialBuckets.reduce(
+      (sum, bucket) => sum + bucket.count,
+      0,
+    );
     for (let reload = 0; reload < 3; reload++) {
       await page.reload();
       await expect(toggle).toHaveAttribute("aria-checked", "true");
@@ -102,11 +116,20 @@ test("N3: существующая подписка привязывается �
     const buckets = await db.rateLimitBucket.findMany({
       where: { key: `push-subscription:${danila.id}` },
     });
-    expect(buckets.reduce((sum, bucket) => sum + bucket.count, 0)).toBe(1);
+    expect(buckets.reduce((sum, bucket) => sum + bucket.count, 0)).toBe(
+      initialCount,
+    );
     await page.getByRole("button", { name: "Выйти", exact: true }).click();
     await expect(page).toHaveURL(/\/login$/);
     await page.getByRole("button", { name: /Студентка — Ксения/ }).click();
     await expect(page).not.toHaveURL(/\/login$/);
+    await expect
+      .poll(
+        async () =>
+          (await db.pushSubscription.findUnique({ where: { id: first.id } }))
+            ?.userId,
+      )
+      .toBe(ksenia.id);
     await page.goto("/profile");
     await expect(toggle).toHaveAttribute("aria-checked", "true");
     expect(
