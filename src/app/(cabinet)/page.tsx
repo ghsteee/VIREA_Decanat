@@ -80,87 +80,92 @@ export default async function TodayPage() {
     : {};
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
-      <section
-        aria-labelledby="today-title"
-        className="bg-board px-3 pb-1 pt-3 text-board-text"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 font-board text-xl font-extrabold uppercase tracking-[0.03em]">
-            <BrandMark size={26} />
-            Деканыч
-          </div>
-          <Link
-            href="/feed"
-            aria-label={unread ? `Уведомления, ${unread} новых` : "Уведомления"}
-            className="relative grid size-11 place-items-center text-board-text"
-          >
-            <Bell size={22} aria-hidden />
-            {unread ? (
-              <span className="absolute right-1.5 top-1.5 h-[18px] min-w-[18px] rounded-full bg-plate-change px-1 text-center text-[11px] font-bold leading-[18px] text-plate-ink">
-                {unread}
-              </span>
-            ) : null}
-          </Link>
-        </div>
-        <div className="flex items-end justify-between px-0.5 pb-3 pt-2">
-          <div>
-            <h1
-              id="today-title"
-              className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]"
+    <main className="cabinet-page flex flex-col lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,1fr)] lg:items-start lg:gap-6">
+      <div className="min-w-0">
+        <section
+          aria-labelledby="today-title"
+          className="min-w-0 bg-board px-3 pb-1 pt-3 text-board-text md:rounded-3xl md:p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-board text-xl font-extrabold uppercase tracking-[0.03em]">
+              <BrandMark size={26} />
+              Деканыч
+            </div>
+            <Link
+              href="/feed"
+              aria-label={
+                unread ? `Уведомления, ${unread} новых` : "Уведомления"
+              }
+              className="relative grid size-11 place-items-center text-board-text"
             >
-              Сегодня
-            </h1>
-            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
-              {weekdayShort(today)} {dayMonth(today)}
-              {week ? ` · неделя ${week.number}` : ""}
-            </p>
+              <Bell size={22} aria-hidden />
+              {unread ? (
+                <span className="absolute right-1.5 top-1.5 h-[18px] min-w-[18px] rounded-full bg-plate-change px-1 text-center text-[11px] font-bold leading-[18px] text-plate-ink">
+                  {unread}
+                </span>
+              ) : null}
+            </Link>
           </div>
-          <Flaps
-            value={mskTime(now)}
-            label={`Сейчас ${mskTime(now)}`}
-            size="lg"
-          />
-        </div>
-
-        {closest ? (
-          <div role="table" aria-label="Ближайшая пара">
-            <BoardHead />
-            <LessonRow lesson={closest} details />
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2.5 border-t border-board-line px-0.5 pb-1.5 pt-[18px] text-center">
-            <Flaps value="––:––" label="Пар нет" tone="dim" />
-            {lessons.length > 0 && (
-              <p className="font-board text-2xl font-extrabold uppercase">
-                Пар больше нет
+          <div className="flex items-end justify-between px-0.5 pb-3 pt-2">
+            <div>
+              <h1
+                id="today-title"
+                className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em] lg:text-[46px] lg:leading-[44px]"
+              >
+                Сегодня
+              </h1>
+              <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                {weekdayShort(today)} {dayMonth(today)}
+                {week ? ` · неделя ${week.number}` : ""}
               </p>
-            )}
+            </div>
+            <Flaps
+              value={mskTime(now)}
+              label={`Сейчас ${mskTime(now)}`}
+              size="lg"
+            />
           </div>
-        )}
 
-        {closest ? (
-          <Link
-            href={`/schedule?date=${closestDate}#lesson-${closest.id}`}
-            className="flex min-h-11 items-center justify-between border-t border-board-line px-0.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
-          >
-            {next ? "Всё расписание на сегодня" : "Расписание на завтра"}
-            <ChevronRight size={16} aria-hidden />
-          </Link>
-        ) : null}
-        {lessons.length === 0 && (
-          <div className="flex flex-col items-center gap-1 border-t border-board-line pb-2 pt-2 text-center">
-            <EmptyIllustration scene="today" />
-            <p className="m-0 font-board text-2xl font-extrabold uppercase">
-              Сегодня пар нет
-            </p>
-          </div>
-        )}
-      </section>
+          {closest ? (
+            <div role="table" aria-label="Ближайшая пара">
+              <BoardHead />
+              <LessonRow lesson={closest} details />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2.5 border-t border-board-line px-0.5 pb-1.5 pt-[18px] text-center">
+              <Flaps value="––:––" label="Пар нет" tone="dim" />
+              {lessons.length > 0 && (
+                <p className="font-board text-2xl font-extrabold uppercase">
+                  Пар больше нет
+                </p>
+              )}
+            </div>
+          )}
 
-      <div className="flex flex-col gap-5 px-4 pb-3 pt-4">
+          {closest ? (
+            <Link
+              href={`/schedule?date=${closestDate}#lesson-${closest.id}`}
+              className="flex min-h-11 items-center justify-between border-t border-board-line px-0.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
+            >
+              {next ? "Всё расписание на сегодня" : "Расписание на завтра"}
+              <ChevronRight size={16} aria-hidden />
+            </Link>
+          ) : null}
+          {lessons.length === 0 && (
+            <div className="flex flex-col items-center gap-1 border-t border-board-line pb-2 pt-2 text-center">
+              <EmptyIllustration scene="today" />
+              <p className="m-0 font-board text-2xl font-extrabold uppercase">
+                Сегодня пар нет
+              </p>
+            </div>
+          )}
+        </section>
+
         {changes.length > 0 && (
-          <section aria-labelledby="changes-title">
+          <section
+            aria-labelledby="changes-title"
+            className="px-4 pt-4 md:mt-5 md:rounded-3xl md:bg-surface md:p-6"
+          >
             <h2
               id="changes-title"
               className="mb-1 font-board text-[22px] font-extrabold uppercase"
@@ -190,10 +195,13 @@ export default async function TodayPage() {
             </ul>
           </section>
         )}
+      </div>
+
+      <div className="min-w-0 flex flex-col gap-5 px-4 pb-3 pt-4 md:mt-5 md:grid md:grid-cols-2 md:gap-x-6 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0 lg:flex">
         {next?.roomLabel ? (
           <Link
             href={`/schedule?date=${today}#lesson-${next.id}`}
-            className="flex h-12 items-center justify-center gap-2 rounded-[14px] bg-action font-semibold text-on-action no-underline"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-[14px] md:col-span-2 bg-action font-semibold text-on-action no-underline"
           >
             <Navigation size={18} aria-hidden />
             Как дойти до {next.roomLabel}
@@ -325,7 +333,7 @@ export default async function TodayPage() {
             Ближайшая пара: {next.subject}, {kindLabel(next.kind)}, {next.start}
           </p>
         ) : null}
-        <ConceptNote />
+        <ConceptNote className="md:col-span-2" />
       </div>
     </main>
   );

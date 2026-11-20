@@ -137,8 +137,8 @@ export default async function SchedulePage({
     `/schedule?date=${d}${v === "week" ? "&view=week" : ""}`;
 
   return (
-    <main className="mx-auto flex min-h-[calc(100dvh-88px)] max-w-[480px] flex-col bg-board text-board-text lg:min-h-dvh">
-      <header className="flex flex-col gap-3 px-3.5 pb-2.5 pt-3.5">
+    <main className="cabinet-page flex min-h-[calc(100dvh-88px)] flex-col bg-board text-board-text md:min-h-0 md:overflow-hidden md:rounded-3xl">
+      <header className="flex flex-col gap-3 px-3.5 pb-2.5 pt-3.5 md:px-6 md:pt-6">
         <div className="flex items-end justify-between gap-2">
           <div>
             <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]">
@@ -179,7 +179,7 @@ export default async function SchedulePage({
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-lg bg-board-row px-1">
+        <div className="flex items-center justify-between rounded-lg bg-board-row px-1 md:w-full md:max-w-[640px]">
           <Link
             href={link(addDays(monday, -7))}
             aria-label="Предыдущая неделя"
@@ -203,7 +203,7 @@ export default async function SchedulePage({
         </div>
         <nav
           aria-label="Дни недели"
-          className="grid grid-cols-7 items-center gap-[3px]"
+          className="grid grid-cols-7 items-center gap-[3px] md:w-full md:max-w-[640px] md:gap-2"
         >
           {days.map((d) => {
             const selected = view === "day" && d === date;
@@ -250,7 +250,7 @@ export default async function SchedulePage({
         </nav>
       </header>
 
-      <div className="flex flex-1 flex-col px-3 pb-3">
+      <div className="flex min-w-0 flex-1 flex-col px-3 pb-3 md:px-6">
         {view === "day" ? (
           <ScheduleSwipe
             previous={link(addDays(date, -1), "day")}
@@ -262,10 +262,10 @@ export default async function SchedulePage({
                 role="table"
                 aria-label={`Пары, ${weekdayFull(date)} ${dayMonth(date)}`}
               >
-                <BoardHead />
+                <BoardHead wide />
                 {lessons.map((l) => (
                   <div key={l.id} role="rowgroup">
-                    <LessonRow lesson={l} details />
+                    <LessonRow lesson={l} details wide />
                     {l.state.kind !== "cancelled" && l.state.kind !== "past" ? (
                       <BoardDetailRow>
                         <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1.5">
@@ -301,34 +301,40 @@ export default async function SchedulePage({
             ) : null}
           </ScheduleSwipe>
         ) : (
-          days.map((d) => {
-            const dayLessons = lessons.filter((l) => mskDate(l.startsAt) === d);
-            return (
-              <section
-                key={d}
-                aria-label={`${weekdayFull(d)} ${dayMonth(d)}`}
-                className="mb-2"
-              >
-                <h2 className="m-0 border-t border-board-line pt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-board-head">
-                  {weekdayFull(d)} · {dayMonth(d)}
-                  {d === today ? " · сегодня" : ""}
-                </h2>
-                <MovedOut items={movedOut.filter((move) => move.date === d)} />
-                {dayLessons.length ? (
-                  <div
-                    role="table"
-                    aria-label={`Пары, ${weekdayFull(d)} ${dayMonth(d)}`}
-                  >
-                    {dayLessons.map((l) => (
-                      <LessonRow key={l.id} lesson={l} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="py-2 text-[13px] text-board-muted">Пар нет</p>
-                )}
-              </section>
-            );
-          })
+          <div className="grid gap-x-6 lg:grid-cols-2">
+            {days.map((d) => {
+              const dayLessons = lessons.filter(
+                (l) => mskDate(l.startsAt) === d,
+              );
+              return (
+                <section
+                  key={d}
+                  aria-label={`${weekdayFull(d)} ${dayMonth(d)}`}
+                  className="mb-2"
+                >
+                  <h2 className="m-0 border-t border-board-line pt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-board-head">
+                    {weekdayFull(d)} · {dayMonth(d)}
+                    {d === today ? " · сегодня" : ""}
+                  </h2>
+                  <MovedOut
+                    items={movedOut.filter((move) => move.date === d)}
+                  />
+                  {dayLessons.length ? (
+                    <div
+                      role="table"
+                      aria-label={`Пары, ${weekdayFull(d)} ${dayMonth(d)}`}
+                    >
+                      {dayLessons.map((l) => (
+                        <LessonRow key={l.id} lesson={l} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="py-2 text-[13px] text-board-muted">Пар нет</p>
+                  )}
+                </section>
+              );
+            })}
+          </div>
         )}
 
         <div className="mt-auto flex flex-wrap gap-x-3.5 gap-y-1.5 border-t border-board-line px-0.5 pt-3 text-xs text-board-muted">

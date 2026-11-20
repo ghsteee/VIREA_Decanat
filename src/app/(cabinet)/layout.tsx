@@ -8,7 +8,7 @@ export default async function CabinetLayout({
   const user = await requireUser();
 
   return (
-    <div className="min-h-dvh pb-[88px] lg:pb-0 lg:pl-[92px]">
+    <div className="min-h-dvh pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-[92px]">
       {children}
       <CabinetNav role={user.role} />
     </div>
