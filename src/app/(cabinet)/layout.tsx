@@ -9,7 +9,7 @@ export default async function CabinetLayout({
   const user = await requireUser();
 
   return (
-    <div className="min-h-dvh pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-[92px] xl:pl-52">
+    <div className="cabinet-shell min-h-dvh pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
       <a className="skip-link" href="#cabinet-content">
         К содержанию
       </a>

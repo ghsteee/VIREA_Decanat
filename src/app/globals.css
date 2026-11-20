@@ -411,3 +411,21 @@ nav[aria-label="Разделы"] :focus-visible {
   outline-color: currentColor;
   outline-offset: -3px;
 }
+
+@media (min-width: 64rem) {
+  .cabinet-shell {
+    --sidebar-rail: 60px;
+    --sidebar-expanded: 300px;
+    --sidebar-transition: 220ms cubic-bezier(0.2, 0.75, 0.25, 1);
+    padding-inline-start: var(--sidebar-rail);
+    transition: padding-inline-start var(--sidebar-transition);
+  }
+  .cabinet-shell:has(> nav[data-open="true"]) {
+    padding-inline-start: var(--sidebar-expanded);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cabinet-shell {
+      transition: none;
+    }
+  }
+}

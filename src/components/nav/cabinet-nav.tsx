@@ -13,7 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BrandMark } from "@/components/brand-mark";
+import { DesktopSidebar, SidebarLabel } from "@/components/ui/sidebar";
 
 type Item = { href: string; label: string; icon: LucideIcon };
 
@@ -76,19 +76,7 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
         })}
       </nav>
 
-      <nav
-        aria-label="Разделы"
-        className="fixed inset-y-0 left-0 z-20 hidden w-[92px] flex-col items-center gap-1.5 overflow-y-auto bg-[#1d1b18] py-[18px] lg:flex xl:w-52 xl:items-stretch xl:px-3"
-      >
-        <div className="mb-4 flex items-center gap-3 xl:px-2">
-          <BrandMark size={40} alt="Деканыч" />
-          <span
-            aria-hidden
-            className="hidden font-board text-2xl font-bold uppercase text-[#f3f0ea] xl:inline"
-          >
-            Деканыч
-          </span>
-        </div>
+      <DesktopSidebar>
         {[...items, NOTIFICATIONS].map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (
@@ -97,18 +85,18 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
               href={href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-[60px] w-[76px] flex-col items-center justify-center gap-[3px] rounded-[14px] text-center text-[11px] no-underline xl:min-h-12 xl:w-full xl:flex-row xl:justify-start xl:gap-3 xl:px-3 xl:text-sm",
+                "no-underline",
                 active
                   ? "bg-[#f3f0ea] font-bold text-[#1d1b18]"
                   : "text-[#cfcac0]",
               )}
             >
               <Icon size={20} strokeWidth={2} aria-hidden />
-              {label}
+              <SidebarLabel>{label}</SidebarLabel>
             </Link>
           );
         })}
-      </nav>
+      </DesktopSidebar>
     </>
   );
 }
