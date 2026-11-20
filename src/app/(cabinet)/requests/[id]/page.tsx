@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import { requireOwnApplication, num, type Field } from "@/server/applications";
 import { Flaps } from "@/components/board/flaps";
 import { VerticalRoute } from "@/components/board/vertical-route";
-import { ConceptNote } from "@/components/concept-note";
 
 export const dynamic = "force-dynamic";
 
@@ -94,7 +93,6 @@ export default async function RequestPage({
               : "электронно"}
           </dd>
         </dl>
-        <ConceptNote />
       </div>
     </main>
   );

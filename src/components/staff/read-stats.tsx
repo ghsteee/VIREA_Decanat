@@ -68,7 +68,9 @@ export async function ReadStats({
             className="grid grid-cols-[minmax(0,1fr)_120px] items-center gap-3 border-t border-board-line py-2.5"
           >
             <div className="min-w-0">
-              <b className="block truncate text-[14px]">{n.title}</b>
+              <b className="block [overflow-wrap:anywhere] text-[14px]">
+                {n.title}
+              </b>
               <span className="text-[12.5px] text-board-muted">
                 {weekdayShort(mskDate(n.publishedAt))}{" "}
                 {dayMonth(mskDate(n.publishedAt))}, {mskTime(n.publishedAt)}

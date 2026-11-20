@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { requireGroupHead } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { LessonForm } from "@/components/staff/forms";
-import { ConceptNote } from "@/components/concept-note";
 import { pairByStart } from "@/lib/pairs";
 import { mskDate, mskTime } from "@/lib/time";
 import { updateGroupLesson } from "../../actions";
@@ -57,7 +56,6 @@ export default async function GroupLessonPage({
           }))}
         />
       </section>
-      <ConceptNote />
     </main>
   );
 }

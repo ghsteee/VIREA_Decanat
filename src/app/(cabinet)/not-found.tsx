@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ConceptNote } from "@/components/concept-note";
 
 export default function CabinetNotFound() {
   return (
@@ -10,7 +9,6 @@ export default function CabinetNotFound() {
       <Link href="/" className="flex min-h-11 items-center font-semibold">
         Вернуться в кабинет
       </Link>
-      <ConceptNote />
     </main>
   );
 }

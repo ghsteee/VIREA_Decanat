@@ -14,7 +14,6 @@ import {
   LessonRow,
 } from "@/components/board/lesson-row";
 import { ScheduleSwipe } from "@/components/board/schedule-swipe";
-import { ConceptNote } from "@/components/concept-note";
 import {
   dayRange,
   getAcademicWeek,
@@ -114,6 +113,12 @@ export default async function SchedulePage({
   const sp = await searchParams;
   const today = mskDate();
   const date = validDate(sp.date) ?? today;
+  const dateTitle = new Intl.DateTimeFormat("ru-RU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Europe/Moscow",
+  }).format(mskDayStart(date));
   const view = sp.view === "week" ? "week" : "day";
   const monday = weekStart(date);
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
@@ -137,11 +142,11 @@ export default async function SchedulePage({
     `/schedule?date=${d}${v === "week" ? "&view=week" : ""}`;
 
   return (
-    <main className="cabinet-page flex min-h-[calc(100dvh-88px)] flex-col bg-board text-board-text md:min-h-0 md:overflow-hidden md:rounded-3xl">
-      <header className="flex flex-col gap-3 px-3.5 pb-2.5 pt-3.5 md:px-6 md:pt-6">
-        <div className="flex items-end justify-between gap-2">
+    <main className="cabinet-page schedule-page" data-view={view}>
+      <header className="schedule-picker">
+        <div className="flex flex-wrap items-center justify-between gap-3 lg:flex-col lg:items-start">
           <div>
-            <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]">
+            <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-none tracking-[0.03em] lg:text-[46px]">
               Расписание
             </h1>
             <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
@@ -179,7 +184,7 @@ export default async function SchedulePage({
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-lg bg-board-row px-1 md:w-full md:max-w-[640px]">
+        <div className="flex items-center justify-between rounded-lg bg-board-row px-1">
           <Link
             href={link(addDays(monday, -7))}
             aria-label="Предыдущая неделя"
@@ -203,7 +208,7 @@ export default async function SchedulePage({
         </div>
         <nav
           aria-label="Дни недели"
-          className="grid grid-cols-7 items-center gap-[3px] md:w-full md:max-w-[640px] md:gap-2"
+          className="grid grid-cols-7 items-center gap-[3px] md:gap-1"
         >
           {days.map((d) => {
             const selected = view === "day" && d === date;
@@ -250,7 +255,15 @@ export default async function SchedulePage({
         </nav>
       </header>
 
-      <div className="flex min-w-0 flex-1 flex-col px-3 pb-3 md:px-6">
+      <section className="schedule-results" aria-labelledby="schedule-period">
+        <h2
+          id="schedule-period"
+          className="mb-3 font-board text-[28px] font-bold uppercase leading-tight"
+        >
+          {view === "day"
+            ? dateTitle
+            : `Неделя · ${dayMonth(monday)} — ${dayMonth(days[6])}`}
+        </h2>
         {view === "day" ? (
           <ScheduleSwipe
             previous={link(addDays(date, -1), "day")}
@@ -301,7 +314,7 @@ export default async function SchedulePage({
             ) : null}
           </ScheduleSwipe>
         ) : (
-          <div className="grid gap-x-6 lg:grid-cols-2">
+          <div className="schedule-week">
             {days.map((d) => {
               const dayLessons = lessons.filter(
                 (l) => mskDate(l.startsAt) === d,
@@ -310,9 +323,9 @@ export default async function SchedulePage({
                 <section
                   key={d}
                   aria-label={`${weekdayFull(d)} ${dayMonth(d)}`}
-                  className="mb-2"
+                  className="rounded-xl bg-board-row p-3"
                 >
-                  <h2 className="m-0 border-t border-board-line pt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-board-head">
+                  <h2 className="m-0 pb-2 text-[13px] font-bold uppercase tracking-[0.12em] text-board-head">
                     {weekdayFull(d)} · {dayMonth(d)}
                     {d === today ? " · сегодня" : ""}
                   </h2>
@@ -337,7 +350,7 @@ export default async function SchedulePage({
           </div>
         )}
 
-        <div className="mt-auto flex flex-wrap gap-x-3.5 gap-y-1.5 border-t border-board-line px-0.5 pt-3 text-xs text-board-muted">
+        <div className="mt-4 flex flex-wrap gap-x-3.5 gap-y-1.5 border-t border-board-line px-0.5 pt-3 text-xs text-board-muted">
           <span>
             <b className="font-board uppercase tracking-[0.06em] text-board-soon">
               скоро
@@ -357,10 +370,7 @@ export default async function SchedulePage({
             — пары не будет
           </span>
         </div>
-      </div>
-      <div className="bg-bg px-4 py-4">
-        <ConceptNote />
-      </div>
+      </section>
     </main>
   );
 }

@@ -4,7 +4,6 @@ import { db } from "@/server/db";
 import { staffInstituteIds } from "@/server/staff";
 import { STATUS_LABEL, num } from "@/server/applications";
 import { Flaps } from "@/components/board/flaps";
-import { ConceptNote } from "@/components/concept-note";
 import { dayMonth, mskDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { ApplicationStatus } from "@prisma/client";
@@ -71,7 +70,7 @@ export default async function StaffQueuePage({
     `/staff?s=${s}${t ? `&type=${t}` : ""}`;
 
   return (
-    <main className="cabinet-page flex min-h-dvh flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text lg:px-8 lg:pt-7 md:rounded-3xl">
+    <main className="cabinet-page flex flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text lg:px-8 lg:pt-7 md:rounded-3xl">
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em] lg:text-[46px] lg:leading-[44px]">
@@ -87,17 +86,14 @@ export default async function StaffQueuePage({
           size="lg"
         />
       </div>
-      <nav
-        aria-label="Фильтр по статусу"
-        className="-mr-4 flex gap-1.5 overflow-x-auto pr-4"
-      >
+      <nav aria-label="Фильтр по статусу" className="flex flex-wrap gap-1.5">
         {Object.entries(FILTERS).map(([k, v]) => (
           <Link
             key={k}
             href={href(k, sp.type)}
             aria-current={f === k ? "true" : undefined}
             className={cn(
-              "flex h-9 flex-none items-center rounded-full px-3.5 text-[13px] font-semibold no-underline",
+              "flex min-h-11 flex-none items-center rounded-full px-3.5 text-[13px] font-semibold no-underline",
               f === k ? "" : "bg-board-row text-board-text",
             )}
             style={
@@ -110,15 +106,12 @@ export default async function StaffQueuePage({
           </Link>
         ))}
       </nav>
-      <nav
-        aria-label="Фильтр по типу"
-        className="-mr-4 flex gap-1.5 overflow-x-auto pr-4"
-      >
+      <nav aria-label="Фильтр по типу" className="flex flex-wrap gap-1.5">
         <Link
           href={href(f)}
           aria-current={!sp.type ? "true" : undefined}
           className={cn(
-            "flex h-9 flex-none items-center rounded-full px-3 text-[12.5px] no-underline",
+            "flex min-h-11 flex-none items-center rounded-full px-3 text-[12.5px] no-underline",
             !sp.type
               ? "bg-board-row font-bold text-board-text"
               : "text-board-muted",
@@ -132,7 +125,7 @@ export default async function StaffQueuePage({
             href={href(f, t.code)}
             aria-current={sp.type === t.code ? "true" : undefined}
             className={cn(
-              "flex h-9 flex-none items-center rounded-full px-3 text-[12.5px] no-underline",
+              "flex min-h-11 flex-none items-center rounded-full px-3 text-[12.5px] no-underline",
               sp.type === t.code
                 ? "bg-board-row font-bold text-board-text"
                 : "text-board-muted",
@@ -164,7 +157,7 @@ export default async function StaffQueuePage({
                 />
               </span>
               <span role="cell" className="flex min-w-0 flex-col gap-1">
-                <span className="truncate font-board text-[18px] font-extrabold uppercase tracking-[0.03em]">
+                <span className="[overflow-wrap:anywhere] font-board text-[18px] font-extrabold uppercase tracking-[0.03em]">
                   {a.type.title}
                 </span>
                 <span
@@ -194,7 +187,7 @@ export default async function StaffQueuePage({
               </span>
               <span
                 role="cell"
-                className="col-span-2 min-w-0 truncate text-[13px] lg:col-span-1"
+                className="col-span-2 min-w-0 [overflow-wrap:anywhere] text-[13px] lg:col-span-1"
               >
                 <b>
                   {snap.lastName} {snap.firstName[0]}.
@@ -219,7 +212,6 @@ export default async function StaffQueuePage({
           </p>
         ) : null}
       </div>
-      <ConceptNote className="mt-auto text-[11px] text-board-muted" />
     </main>
   );
 }

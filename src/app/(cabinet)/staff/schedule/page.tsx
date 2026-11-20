@@ -7,7 +7,6 @@ import {
   LessonRow,
 } from "@/components/board/lesson-row";
 import { ReadStats } from "@/components/staff/read-stats";
-import { ConceptNote } from "@/components/concept-note";
 import { dayRange, getLessons } from "@/server/queries/schedule";
 import { mskDate } from "@/lib/time";
 
@@ -28,7 +27,7 @@ export default async function StaffSchedulePage({
   const lessons = group ? await getLessons(group.id, ...dayRange(date)) : [];
 
   return (
-    <main className="cabinet-page flex min-h-dvh flex-col gap-5 bg-board px-4 pb-6 pt-4 text-board-text lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.65fr)] lg:items-start lg:gap-7 lg:px-8 lg:pt-7 md:rounded-3xl">
+    <main className="cabinet-page flex flex-col gap-5 bg-board px-4 pb-6 pt-4 text-board-text lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.65fr)] lg:items-start lg:gap-7 lg:px-8 lg:pt-7 md:rounded-3xl">
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em] lg:text-[46px] lg:leading-[44px]">
@@ -109,7 +108,6 @@ export default async function StaffSchedulePage({
         </h2>
         <ReadStats authorId={user.id} kinds={["lesson_change"]} />
       </aside>
-      <ConceptNote className="text-[11px] text-board-muted lg:col-span-2" />
     </main>
   );
 }

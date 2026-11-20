@@ -7,7 +7,6 @@ import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { Flaps } from "@/components/board/flaps";
 import { BrandMark } from "@/components/brand-mark";
 import { CompactRoute } from "@/components/board/route";
-import { ConceptNote } from "@/components/concept-note";
 import { DeadlineCheck } from "@/components/deadline-check";
 import {
   dayRange,
@@ -333,7 +332,6 @@ export default async function TodayPage() {
             Ближайшая пара: {next.subject}, {kindLabel(next.kind)}, {next.start}
           </p>
         ) : null}
-        <ConceptNote className="md:col-span-2" />
       </div>
     </main>
   );

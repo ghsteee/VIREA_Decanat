@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
 import { getStudy, type SubjectStanding } from "@/server/queries/study";
 import { Flaps } from "@/components/board/flaps";
-import { ConceptNote } from "@/components/concept-note";
 import { dayMonth, mskDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
@@ -173,7 +172,7 @@ export default async function StudyPage() {
                 )}
               >
                 <div role="cell" className="min-w-0">
-                  <div className="truncate font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]">
+                  <div className="[overflow-wrap:anywhere] font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]">
                     {s.name}
                   </div>
                   {s.works.total ? (
@@ -320,7 +319,6 @@ export default async function StudyPage() {
             ))}
           </section>
         ) : null}
-        <ConceptNote />
       </div>
     </main>
   );

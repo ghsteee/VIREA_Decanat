@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const sizes = [
+  { width: 320, height: 680 },
   { width: 360, height: 640 },
   { width: 820, height: 900 },
   { width: 1024, height: 768 },
@@ -37,6 +38,7 @@ for (const size of sizes) {
     baseURL,
   }) => {
     await page.setViewportSize(size);
+    if (size.width === 1366) await page.emulateMedia({ colorScheme: "dark" });
     await open(page, "/login");
     await page.getByRole("button", { name: /Студент — Данила/ }).click();
     await expect(
@@ -70,11 +72,36 @@ for (const size of sizes) {
       await open(page, path);
     }
 
+    await open(page, "/schedule");
+    const picker = (await page.locator(".schedule-picker").boundingBox())!;
+    const results = (await page.locator(".schedule-results").boundingBox())!;
+    if (size.width >= 1024) {
+      expect(results.x).toBeGreaterThanOrEqual(picker.x + picker.width);
+    } else {
+      expect(results.y).toBeGreaterThanOrEqual(picker.y + picker.height);
+    }
+    await expect(page.getByRole("contentinfo")).toHaveCount(1);
+    for (const link of await page
+      .getByRole("navigation", { name: "Дни недели" })
+      .getByRole("link")
+      .all()) {
+      const target = (await link.boundingBox())!;
+      expect(target.height).toBeGreaterThanOrEqual(44);
+      expect(target.width).toBeGreaterThanOrEqual(size.width >= 360 ? 44 : 24);
+    }
     await open(page, "/schedule?view=week");
+    const days = page.locator(".schedule-week > section");
+    await expect(days).toHaveCount(7);
+    if (size.width >= 1024) {
+      const first = (await days.nth(0).boundingBox())!;
+      const second = (await days.nth(1).boundingBox())!;
+      expect(first.y).toBe(second.y);
+      expect(second.x).toBeGreaterThan(first.x);
+    }
     const week = page.getByRole("main");
     const box = (await week.boundingBox())!;
     expect(box.width).toBeGreaterThanOrEqual(
-      size.width >= 1024 ? 850 : size.width >= 768 ? 640 : 350,
+      size.width >= 1024 ? 850 : size.width >= 768 ? 640 : size.width - 10,
     );
 
     const staff = await browser.newPage({ baseURL, viewport: size });
