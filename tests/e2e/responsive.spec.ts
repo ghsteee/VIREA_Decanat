@@ -90,11 +90,9 @@ for (const size of sizes) {
     await open(page, "/schedule");
     const picker = (await page.locator(".schedule-picker").boundingBox())!;
     const results = (await page.locator(".schedule-results").boundingBox())!;
-    if (size.width >= 1024) {
-      expect(results.x).toBeGreaterThanOrEqual(picker.x + picker.width);
-    } else {
-      expect(results.y).toBeGreaterThanOrEqual(picker.y + picker.height);
-    }
+    expect(results.y).toBeGreaterThanOrEqual(picker.y + picker.height);
+    expect(results.x).toBe(picker.x);
+    expect(results.width).toBe(picker.width);
     await expect(page.getByRole("contentinfo")).toHaveCount(1);
     for (const link of await page
       .getByRole("navigation", { name: "Дни недели" })

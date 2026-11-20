@@ -333,8 +333,12 @@
     }
   }
   @media (min-width: 64rem) {
-    .schedule-page {
-      grid-template-columns: 23.75rem minmax(0, 1fr);
+    .schedule-picker {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+    .schedule-picker nav {
+      grid-column: 1 / -1;
     }
   }
   .skip-link {
@@ -406,17 +410,4 @@
 nav[aria-label="Разделы"] :focus-visible {
   outline-color: currentColor;
   outline-offset: -3px;
-}
-
-@media (min-width: 64rem) {
-  .schedule-page[data-view="week"] {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .schedule-page[data-view="week"] .schedule-picker {
-    grid-template-columns: minmax(14rem, 1fr) minmax(24rem, 2fr);
-    align-items: center;
-  }
-  .schedule-page[data-view="week"] .schedule-picker > :first-child {
-    grid-row: span 2;
-  }
 }

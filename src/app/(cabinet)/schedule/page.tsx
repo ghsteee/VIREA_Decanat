@@ -142,9 +142,9 @@ export default async function SchedulePage({
     `/schedule?date=${d}${v === "week" ? "&view=week" : ""}`;
 
   return (
-    <main className="cabinet-page schedule-page" data-view={view}>
+    <main className="cabinet-page schedule-page">
       <header className="schedule-picker">
-        <div className="flex flex-wrap items-center justify-between gap-3 lg:flex-col lg:items-start">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-none tracking-[0.03em] lg:text-[46px]">
               Расписание
