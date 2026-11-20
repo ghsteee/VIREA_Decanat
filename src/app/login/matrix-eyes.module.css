@@ -1,0 +1,65 @@
+.light {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  fill: var(--action);
+  shape-rendering: crispEdges;
+  mask-image: radial-gradient(circle, black 18%, transparent 70%);
+  transition: opacity 180ms ease-out;
+}
+
+.light[data-active] {
+  opacity: 0.9;
+}
+.pixels {
+  opacity: 0.36;
+}
+
+.blink,
+.lateBlink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: matrix-blink 3.8s steps(1, end) infinite paused;
+}
+.lateBlink {
+  animation-delay: -1.65s;
+  animation-duration: 4.3s;
+}
+.light[data-active] :is(.blink, .lateBlink) {
+  animation-play-state: running;
+}
+
+@keyframes matrix-blink {
+  0%,
+  88%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  89%,
+  93% {
+    transform: scaleY(0.55);
+  }
+  90% {
+    transform: scaleY(0.17);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light {
+    transition: none;
+  }
+  .blink,
+  .lateBlink {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .light {
+    display: none;
+  }
+}
