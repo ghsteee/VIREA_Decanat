@@ -5,6 +5,7 @@ import { Bell, ChevronRight, Navigation } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { Flaps } from "@/components/board/flaps";
+import { BrandSwirl } from "@/components/ui/swirl";
 import { BrandMark } from "@/components/brand-mark";
 import { CompactRoute } from "@/components/board/route";
 import { DeadlineCheck } from "@/components/deadline-check";
@@ -85,9 +86,10 @@ export default async function TodayPage() {
           aria-labelledby="today-title"
           className="min-w-0 bg-board px-3 pb-1 pt-3 text-board-text md:rounded-3xl md:p-6"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 font-board text-xl font-extrabold uppercase tracking-[0.03em]">
-              <BrandMark size={26} />
+          <div className="relative isolate grid min-h-24 place-items-center overflow-hidden rounded-xl md:min-h-32">
+            <BrandSwirl compact />
+            <div className="pointer-events-none relative flex items-center gap-2 font-board text-3xl font-extrabold uppercase tracking-[0.03em]">
+              <BrandMark size={36} />
               Деканыч
             </div>
             <Link
@@ -95,7 +97,7 @@ export default async function TodayPage() {
               aria-label={
                 unread ? `Уведомления, ${unread} новых` : "Уведомления"
               }
-              className="relative grid size-11 place-items-center text-board-text"
+              className="absolute right-2 top-2 grid size-11 place-items-center rounded-full bg-board text-board-text"
             >
               <Bell size={22} aria-hidden />
               {unread ? (

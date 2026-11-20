@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/server/auth/session";
 import { LoginForm } from "./login-form";
 import { demoLogin } from "./actions";
 import { demoLoginEnabled } from "@/server/demo";
+import { BrandSwirl } from "@/components/ui/swirl";
 import { BrandMark } from "@/components/brand-mark";
 import { ConceptNote } from "@/components/concept-note";
 
@@ -45,18 +46,21 @@ export default async function LoginPage() {
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-xl lg:grid lg:max-w-[68rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:content-start lg:items-stretch lg:gap-6 lg:px-6 lg:py-10">
       <section
         aria-labelledby="login-brand"
-        className="flex flex-col items-center justify-center gap-3 px-4 py-10 lg:rounded-3xl lg:bg-board lg:text-board-text"
+        className="relative isolate flex min-h-64 flex-col items-center justify-center overflow-hidden bg-board px-4 py-10 text-board-text lg:rounded-3xl"
       >
-        <BrandMark size={84} className="lg:size-28" />
-        <h1
-          id="login-brand"
-          className="font-board text-5xl font-extrabold uppercase tracking-wide lg:text-7xl"
-        >
-          Деканыч
-        </h1>
-        <p className="font-board text-sm font-bold uppercase tracking-widest text-text-muted lg:text-board-muted">
-          Цифровой деканат ВТУ ВИРЭА
-        </p>
+        <BrandSwirl />
+        <div className="pointer-events-none relative flex flex-col items-center gap-3">
+          <BrandMark size={84} className="lg:size-28" />
+          <h1
+            id="login-brand"
+            className="font-board text-5xl font-extrabold uppercase tracking-wide lg:text-7xl"
+          >
+            Деканыч
+          </h1>
+          <p className="font-board text-sm font-bold uppercase tracking-widest text-text-muted lg:text-board-muted">
+            Цифровой деканат ВТУ ВИРЭА
+          </p>
+        </div>
       </section>
       <div className="lg:bg-surface lg:overflow-hidden lg:rounded-3xl">
         <section className="rounded-t-3xl bg-surface px-4 py-6 text-text md:px-6 lg:px-8">
