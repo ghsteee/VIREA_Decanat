@@ -261,33 +261,48 @@
 
 @layer components {
   .cabinet-page {
-    width: 100%;
     min-width: 0;
-    max-width: 45rem;
+    width: 100%;
     margin-inline: auto;
   }
 
-  .cabinet-focus {
-    max-width: 35rem;
+  #cabinet-content {
+    container: cabinet / inline-size;
+  }
+  #cabinet-content > main {
+    flex: 1;
   }
 
   @media (min-width: 48rem) {
     .cabinet-page {
       width: calc(100% - 3rem);
-      max-width: 45rem;
-      margin-block: 1.5rem;
+      margin-block-start: 1.5rem;
     }
   }
 
-  @media (min-width: 64rem) {
-    .cabinet-page {
-      max-width: 75rem;
-      margin-block: 2rem;
-    }
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding-block: 1rem;
+    text-align: center;
+  }
 
-    .cabinet-focus {
-      max-width: 58rem;
-    }
+  .empty-art {
+    width: clamp(12rem, 54vw, 20rem);
+    max-width: 100%;
+    height: auto;
+    max-height: clamp(12rem, 46vw, 16rem);
+    object-fit: contain;
+  }
+}
+
+@container cabinet (max-width: 53rem) {
+  #cabinet-content > .cabinet-columns {
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -301,7 +316,7 @@
   .schedule-page {
     display: grid;
     gap: 1rem;
-    align-items: start;
+    grid-template-rows: auto 1fr;
   }
   .schedule-picker,
   .schedule-results {
@@ -318,13 +333,13 @@
     container-type: inline-size;
   }
   .schedule-week {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
   }
-  @container (min-width: 44rem) {
-    .schedule-week {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .schedule-week > section {
+    flex: 1 1 21.5rem;
+    min-width: 0;
   }
   @media (min-width: 48rem) {
     .schedule-picker,

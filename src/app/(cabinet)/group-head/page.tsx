@@ -35,7 +35,7 @@ export default async function GroupHeadPage({
   ]);
 
   return (
-    <main className="cabinet-page flex flex-col gap-4 bg-board px-4 py-4 text-board-text md:rounded-3xl md:p-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
+    <main className="cabinet-page cabinet-columns flex flex-col gap-4 bg-board px-4 py-4 text-board-text md:rounded-3xl md:p-6 lg:grid lg:grid-cols-2 lg:gap-x-6">
       <Link
         href="/profile"
         className="flex min-h-11 items-center text-board-link lg:col-span-2"
@@ -102,7 +102,7 @@ export default async function GroupHeadPage({
         )}
       </section>
       <section
-        className="rounded-xl bg-board-row p-4"
+        className="rounded-xl bg-board-row p-4 lg:col-span-2"
         aria-labelledby="read-title"
       >
         <h2

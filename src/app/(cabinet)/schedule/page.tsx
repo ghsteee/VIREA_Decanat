@@ -349,27 +349,6 @@ export default async function SchedulePage({
             })}
           </div>
         )}
-
-        <div className="mt-4 flex flex-wrap gap-x-3.5 gap-y-1.5 border-t border-board-line px-0.5 pt-3 text-xs text-board-muted">
-          <span>
-            <b className="font-board uppercase tracking-[0.06em] text-board-soon">
-              скоро
-            </b>{" "}
-            — меньше часа
-          </span>
-          <span>
-            <b className="font-board uppercase tracking-[0.06em] text-board-change">
-              перенос
-            </b>{" "}
-            — новое время
-          </span>
-          <span>
-            <b className="rounded-[3px] bg-plate-danger px-1 font-board uppercase tracking-[0.06em] text-white">
-              отмена
-            </b>{" "}
-            — пары не будет
-          </span>
-        </div>
       </section>
     </main>
   );

@@ -119,7 +119,7 @@ export default async function FeedPage({
   const home = user.role === "staff" ? "/staff" : "/";
 
   return (
-    <main className="cabinet-page flex flex-col lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:items-start lg:gap-6">
+    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:gap-6">
       <section
         aria-labelledby="feed-title"
         className="min-w-0 flex flex-col gap-3 bg-board px-3 pb-1 pt-2 text-board-text md:rounded-3xl md:p-6"
@@ -203,7 +203,7 @@ export default async function FeedPage({
             })}
           </ul>
         ) : (
-          <div className="flex items-center gap-2 border-t border-board-line px-0.5 py-2">
+          <div className="empty-state border-t border-board-line">
             <EmptyIllustration
               scene={f === "deadlines" ? "deadlines" : "notifications"}
             />

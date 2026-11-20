@@ -14,6 +14,16 @@ async function open(page: Page, path: string) {
   const response = await page.goto(path);
   expect(response?.ok()).toBe(true);
   await expect(page.getByRole("main")).toBeVisible();
+  const widths = await page.getByRole("main").evaluate((main) => ({
+    actual: main.getBoundingClientRect().width,
+    available: main.closest("#cabinet-content")?.clientWidth,
+    viewport: document.documentElement.clientWidth,
+  }));
+  const expected =
+    widths.available === undefined
+      ? widths.viewport
+      : widths.available - (widths.viewport >= 768 ? 48 : 0);
+  expect(Math.abs(widths.actual - expected), path).toBeLessThanOrEqual(1);
   const width = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(width, path).toBeLessThanOrEqual(page.viewportSize()!.width);
 }
@@ -74,6 +84,20 @@ for (const size of sizes) {
         boardBox.y + boardBox.height,
       );
     }
+
+    const requestsLink = page.getByRole("link", {
+      name: "Все заявки",
+      exact: true,
+    });
+    await expect(requestsLink).toHaveAttribute("href", "/requests");
+    expect((await requestsLink.boundingBox())!.height).toBeGreaterThanOrEqual(
+      44,
+    );
+    await requestsLink.focus();
+    await requestsLink.press("Enter");
+    await expect(
+      page.getByRole("heading", { name: "Заявки", exact: true }),
+    ).toBeVisible();
 
     for (const path of [
       "/schedule",

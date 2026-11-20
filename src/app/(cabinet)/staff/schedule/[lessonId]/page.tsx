@@ -33,7 +33,7 @@ export default async function EditLessonPage({
   });
 
   return (
-    <main className="cabinet-page cabinet-focus flex flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text md:rounded-3xl">
+    <main className="cabinet-page flex flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text md:rounded-3xl">
       <Link
         href={`/staff/schedule?group=${group.id}&date=${mskDate(lesson.startsAt)}`}
         className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted"

@@ -48,7 +48,7 @@ export default async function RequestsPage() {
   const moving = active.length - toFix;
 
   return (
-    <main className="cabinet-page flex flex-col lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:items-start lg:gap-6">
+    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:gap-6">
       <section
         aria-labelledby="rq-title"
         className="min-w-0 flex flex-col gap-4 bg-board px-3.5 pb-3.5 pt-4 text-board-text md:rounded-3xl md:p-6"
@@ -143,7 +143,7 @@ export default async function RequestsPage() {
           ),
         )}
         {!active.length ? (
-          <div className="flex items-center gap-2">
+          <div className="empty-state">
             <EmptyIllustration scene="requests" />
             <p className="m-0 text-[15px]">
               Заявок пока нет. Можно заказать справку и следить за её статусом.

@@ -50,7 +50,7 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
     <>
       <nav
         aria-label="Разделы"
-        className="fixed inset-x-[10px] bottom-[calc(10px+env(safe-area-inset-bottom))] z-20 grid rounded-[18px] bg-nav p-1 md:mx-auto md:max-w-[680px] lg:hidden"
+        className="fixed inset-x-[10px] bottom-[calc(10px+env(safe-area-inset-bottom))] z-20 grid rounded-[18px] bg-nav p-1 md:inset-x-6 lg:hidden"
         style={{
           gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
         }}
