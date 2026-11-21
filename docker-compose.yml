@@ -31,6 +31,7 @@ services:
       # не для всего приложения: остальные соединения проверяются обычными корневыми сертификатами.
     volumes:
       - ./deploy/certs:/certs:ro
+      - portfolio-data:/app/storage/portfolio
     depends_on:
       db:
         condition: service_healthy
@@ -66,5 +67,6 @@ services:
 
 volumes:
   db-data:
+  portfolio-data:
   caddy-data:
   caddy-config:

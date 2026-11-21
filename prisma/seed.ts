@@ -1210,6 +1210,44 @@ async function main() {
     });
   }
 
+  for (const studentId of [
+    danila.profileId,
+    ksenia.profileId,
+    marat.profileId,
+  ]) {
+    await db.portfolioItem.createMany({
+      data: [
+        {
+          studentId,
+          kind: "work",
+          title: "Проект «Расписание команды»",
+          description:
+            "Демонстрационный проект студенческого сервиса: интерфейс расписания и командных задач.",
+          occurredOn: new Date(addDays(today, -20)),
+        },
+        {
+          studentId,
+          kind: "participation",
+          title: "Участие в командном хакатоне",
+          eventName: "Демо-хакатон «Код кампуса»",
+          description:
+            "Вымышленный пример участия: работа над прототипом в составе команды.",
+          occurredOn: new Date(addDays(today, -14)),
+        },
+        {
+          studentId,
+          kind: "award",
+          award: "winner",
+          title: "Диплом победителя",
+          eventName: "Демо-хакатон «Студенческие сервисы»",
+          description:
+            "Вымышленный пример награды. Можно заменить своей записью и приложить подтверждение.",
+          occurredOn: new Date(addDays(today, -7)),
+        },
+      ],
+    });
+  }
+
   // Прошлая сессия Ксении (весна 2026): средний 4,6
   const spring = await db.academicTerm.create({
     data: {

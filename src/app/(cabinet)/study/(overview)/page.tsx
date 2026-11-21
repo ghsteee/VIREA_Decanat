@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
 import { getStudy, type SubjectStanding } from "@/server/queries/study";
 import { Flaps } from "@/components/board/flaps";
+import Link from "next/link";
 import { dayMonth, mskDate } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -95,6 +96,7 @@ export default async function StudyPage() {
               ` · сессия с ${dayMonth(study.term.sessionStartsOn)}`}
           </p>
           <p className="mt-3 text-sm">{summary(study.subjects)}</p>
+          <Link href="/study/portfolio" className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-board-row px-4 py-2 text-sm font-semibold text-board-link">Моё портфолио →</Link>
         </div>
         <dl className="grid grid-cols-3 gap-2 rounded-xl bg-board-row p-3">
           {metrics.map(([label, value]) => (
