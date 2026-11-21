@@ -104,6 +104,8 @@ for (const size of sizes) {
     for (const path of [
       "/schedule",
       "/schedule?view=week",
+      "/schedule?view=month",
+      "/schedule?view=session",
       "/study",
       "/feed",
       "/requests",

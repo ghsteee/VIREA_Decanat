@@ -32,7 +32,11 @@ export type LessonView = {
   change: { at: Date; reason: string | null; byStaff: boolean } | null;
 };
 
-const KIND = { lecture: "лекция", practice: "практика", lab: "лаба" } as const;
+const KIND = {
+  lecture: "лекция",
+  practice: "практическое занятие",
+  lab: "лабораторная работа",
+} as const;
 export const kindLabel = (k: LessonView["kind"]) => KIND[k];
 
 /** «Ясноборов И. А.» */
