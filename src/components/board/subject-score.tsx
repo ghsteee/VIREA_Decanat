@@ -1,16 +1,10 @@
 import type { SubjectStanding } from "@/server/queries/study";
 import { Flaps } from "./flaps";
 
-export function SubjectScore({
-  subject,
-  id,
-}: {
-  subject: SubjectStanding;
-  id?: string;
-}) {
+export function SubjectScore({ subject }: { subject: SubjectStanding }) {
   if (subject.status === "unpublished") return null;
   return (
-    <span id={id} className="inline-flex shrink-0 items-center gap-1">
+    <span className="inline-flex shrink-0 items-center gap-1">
       <Flaps
         value={String(subject.points)}
         size="sm"

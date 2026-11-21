@@ -21,13 +21,14 @@ test("S5: Ксения видит работы, ближайший срок и �
         el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight,
     ),
   ).toBe(true);
-  const score = trigger.getByRole("img", { name: /Рейтинг:/ });
-  await expect(score).toBeVisible();
-  const rating = await score.getAttribute("aria-label");
+  await expect(cards.getByRole("img", { name: /Рейтинг:/ })).toHaveCount(0);
+  await expect(cards).not.toContainText("/ 100");
   await trigger.click();
   const databases = page.getByRole("dialog", { name: "Базы данных" });
   await expect(databases).toContainText("Риск недопуска");
-  await expect(databases.getByRole("img", { name: rating! })).toBeVisible();
+  await expect(
+    databases.getByRole("img", { name: "Рейтинг: 48 из 100" }),
+  ).toBeVisible();
   await expect(
     databases.getByText("до 06.12", { exact: true }).first(),
   ).toBeVisible();

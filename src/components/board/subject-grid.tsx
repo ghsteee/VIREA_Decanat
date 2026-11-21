@@ -6,7 +6,6 @@ import type { SubjectStanding } from "@/server/queries/study";
 import { ActivityRings } from "./activity-rings";
 import { SubjectDetails } from "./subject-details";
 import { COVER_PATTERNS, CoverPattern } from "./cover-pattern";
-import { SubjectScore } from "./subject-score";
 
 export function SubjectGrid({ subjects }: { subjects: SubjectStanding[] }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -37,9 +36,6 @@ export function SubjectGrid({ subjects }: { subjects: SubjectStanding[] }) {
             <button
               type="button"
               aria-label={s.name}
-              aria-describedby={
-                s.status === "unpublished" ? undefined : `score-${s.subjectId}`
-              }
               aria-haspopup="dialog"
               className="study-card"
               onClick={(e) => {
@@ -52,11 +48,8 @@ export function SubjectGrid({ subjects }: { subjects: SubjectStanding[] }) {
                 <ActivityRings subject={s} />
               </div>
               <span className="study-caption">
-                <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-left">
-                  <span className="font-board text-2xl font-bold uppercase leading-tight">
-                    {s.name}
-                  </span>
-                  <SubjectScore subject={s} id={`score-${s.subjectId}`} />
+                <span className="text-left font-board text-2xl font-bold uppercase leading-tight">
+                  {s.name}
                 </span>
                 <ArrowUpRight
                   aria-hidden
