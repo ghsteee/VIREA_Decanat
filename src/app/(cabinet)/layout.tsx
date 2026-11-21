@@ -1,6 +1,6 @@
 import { requireUser } from "@/server/auth/guards";
-import { ConceptNote } from "@/components/concept-note";
 import { CabinetNav } from "@/components/nav/cabinet-nav";
+import { CabinetHeader } from "@/components/nav/cabinet-header";
 
 // Оболочка кабинета (задача 3.8): навигация, отступы под капсулу и панель.
 export default async function CabinetLayout({
@@ -9,11 +9,12 @@ export default async function CabinetLayout({
   const user = await requireUser();
 
   return (
-    <div className="cabinet-shell flex min-h-dvh flex-col pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
+    <div className="cabinet-shell flex min-h-dvh flex-col">
       <a className="skip-link" href="#cabinet-content">
         К содержанию
       </a>
       <CabinetNav role={user.role} />
+      <CabinetHeader role={user.role} />
       <div
         id="cabinet-content"
         className="flex min-w-0 flex-1 flex-col"
@@ -21,9 +22,6 @@ export default async function CabinetLayout({
       >
         {children}
       </div>
-      <footer className="cabinet-page cabinet-footer">
-        <ConceptNote />
-      </footer>
     </div>
   );
 }

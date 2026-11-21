@@ -7,10 +7,10 @@ import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { Flaps } from "@/components/board/flaps";
 import { BrandSwirl } from "@/components/ui/swirl";
 import { BrandMark } from "@/components/brand-mark";
+import { ConceptNote } from "@/components/concept-note";
 import { CompactRoute } from "@/components/board/route";
 import { DeadlineCheck } from "@/components/deadline-check";
 import {
-  dayRange,
   getAcademicWeek,
   getLessons,
   kindLabel,
@@ -43,10 +43,14 @@ export default async function TodayPage() {
   const now = new Date();
   const today = mskDate(now);
   const tomorrow = addDays(today, 1);
-  const [lessons, nextDay, week, deadlines, app, unread, changes, results] =
+  const [upcoming, week, deadlines, app, unread, changes, results] =
     await Promise.all([
-      getLessons(user.groupId, ...dayRange(today), now),
-      getLessons(user.groupId, ...dayRange(tomorrow), now),
+      getLessons(
+        user.groupId,
+        mskDayStart(today),
+        mskDayStart(addDays(today, 8)),
+        now,
+      ),
       getAcademicWeek(today),
       getWeekDeadlines(user.groupId, user.studentProfileId, now),
       getTopApplication(user.studentProfileId),
@@ -59,12 +63,20 @@ export default async function TodayPage() {
       getNewResults(user.studentProfileId, now),
     ]);
 
-  const next = lessons.find(
+  const lessons = upcoming.filter(
+    (lesson) => mskDate(lesson.startsAt) === today,
+  );
+  const closest = upcoming.find(
     (l) => l.state.kind !== "past" && l.state.kind !== "cancelled",
   );
-  const tomorrowFirst = nextDay.find((l) => l.state.kind !== "cancelled");
-  const closest = next ?? tomorrowFirst;
-  const closestDate = next ? today : tomorrow;
+  const closestDate = closest ? mskDate(closest.startsAt) : today;
+  const next = closestDate === today ? closest : undefined;
+  const closestDay =
+    closestDate === today
+      ? "Сегодня"
+      : closestDate === tomorrow
+        ? "Завтра"
+        : `${weekdayShort(closestDate)}, ${dayMonth(closestDate)}`;
   const when = (date: Date) => `${dayMonth(mskDate(date))}, ${mskTime(date)}`;
   const changeLabels = {
     moved: "Перенос",
@@ -86,10 +98,10 @@ export default async function TodayPage() {
           aria-labelledby="today-title"
           className="min-w-0 bg-board px-3 pb-1 pt-3 text-board-text md:rounded-3xl md:p-6"
         >
-          <div className="relative isolate grid min-h-24 place-items-center overflow-hidden rounded-xl md:min-h-32">
+          <div className="relative isolate grid min-h-16 place-items-center overflow-hidden rounded-xl md:min-h-20">
             <BrandSwirl compact />
-            <div className="pointer-events-none relative flex items-center gap-2 font-board text-3xl font-extrabold uppercase tracking-[0.03em]">
-              <BrandMark size={36} />
+            <div className="pointer-events-none relative flex items-center gap-2 font-board text-2xl font-extrabold uppercase tracking-[0.03em]">
+              <BrandMark size={28} />
               Деканыч
             </div>
             <Link
@@ -107,7 +119,7 @@ export default async function TodayPage() {
               ) : null}
             </Link>
           </div>
-          <div className="flex items-end justify-between px-0.5 pb-3 pt-2">
+          <div className="flex items-end justify-between gap-3 px-0.5 pb-3 pt-3">
             <div>
               <h1
                 id="today-title"
@@ -120,17 +132,29 @@ export default async function TodayPage() {
                 {week ? ` · неделя ${week.number}` : ""}
               </p>
             </div>
-            <Flaps
-              value={mskTime(now)}
-              label={`Сейчас ${mskTime(now)}`}
-              size="lg"
-            />
+            <div className="shrink-0 pb-0.5 text-right">
+              <ConceptNote className="text-[11px] font-medium text-board-muted" />
+              <p className="font-board text-xl font-bold text-board-muted">
+                Сейчас {mskTime(now)}
+              </p>
+            </div>
           </div>
 
           {closest ? (
-            <div role="table" aria-label="Ближайшая пара">
-              <BoardHead />
-              <LessonRow lesson={closest} details />
+            <div>
+              <p
+                className="border-t border-board-line px-0.5 py-2 text-xs font-bold text-board-link"
+                data-next-lesson-day
+              >
+                {closestDay} ·{" "}
+                {closest.state.kind === "now"
+                  ? "идёт сейчас"
+                  : "ближайшая пара"}
+              </p>
+              <div role="table" aria-label="Ближайшая пара">
+                <BoardHead />
+                <LessonRow lesson={closest} details />
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2.5 border-t border-board-line px-0.5 pb-1.5 pt-[18px] text-center">
@@ -148,7 +172,9 @@ export default async function TodayPage() {
               href={`/schedule?date=${closestDate}#lesson-${closest.id}`}
               className="flex min-h-11 items-center justify-between border-t border-board-line px-0.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
             >
-              {next ? "Всё расписание на сегодня" : "Расписание на завтра"}
+              {next
+                ? "Всё расписание на сегодня"
+                : `Расписание · ${closestDay.toLowerCase()}`}
               <ChevronRight size={16} aria-hidden />
             </Link>
           ) : null}
@@ -330,7 +356,25 @@ export default async function TodayPage() {
               Все заявки
             </Link>
           </section>
-        ) : null}
+        ) : (
+          <section className="flex flex-col gap-3" aria-labelledby="app-title">
+            <h2
+              id="app-title"
+              className="font-board text-[22px] font-extrabold uppercase"
+            >
+              Заявки и справки
+            </h2>
+            <p className="text-sm text-text-muted">
+              Закажи справку — данные из профиля уже подставлены.
+            </p>
+            <Link
+              href="/requests"
+              className="flex min-h-11 items-center justify-center rounded-xl bg-action px-4 py-2 font-semibold text-on-action no-underline"
+            >
+              Заказать справку
+            </Link>
+          </section>
+        )}
 
         {next ? (
           <p className="sr-only">

@@ -12,7 +12,7 @@ import { db } from "@/server/db";
 export const metadata: Metadata = {
   title: "Деканыч — цифровой деканат ВТУ ВИРЭА",
   description:
-    "Концепт для хакатона. ВТУ ВИРЭА — вымышленный вуз, прообраз — РТУ МИРЭА. Не официальный сервис.",
+    "Деканыч — учебный прототип личного кабинета студента ВТУ ВИРЭА.",
   icons: {
     icon: [{ url: "/brand/favicon-32.png", sizes: "32x32" }],
     apple: "/brand/apple-touch-icon.png",

@@ -9,6 +9,7 @@ import {
 type State =
   | "loading"
   | "unsupported"
+  | "unavailable"
   | "ios-install"
   | "denied"
   | "off"
@@ -24,6 +25,7 @@ function urlBase64ToUint8Array(base64: string) {
 
 const TEXT: Record<State, string> = {
   loading: "Проверяем…",
+  unavailable: "Push сейчас недоступен. Все уведомления есть в ленте.",
   unsupported:
     "Этот браузер не умеет push. Уведомления всё равно будут в ленте.",
   "ios-install":
@@ -42,8 +44,8 @@ export function PushToggle({ publicKey }: { publicKey: string | null }) {
 
   useEffect(() => {
     (async () => {
+      if (!publicKey) return setState("unavailable");
       if (
-        !publicKey ||
         !("serviceWorker" in navigator) ||
         !("PushManager" in window) ||
         !("Notification" in window)

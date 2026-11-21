@@ -1,0 +1,194 @@
+import { randomUUID } from "node:crypto";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { expect, test, type Page } from "@playwright/test";
+import { addDays, dayMonth, mskDate, mskDayStart } from "../../src/lib/time";
+
+const db = new PrismaClient();
+test.afterAll(() => db.$disconnect());
+async function login(page: Page, account = /Студент — Данила/) {
+  await page.goto("/login");
+  await page.getByRole("button", { name: account }).click();
+  await expect(page).not.toHaveURL(/\/login$/);
+}
+
+test("N1: предзагрузка не читает сообщение, после открытия текст сохраняется", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const user = await db.user.findUniqueOrThrow({
+    where: { login: "d.severov" },
+  });
+  const staff = await db.user.findUniqueOrThrow({
+    where: { login: "i.sokolova" },
+  });
+  const title = `Сообщение ${randomUUID()}`;
+  const body = `Полный текст для повторного чтения ${randomUUID()}`;
+  const announcement = await db.announcement.create({
+    data: { title, body, authorId: staff.id, authorRole: "staff" },
+  });
+  const notice = await db.notification.create({
+    data: {
+      kind: "announcement",
+      title,
+      body,
+      announcementId: announcement.id,
+      eventKey: `test:${randomUUID()}`,
+      recipients: { create: { userId: user.id } },
+    },
+    include: { recipients: true },
+  });
+  try {
+    await login(page);
+    expect((await page.request.get("/feed?f=announcements")).ok()).toBe(true);
+    expect(
+      (
+        await db.notificationRecipient.findUniqueOrThrow({
+          where: { id: notice.recipients[0].id },
+        })
+      ).readAt,
+    ).toBeNull();
+    await page.goto("/feed?f=announcements");
+    await expect(page.getByText(body, { exact: true })).toBeVisible();
+    await expect
+      .poll(async () =>
+        Boolean(
+          (
+            await db.notificationRecipient.findUniqueOrThrow({
+              where: { id: notice.recipients[0].id },
+            })
+          ).readAt,
+        ),
+      )
+      .toBe(true);
+    await page.reload();
+    await expect(page.getByText(body, { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("main").locator('img[src*="empty-notifications"]'),
+    ).toHaveCount(0);
+    const other = await browser.newPage({ baseURL });
+    try {
+      await login(other, /Студентка — Ксения/);
+      await other.goto("/feed?f=announcements");
+      await expect(other.getByText(body, { exact: true })).toHaveCount(0);
+    } finally {
+      await other.close();
+    }
+  } finally {
+    await db.announcement.delete({ where: { id: announcement.id } });
+  }
+});
+
+test("A4: завершённая заявка доступна в истории только своему студенту", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const user = await db.user.findUniqueOrThrow({
+    where: { login: "d.severov" },
+    include: { studentProfile: true },
+  });
+  const template = await db.application.findFirstOrThrow({
+    where: { studentId: user.studentProfile!.id },
+  });
+  const application = await db.application.create({
+    data: {
+      studentId: template.studentId,
+      typeId: template.typeId,
+      submissionGroupId: template.submissionGroupId,
+      formData: template.formData as Prisma.InputJsonValue,
+      profileSnapshot: template.profileSnapshot as Prisma.InputJsonValue,
+      deliveryMethod: "electronic",
+      status: "issued",
+    },
+  });
+  try {
+    await login(page);
+    await page.goto("/requests");
+    await expect(
+      page.locator(`a[href="/requests/${application.id}"]`),
+    ).toHaveCount(0);
+    await page.getByRole("link", { name: /^История/ }).click();
+    const row = page.locator(`a[href="/requests/${application.id}"]`);
+    await expect(row).toContainText("выдана");
+    await row.click();
+    await expect(page.getByRole("main")).toBeVisible();
+    const other = await browser.newPage({ baseURL });
+    try {
+      await login(other, /Студентка — Ксения/);
+      expect((await other.goto(`/requests/${application.id}`))?.status()).toBe(
+        404,
+      );
+    } finally {
+      await other.close();
+    }
+  } finally {
+    await db.application.delete({ where: { id: application.id } });
+  }
+});
+
+test("T1: ближайшая пара находится после свободных сегодня и завтра", async ({
+  page,
+}) => {
+  const user = await db.user.findUniqueOrThrow({
+    where: { login: "d.severov" },
+    include: { studentProfile: true },
+  });
+  const groupId = user.studentProfile!.groupId;
+  const next = await db.lesson.findFirstOrThrow({
+    where: {
+      groupId,
+      status: "scheduled",
+      startsAt: {
+        gte: mskDayStart(addDays(mskDate(), 2)),
+        lt: mskDayStart(addDays(mskDate(), 8)),
+      },
+    },
+    orderBy: { startsAt: "asc" },
+    include: { subject: true },
+  });
+  const earlier = await db.lesson.findMany({
+    where: {
+      groupId,
+      startsAt: { gte: mskDayStart(mskDate()), lt: next.startsAt },
+      status: "scheduled",
+    },
+    select: { id: true },
+  });
+  try {
+    await db.lesson.updateMany({
+      where: { id: { in: earlier.map((lesson) => lesson.id) } },
+      data: { status: "cancelled" },
+    });
+    await login(page);
+    await expect(
+      page.getByRole("table", { name: "Ближайшая пара" }),
+    ).toContainText(next.subject.name);
+    await expect(page.locator("[data-next-lesson-day]")).toContainText(
+      dayMonth(mskDate(next.startsAt)),
+    );
+  } finally {
+    await db.lesson.updateMany({
+      where: { id: { in: earlier.map((lesson) => lesson.id) } },
+      data: { status: "scheduled" },
+    });
+  }
+});
+
+test("P1 и X1: профиль без QR и длинной надписи, уведомления доступны", async ({
+  page,
+}) => {
+  await login(page);
+  await page.goto("/profile");
+  await expect(
+    page.getByText(/QR на проходной|Концепт для хакатона/),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Учебный прототип", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Уведомления", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/feed$/);
+});

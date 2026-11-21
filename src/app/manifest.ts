@@ -5,8 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Деканыч — цифровой деканат ВТУ ВИРЭА",
     short_name: "Деканыч",
-    description:
-      "Концепт для хакатона. ВТУ ВИРЭА — вымышленный вуз. Не официальный сервис.",
+    description: "Учебный прототип личного кабинета студента ВТУ ВИРЭА.",
     lang: "ru",
     start_url: "/",
     display: "standalone",

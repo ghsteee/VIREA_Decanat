@@ -269,8 +269,36 @@
   #cabinet-content {
     container: cabinet / inline-size;
   }
-  #cabinet-content > main {
-    flex: 1;
+  .cabinet-columns {
+    align-items: start;
+  }
+  .cabinet-columns > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cabinet-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+  @media (min-width: 48rem) {
+    .cabinet-topbar {
+      padding: 0.75rem 1.5rem;
+    }
+    .cabinet-topbar + #cabinet-content .cabinet-page {
+      margin-block-start: 0;
+    }
+  }
+  .cabinet-shell {
+    padding-bottom: calc(108px + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 64rem) {
+    .cabinet-shell {
+      padding-bottom: 1.5rem;
+    }
   }
 
   @media (min-width: 48rem) {
@@ -307,12 +335,6 @@
 }
 
 @layer components {
-  .cabinet-footer {
-    margin-block: 1rem 0;
-    border-top: 1px solid var(--border);
-    padding: 1rem clamp(1rem, 2vw, 1.5rem);
-  }
-
   .schedule-page {
     display: grid;
     gap: 1rem;

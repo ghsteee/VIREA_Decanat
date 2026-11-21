@@ -57,8 +57,10 @@ for (const size of sizes) {
       .getByRole("heading", { name: "Вход", exact: true })
       .locator("../..")
       .boundingBox())!;
-    const note = (await page.getByText(/^Концепт для хакатона/).boundingBox())!;
-    expect(note.y).toBeGreaterThanOrEqual(formPanel.y + formPanel.height);
+    await expect(
+      page.getByText("Учебный прототип", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText(/Концепт для хакатона/)).toHaveCount(0);
     if (size.width >= 1024) {
       expect(brand.y).toBe(formPanel.y);
       expect(brand.height).toBe(formPanel.height);
@@ -117,7 +119,12 @@ for (const size of sizes) {
     expect(results.y).toBeGreaterThanOrEqual(picker.y + picker.height);
     expect(results.x).toBe(picker.x);
     expect(results.width).toBe(picker.width);
-    await expect(page.getByRole("contentinfo")).toHaveCount(1);
+    await expect(page.getByRole("contentinfo")).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("banner")
+        .getByRole("link", { name: "Уведомления", exact: true }),
+    ).toBeVisible();
     for (const link of await page
       .getByRole("navigation", { name: "Дни недели" })
       .getByRole("link")

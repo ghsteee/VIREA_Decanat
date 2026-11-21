@@ -5,21 +5,6 @@ import { Pause, Play } from "lucide-react";
 import { DitheringShader } from "./dithering-shader";
 import { cn } from "@/lib/utils";
 
-// Standalone example supplied alongside the shader demo.
-export const Component = () => {
-  const [count, setCount] = useState(0);
-  return (
-    <div className={cn("flex flex-col items-center gap-4 p-4 rounded-lg")}>
-      <h1 className="text-2xl font-bold mb-2">Component Example</h1>
-      <h2 className="text-xl font-semibold">{count}</h2>
-      <div className="flex gap-2">
-        <button onClick={() => setCount(count - 1)}>-</button>
-        <button onClick={() => setCount(count + 1)}>+</button>
-      </div>
-    </div>
-  );
-};
-
 export function BrandSwirl({ compact = false }: { compact?: boolean }) {
   const [paused, setPaused] = useState(false);
   const label = paused ? "Включить анимацию" : "Приостановить анимацию";

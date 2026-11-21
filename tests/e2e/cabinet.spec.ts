@@ -13,7 +13,7 @@ const danila = /Студент — Данила/;
 const ksenia = /Студентка — Ксения/;
 const irina = /Дирекция — Ирина/;
 const marat = /Староста — Марат/;
-const concept = /Концепт для хакатона\. ВТУ ВИРЭА/;
+const concept = /Учебный прототип/;
 const db = new PrismaClient();
 
 test.afterAll(() => db.$disconnect());
