@@ -58,7 +58,7 @@ export default async function LoginPage() {
             Деканыч
           </h1>
           <p className="rounded-lg bg-board/90 px-2 py-1 text-center font-board text-sm font-bold uppercase tracking-widest text-board-text">
-            Цифровой деканат ВТУ ВИРЭА
+            Цифровой деканат
           </p>
           <ConceptNote className="rounded-full bg-board/90 px-3 py-1 text-xs font-medium text-board-muted" />
         </div>

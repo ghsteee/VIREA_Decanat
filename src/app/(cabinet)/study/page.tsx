@@ -172,7 +172,7 @@ export default async function StudyPage() {
                 )}
               >
                 <div role="cell" className="min-w-0">
-                  <div className="[overflow-wrap:anywhere] font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]">
+                  <div className="[overflow-wrap:anywhere] text-[15px] font-semibold leading-5">
                     {s.name}
                   </div>
                   {s.works.total ? (

@@ -12,7 +12,6 @@ export type LessonView = {
   start: string;
   end: string;
   subject: string;
-  subjectShort: string;
   kind: "lecture" | "practice" | "lab";
   teachers: string[];
   /** Код для плиток: «А214», «ЗАЛ», «ОНЛ» */
@@ -140,7 +139,6 @@ export async function getLessons(
       start: mskTime(l.startsAt),
       end: mskTime(l.endsAt),
       subject: l.subject.name,
-      subjectShort: l.subject.shortName ?? l.subject.name,
       kind: l.kind,
       teachers: l.teachers.map((t) => shortName(t.teacher.fullName)),
       roomFlaps:

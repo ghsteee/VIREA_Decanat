@@ -179,7 +179,7 @@ export default async function TodayPage() {
             </Link>
           ) : null}
           {lessons.length === 0 && (
-            <div className="empty-state border-t border-board-line">
+            <div className="empty-state empty-state-compact border-t border-board-line">
               <EmptyIllustration scene="today" />
               <p className="m-0 font-board text-2xl font-extrabold uppercase">
                 Сегодня пар нет
@@ -224,7 +224,7 @@ export default async function TodayPage() {
         )}
       </div>
 
-      <div className="min-w-0 flex flex-col gap-5 px-4 pb-3 pt-4 md:mt-5 md:grid md:grid-cols-2 md:gap-x-6 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0 lg:flex">
+      <div className="dashboard-cards min-w-0 flex flex-col gap-4 px-4 pb-3 pt-4 md:mt-5 md:grid md:grid-cols-2 md:gap-x-6 md:px-0 md:pt-0 lg:mt-0 lg:flex">
         {next?.roomLabel ? (
           <Link
             href={`/schedule?date=${today}#lesson-${next.id}`}
@@ -285,7 +285,7 @@ export default async function TodayPage() {
               })}
             </ul>
           ) : (
-            <div className="empty-state">
+            <div className="empty-state empty-state-compact">
               <EmptyIllustration scene="deadlines" />
               <p className="text-[14px] text-text-muted">
                 Дедлайнов на неделе нет. Можно выдохнуть.

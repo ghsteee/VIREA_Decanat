@@ -79,7 +79,7 @@ export async function getStudy(
     const ok = missingPoints === 0 && checklist.every((item) => item.done);
     return {
       subjectId: subject.id,
-      name: subject.shortName ?? subject.name,
+      name: subject.name,
       points,
       missingPoints,
       works: {

@@ -107,7 +107,7 @@ export async function updateLessonFor(
         : "room_changed";
   const oldDate = mskDate(lesson.startsAt);
   const newDate = mskDate(newStartsAt);
-  const subj = lesson.subject.shortName ?? lesson.subject.name;
+  const subj = lesson.subject.name;
   const code = (r: typeof lesson.room) =>
     r ? `${r.campus.code}-${r.number}` : "онлайн";
 

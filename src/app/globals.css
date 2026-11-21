@@ -325,6 +325,24 @@
     max-height: clamp(12rem, 46vw, 16rem);
     object-fit: contain;
   }
+  .empty-state-compact {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 1rem;
+    text-align: left;
+  }
+  .empty-state-compact .empty-art {
+    flex: none;
+    width: 6rem;
+    max-height: 5rem;
+  }
+  .dashboard-cards > section {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    background: var(--surface);
+  }
 }
 
 @container cabinet (max-width: 53rem) {
@@ -356,6 +374,7 @@
   }
   .schedule-week {
     display: flex;
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: 0.75rem;
   }

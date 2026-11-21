@@ -52,14 +52,14 @@ export function LessonRow({
       <div role="cell" className="min-w-0">
         <div
           className={cn(
-            "font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]",
+            "text-[15px] font-semibold leading-5",
             "[overflow-wrap:anywhere]",
-            wide && "md:text-[22px] md:leading-6",
+            wide && "md:text-base md:leading-6",
             dim && "text-board-dim",
             s === "cancelled" && "line-through",
           )}
         >
-          {details ? lesson.subject : lesson.subjectShort}
+          {lesson.subject}
         </div>
         {details ? (
           <div className="text-[12.5px] leading-4 text-board-muted [overflow-wrap:anywhere]">

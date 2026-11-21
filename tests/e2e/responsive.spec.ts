@@ -139,8 +139,12 @@ for (const size of sizes) {
     const days = page.locator(".schedule-week > section");
     await expect(days).toHaveCount(7);
     if (size.width >= 1024) {
-      const first = (await days.nth(0).boundingBox())!;
-      const second = (await days.nth(1).boundingBox())!;
+      const [first, second] = await days.evaluateAll((elements) =>
+        elements.slice(0, 2).map((element) => {
+          const { x, y } = element.getBoundingClientRect();
+          return { x, y };
+        }),
+      );
       expect(first.y).toBe(second.y);
       expect(second.x).toBeGreaterThan(first.x);
     }
