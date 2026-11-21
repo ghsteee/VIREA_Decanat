@@ -7,6 +7,7 @@ type Props = {
   label?: string;
   tone?: "default" | "change" | "dim";
   size?: "sm" | "md" | "lg";
+  flipOnMount?: boolean;
   className?: string;
 };
 
@@ -18,6 +19,7 @@ export function Flaps({
   label,
   tone = "default",
   size = "md",
+  flipOnMount = false,
   className,
 }: Props) {
   return (
@@ -38,8 +40,14 @@ export function Flaps({
             {ch === " " ? "" : ch}
           </span>
         ) : (
-          <span key={i} className="flap" aria-hidden>
-            {ch}
+          <span
+            key={i}
+            className="flap"
+            data-flip={flipOnMount ? ch : undefined}
+            style={flipOnMount ? { animationDelay: `${i * 28}ms` } : undefined}
+            aria-hidden
+          >
+            {flipOnMount ? <span className="flap-letter">{ch}</span> : ch}
           </span>
         ),
       )}
