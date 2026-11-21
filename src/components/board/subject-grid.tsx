@@ -1,22 +1,23 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, X } from "lucide-react";
 import type { SubjectStanding } from "@/server/queries/study";
 import { ActivityRings } from "./activity-rings";
 import { SubjectDetails } from "./subject-details";
+import { COVER_PATTERNS, CoverPattern } from "./cover-pattern";
 import { SubjectScore } from "./subject-score";
 
 export function SubjectGrid({ subjects }: { subjects: SubjectStanding[] }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [selected, setSelected] = useState<SubjectStanding | null>(null);
-  // Keep a subject's colour when its admission status changes the display order.
-  const colours = new Map(
+  // Keep a subject's pattern when its admission status changes the display order.
+  const patterns = new Map(
     subjects
       .map((s) => s.subjectId)
       .sort()
-      .map((id, i) => [id, (i * 137.508 + 155) % 360]),
+      .map((id, i) => [id, COVER_PATTERNS[i % COVER_PATTERNS.length]]),
   );
   useEffect(() => {
     if (selected && dialog.current && !dialog.current.open)
@@ -32,12 +33,7 @@ export function SubjectGrid({ subjects }: { subjects: SubjectStanding[] }) {
       </h2>
       <ul className="study-grid" aria-label="Карточки дисциплин">
         {subjects.map((s) => (
-          <li
-            key={s.subjectId}
-            style={
-              { "--subject-hue": colours.get(s.subjectId) } as CSSProperties
-            }
-          >
+          <li key={s.subjectId}>
             <button
               type="button"
               aria-label={s.name}
@@ -51,14 +47,23 @@ export function SubjectGrid({ subjects }: { subjects: SubjectStanding[] }) {
                 setSelected(s);
               }}
             >
-              <ActivityRings subject={s} />
-              <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-left">
-                <span className="font-board text-2xl font-bold uppercase leading-tight">
-                  {s.name}
+              <div className="study-cover">
+                <CoverPattern pattern={patterns.get(s.subjectId)!} />
+                <ActivityRings subject={s} />
+              </div>
+              <span className="study-caption">
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-left">
+                  <span className="font-board text-2xl font-bold uppercase leading-tight">
+                    {s.name}
+                  </span>
+                  <SubjectScore subject={s} id={`score-${s.subjectId}`} />
                 </span>
-                <SubjectScore subject={s} id={`score-${s.subjectId}`} />
+                <ArrowUpRight
+                  aria-hidden
+                  size={19}
+                  className="shrink-0 text-primary"
+                />
               </span>
-              <ArrowUpRight aria-hidden size={19} className="study-open-icon" />
             </button>
           </li>
         ))}
