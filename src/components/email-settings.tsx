@@ -30,10 +30,8 @@ function Feedback({ state }: { state: EmailActionState }) {
 }
 
 export function EmailSettings({
-  available,
   subscription,
 }: {
-  available: boolean;
   subscription: { id: string; verified: boolean } | null;
 }) {
   const [request, requestAction, requesting] = useActionState(
@@ -48,40 +46,41 @@ export function EmailSettings({
   const busy = requesting || confirming || disabling;
 
   return (
-    <div className="flex min-w-0 flex-col gap-2 border-t border-border py-2.5">
-      <b className="text-[15px]">Письма на почту</b>
+    <section
+      aria-labelledby="email-settings-title"
+      className="flex min-w-0 flex-col gap-2 border-t border-border py-2.5"
+    >
+      <h2
+        id="email-settings-title"
+        className="font-board text-[22px] font-extrabold uppercase"
+      >
+        Письма на почту
+      </h2>
       <p className="m-0 break-all text-[13px] leading-[18px] text-text-muted">
-        {!available
-          ? "Почта сейчас недоступна."
-          : subscription?.verified
-            ? "Письма включены."
-            : "Переносы, отмены и срочные дедлайны — на подтверждённую почту."}
+        {subscription?.verified
+          ? "Письма включены."
+          : "Переносы, отмены и срочные дедлайны — на подтверждённую почту."}
       </p>
-      {available && (
-        <form
-          action={requestAction}
-          className="flex flex-col items-start gap-2"
-        >
-          <label htmlFor="notification-email" className="text-sm font-semibold">
-            {subscription?.verified ? "Новый адрес" : "Адрес почты"}
-          </label>
-          <input
-            key={subscription?.id}
-            id="notification-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            maxLength={254}
-            required
-            className={inputStyle}
-          />
-          <button type="submit" className={buttonStyle} disabled={busy}>
-            {requesting ? "Отправляем…" : "Получить код"}
-          </button>
-        </form>
-      )}
+      <form action={requestAction} className="flex flex-col items-start gap-2">
+        <label htmlFor="notification-email" className="text-sm font-semibold">
+          {subscription?.verified ? "Новый адрес" : "Адрес почты"}
+        </label>
+        <input
+          key={subscription?.id}
+          id="notification-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          maxLength={254}
+          required
+          className={inputStyle}
+        />
+        <button type="submit" className={buttonStyle} disabled={busy}>
+          {requesting ? "Отправляем…" : "Получить код"}
+        </button>
+      </form>
       <Feedback state={request} />
-      {available && subscription && !subscription.verified && (
+      {subscription && !subscription.verified && (
         <form
           action={confirmAction}
           className="flex flex-col items-start gap-2"
@@ -122,6 +121,6 @@ export function EmailSettings({
         </form>
       )}
       <Feedback state={disable} />
-    </div>
+    </section>
   );
 }

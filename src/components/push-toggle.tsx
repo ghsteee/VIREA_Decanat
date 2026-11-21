@@ -6,16 +6,7 @@ import {
   savePushSubscription,
 } from "@/app/(cabinet)/profile/push-actions";
 
-type State =
-  | "loading"
-  | "unsupported"
-  | "unavailable"
-  | "ios-install"
-  | "denied"
-  | "off"
-  | "on"
-  | "busy"
-  | "error";
+type State = "loading" | "unavailable" | "off" | "on" | "busy" | "error";
 
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -25,13 +16,7 @@ function urlBase64ToUint8Array(base64: string) {
 
 const TEXT: Record<State, string> = {
   loading: "Проверяем…",
-  unavailable: "Push сейчас недоступен. Все уведомления есть в ленте.",
-  unsupported:
-    "Этот браузер не умеет push. Уведомления всё равно будут в ленте.",
-  "ios-install":
-    "На iPhone push работает после «Поделиться» → «На экран «Домой»». Открой Деканыча с экрана «Домой» и включи здесь.",
-  denied:
-    "Уведомления запрещены в настройках браузера. Разреши их для этого сайта и вернись сюда.",
+  unavailable: "",
   off: "Переносы, отмены и срочные дедлайны — сразу на телефон.",
   on: "Включено на этом устройстве.",
   busy: "Минутку…",
@@ -39,33 +24,27 @@ const TEXT: Record<State, string> = {
 };
 
 /** Push в 2 касания (S8): переключатель → разрешение браузера. */
-export function PushToggle({ publicKey }: { publicKey: string | null }) {
+export function PushToggle({ publicKey }: { publicKey: string }) {
   const [state, setState] = useState<State>("loading");
 
   useEffect(() => {
     (async () => {
-      if (!publicKey) return setState("unavailable");
       if (
         !("serviceWorker" in navigator) ||
         !("PushManager" in window) ||
         !("Notification" in window)
       ) {
-        const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-        const standalone = window.matchMedia(
-          "(display-mode: standalone)",
-        ).matches;
-        setState(ios && !standalone ? "ios-install" : "unsupported");
+        setState("unavailable");
         return;
       }
-      if (Notification.permission === "denied") return setState("denied");
+      if (Notification.permission === "denied") return setState("unavailable");
       const reg = await navigator.serviceWorker.register("/sw.js");
       const sub = await reg.pushManager.getSubscription();
       setState(sub ? "on" : "off");
-    })().catch(() => setState("error"));
+    })().catch(() => setState("unavailable"));
   }, [publicKey]);
 
   async function toggle() {
-    if (!publicKey) return;
     const prev = state;
     setState("busy");
     try {
@@ -81,7 +60,7 @@ export function PushToggle({ publicKey }: { publicKey: string | null }) {
       }
       const permission = await Notification.requestPermission();
       if (permission !== "granted")
-        return setState(permission === "denied" ? "denied" : "off");
+        return setState(permission === "denied" ? "unavailable" : "off");
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
@@ -98,10 +77,19 @@ export function PushToggle({ publicKey }: { publicKey: string | null }) {
   }
 
   const canToggle = state === "on" || state === "off" || state === "error";
+  if (state === "loading" || state === "unavailable") return null;
   return (
-    <div className="flex items-start justify-between gap-3 border-t border-border py-2.5">
+    <section
+      aria-labelledby="push-settings-title"
+      className="flex items-start justify-between gap-3 border-t border-border py-2.5"
+    >
       <div className="min-w-0">
-        <b className="text-[15px]">Push на телефон</b>
+        <h2
+          id="push-settings-title"
+          className="font-board text-[22px] font-extrabold uppercase"
+        >
+          Push на телефон
+        </h2>
         <p
           className="m-0 text-[13px] leading-[18px] text-text-muted"
           aria-live="polite"
@@ -125,6 +113,6 @@ export function PushToggle({ publicKey }: { publicKey: string | null }) {
           className={`absolute top-3 size-5 rounded-full bg-surface transition-[left] ${state === "on" ? "left-[30px]" : "left-[8px]"}`}
         />
       </button>
-    </div>
+    </section>
   );
 }

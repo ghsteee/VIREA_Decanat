@@ -55,9 +55,9 @@ function summary(subjects: SubjectStanding[]) {
 }
 
 const STATUS = {
-  admitted: { label: "допущен", cls: "text-board-ok" },
+  admitted: { label: "есть допуск", cls: "text-board-ok" },
   at_risk: { label: "риск", cls: "text-board-soon" },
-  not_admitted: { label: "не допущен", cls: "text-board-danger-text" },
+  not_admitted: { label: "нет допуска", cls: "text-board-danger-text" },
 } as const;
 
 export default async function StudyPage() {
@@ -285,13 +285,8 @@ export default async function StudyPage() {
         </div>
       </section>
 
-      <div className="flex min-w-0 flex-col gap-3 px-4 pb-3 pt-3.5 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
-        <p className="m-0 text-[12.5px] leading-[17px] text-text-muted">
-          Балл — рейтинг за семестр из 100. Допуск — от 50 баллов и все
-          обязательные работы; средний — по экзаменам (демо-положение ВТУ ВИРЭА,
-          разделы 2–4).
-        </p>
-        {study.history.length ? (
+      {study.history.length ? (
+        <div className="flex min-w-0 flex-col gap-3 px-4 pb-3 pt-3.5 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
           <section aria-labelledby="hist">
             <h2
               id="hist"
@@ -318,8 +313,8 @@ export default async function StudyPage() {
               </details>
             ))}
           </section>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </main>
   );
 }

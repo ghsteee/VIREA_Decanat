@@ -63,7 +63,7 @@ function WhereIs({ lesson }: { lesson: LessonView }) {
     <details className="ml-0.5 rounded-lg bg-board-row px-3 py-2">
       <summary className="flex min-h-11 cursor-pointer items-center gap-1.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link">
         <Navigation size={14} aria-hidden />
-        Где {lesson.roomLabel}
+        {lesson.roomLabel}
       </summary>
       <p className="m-0 text-[13.5px] leading-[19px] text-board-text">
         {lesson.room.campus}
@@ -305,13 +305,6 @@ export default async function SchedulePage({
                 Пар нет
               </p>
             )}
-            {lessons.some(
-              (l) => l.state.kind !== "past" && l.state.kind !== "cancelled",
-            ) ? (
-              <p className="mb-2 text-xs text-board-muted">
-                В календаре останется время на момент скачивания.
-              </p>
-            ) : null}
           </ScheduleSwipe>
         ) : (
           <div className="schedule-week">

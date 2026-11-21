@@ -969,10 +969,10 @@ async function main() {
     {
       format: "online",
       room: { disconnect: true },
-      onlineUrl: "https://example.org/demo-meet/english",
+      onlineUrl: null,
     },
     "Английский завтра — онлайн",
-    "Аудитория Г-312 не нужна, ссылка — в паре.",
+    "Аудитория Г-312 не нужна. Занятие пройдёт дистанционно.",
     "Ремонт в корпусе Г",
   );
 

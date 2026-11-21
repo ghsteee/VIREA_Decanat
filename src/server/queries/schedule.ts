@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import type { CalendarLesson } from "@/server/lesson-calendar";
 import { dayMonth, mskDate, mskDayStart, mskTime } from "@/lib/time";
 import type { LessonState } from "@/components/board/status";
+import { meetingLink } from "@/lib/meeting-link";
 
 export type LessonView = {
   id: string;
@@ -153,7 +154,7 @@ export async function getLessons(
             mapUrl: l.room.campus.mapUrl,
           }
         : null,
-      onlineUrl: l.onlineUrl,
+      onlineUrl: meetingLink(l.onlineUrl),
       state,
       changed: Boolean(ch),
       move,

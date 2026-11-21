@@ -99,7 +99,7 @@ export default async function TodayPage() {
           className="min-w-0 bg-board px-3 pb-1 pt-3 text-board-text md:rounded-3xl md:p-6"
         >
           <div className="relative isolate grid min-h-16 place-items-center overflow-hidden rounded-xl md:min-h-20">
-            <BrandAurora compact />
+            <BrandAurora />
             <div className="pointer-events-none relative flex items-center gap-2 font-board text-2xl font-extrabold uppercase tracking-[0.03em]">
               <BrandMark size={28} />
               Деканыч

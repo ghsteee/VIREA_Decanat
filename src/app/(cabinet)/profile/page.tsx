@@ -21,6 +21,8 @@ const THEMES = [
 
 export default async function ProfilePage() {
   const user = await requireUser();
+  const pushKey = vapidPublicKey();
+  const mailAvailable = Boolean(user.studentProfileId) && emailConfigured();
   const [profile, prefs, email] = await Promise.all([
     user.studentProfileId
       ? db.studentProfile.findUnique({
@@ -29,7 +31,7 @@ export default async function ProfilePage() {
         })
       : null,
     db.userPreferences.findUnique({ where: { userId: user.id } }),
-    user.studentProfileId
+    mailAvailable
       ? db.emailSubscription.findFirst({
           where: { userId: user.id, revokedAt: null },
           select: { id: true, verifiedAt: true },
@@ -111,26 +113,17 @@ export default async function ProfilePage() {
             Кабинет старосты <ChevronRight size={16} aria-hidden />
           </Link>
         ) : null}
-        <section aria-labelledby="ntf" className="flex flex-col gap-1">
-          <h2
-            id="ntf"
-            className="m-0 font-board text-[22px] font-extrabold uppercase leading-[26px] tracking-[0.03em]"
-          >
-            Уведомления
-          </h2>
-          <PushToggle publicKey={vapidPublicKey()} />
-          {profile && (
-            <EmailSettings
-              available={emailConfigured()}
-              subscription={
-                email && {
-                  id: email.id,
-                  verified: Boolean(email.verifiedAt),
-                }
+        {pushKey ? <PushToggle publicKey={pushKey} /> : null}
+        {mailAvailable ? (
+          <EmailSettings
+            subscription={
+              email && {
+                id: email.id,
+                verified: Boolean(email.verifiedAt),
               }
-            />
-          )}
-        </section>
+            }
+          />
+        ) : null}
 
         <section aria-labelledby="thm">
           <h2

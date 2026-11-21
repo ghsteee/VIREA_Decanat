@@ -192,3 +192,62 @@ test("P1 и X1: профиль без QR и длинной надписи, ув�
     .click();
   await expect(page).toHaveURL(/\/feed$/);
 });
+
+test("P3: без настроенных каналов остаются рабочие настройки профиля и лента", async ({
+  page,
+}) => {
+  test.skip(
+    Boolean(process.env.SMTP_HOST || process.env.VAPID_PUBLIC_KEY),
+    "Сценарий предназначен для среды без внешних каналов",
+  );
+  await page.goto("/login");
+  await expect(
+    page.getByRole("region", { name: "Деканыч" }).getByRole("button"),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: /Студент — Данила/ }).click();
+  await expect(page).not.toHaveURL(/\/login$/);
+  await expect(page.getByRole("button", { name: /анимаци/ })).toHaveCount(0);
+  await page.goto("/profile");
+  await expect(
+    page.getByRole("heading", { name: /Push на телефон|Письма на почту/ }),
+  ).toHaveCount(0);
+  await expect(page.getByText(/сейчас недоступ/)).toHaveCount(0);
+  await page.getByRole("button", { name: "Тёмная", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByRole("button", { name: "Как система", exact: true }).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Уведомления" })
+    .click();
+  await expect(page).toHaveURL(/\/feed$/);
+  await expect(page.getByText(/Важное дублируем/)).toHaveCount(0);
+});
+
+test("R4: старая демо-ссылка встречи не показывается, экспорт пары работает", async ({
+  page,
+}) => {
+  const lesson = await db.lesson.findFirstOrThrow({
+    where: { group: { code: "БИСО-03-25" }, format: "online" },
+  });
+  try {
+    await db.lesson.update({
+      where: { id: lesson.id },
+      data: { onlineUrl: "https://example.org/demo-meet/english" },
+    });
+    await login(page);
+    await page.goto(`/schedule?date=${mskDate(lesson.startsAt)}`);
+    await expect(page.locator(`#lesson-${lesson.id}`)).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Подключиться", exact: true }),
+    ).toHaveCount(0);
+    const exported = await page.request.get(`/schedule/calendar/${lesson.id}`);
+    expect(exported.status()).toBe(200);
+    expect(await exported.text()).toContain("BEGIN:VEVENT");
+  } finally {
+    await db.lesson.update({
+      where: { id: lesson.id },
+      data: { onlineUrl: lesson.onlineUrl },
+    });
+  }
+});
