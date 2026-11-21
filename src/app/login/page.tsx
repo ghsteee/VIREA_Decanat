@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/server/auth/session";
 import { LoginForm } from "./login-form";
 import { demoLogin } from "./actions";
 import { demoLoginEnabled } from "@/server/demo";
-import { BrandSwirl } from "@/components/ui/swirl";
+import { BrandAurora } from "@/components/brand-aurora";
 import { BrandMark } from "@/components/brand-mark";
 import { ConceptNote } from "@/components/concept-note";
 
@@ -48,7 +48,7 @@ export default async function LoginPage() {
         aria-labelledby="login-brand"
         className="relative isolate flex min-h-44 flex-col items-center justify-center overflow-hidden bg-board px-4 py-6 text-board-text lg:rounded-3xl lg:py-10"
       >
-        <BrandSwirl />
+        <BrandAurora />
         <div className="pointer-events-none relative flex flex-col items-center gap-3">
           <BrandMark size={56} className="lg:size-28" />
           <h1
