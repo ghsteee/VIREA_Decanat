@@ -14,6 +14,8 @@ import {
   LessonRow,
 } from "@/components/board/lesson-row";
 import { ScheduleSwipe } from "@/components/board/schedule-swipe";
+import { LessonBreak } from "@/components/board/lesson-break";
+import { lessonBreaks } from "@/lib/lesson-breaks";
 import {
   dayRange,
   getAcademicWeek,
@@ -140,6 +142,7 @@ export default async function SchedulePage({
 
   const link = (d: string, v = view) =>
     `/schedule?date=${d}${v === "week" ? "&view=week" : ""}`;
+  const breaks = view === "day" ? lessonBreaks(lessons) : null;
 
   return (
     <main className="cabinet-page schedule-page">
@@ -278,6 +281,7 @@ export default async function SchedulePage({
                 <BoardHead wide />
                 {lessons.map((l) => (
                   <div key={l.id} role="rowgroup">
+                    <LessonBreak gap={breaks?.get(l.id)} />
                     <LessonRow lesson={l} details wide />
                     {l.state.kind !== "cancelled" && l.state.kind !== "past" ? (
                       <BoardDetailRow>
@@ -312,6 +316,7 @@ export default async function SchedulePage({
               const dayLessons = lessons.filter(
                 (l) => mskDate(l.startsAt) === d,
               );
+              const dayBreaks = lessonBreaks(dayLessons);
               return (
                 <section
                   key={d}
@@ -331,7 +336,10 @@ export default async function SchedulePage({
                       aria-label={`Пары, ${weekdayFull(d)} ${dayMonth(d)}`}
                     >
                       {dayLessons.map((l) => (
-                        <LessonRow key={l.id} lesson={l} />
+                        <div key={l.id} role="rowgroup">
+                          <LessonBreak gap={dayBreaks.get(l.id)} />
+                          <LessonRow lesson={l} />
+                        </div>
                       ))}
                     </div>
                   ) : (

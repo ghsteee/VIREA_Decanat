@@ -492,6 +492,9 @@ nav[aria-label="Разделы"] :focus-visible {
   );
   filter: blur(18px);
   transform: rotate(-14deg);
+  --aurora-angle: -14deg;
+  animation: aurora-flow 12s ease-in-out infinite alternate;
+  animation-delay: -3s;
   translate: var(--aurora-x, 0px) var(--aurora-y, 0px);
   transition: translate 450ms ease-out;
 }
@@ -501,6 +504,9 @@ nav[aria-label="Разделы"] :focus-visible {
   height: 45%;
   opacity: 0.7;
   transform: rotate(16deg);
+  --aurora-angle: 16deg;
+  animation-duration: 16s;
+  animation-delay: -9s;
   background: linear-gradient(
     100deg,
     transparent 12%,
@@ -514,9 +520,20 @@ nav[aria-label="Разделы"] :focus-visible {
   top: 58%;
   height: 28%;
   opacity: 0.55;
+  animation-duration: 20s;
+  animation-delay: -14s;
+}
+@keyframes aurora-flow {
+  from {
+    transform: translate3d(-6%, -12%, 0) rotate(var(--aurora-angle)) scale(0.95, 0.75);
+  }
+  to {
+    transform: translate3d(8%, 18%, 0) rotate(calc(var(--aurora-angle) + 10deg)) scale(1.12, 1.4);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-aurora-band {
+    animation: none;
     translate: none;
     transition: none;
   }
