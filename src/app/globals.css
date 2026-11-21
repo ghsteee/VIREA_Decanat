@@ -47,8 +47,8 @@
 
   --nav: #1d1b18;
   --nav-text: #cfcac0;
-  --nav-active: #f3f0ea;
-  --nav-active-text: #1d1b18;
+  --nav-active: var(--board);
+  --nav-active-text: var(--board-text);
 
   --font-body: "Onest", system-ui, sans-serif;
   --font-board: "Sofia Sans Extra Condensed", "Onest", sans-serif;
@@ -87,8 +87,8 @@
   --board-danger-text: #f8b6ba;
   --nav: #f3f0ea;
   --nav-text: #5e5a53;
-  --nav-active: #1d1b18;
-  --nav-active-text: #f3f0ea;
+  --nav-active: var(--board);
+  --nav-active-text: var(--board-text);
   color-scheme: dark;
 }
 
@@ -125,8 +125,8 @@
     --board-danger-text: #f8b6ba;
     --nav: #f3f0ea;
     --nav-text: #5e5a53;
-    --nav-active: #1d1b18;
-    --nav-active-text: #f3f0ea;
+    --nav-active: var(--board);
+    --nav-active-text: var(--board-text);
     color-scheme: dark;
   }
 }
@@ -531,8 +531,51 @@ nav[aria-label="Разделы"] :focus-visible {
     transform: translate3d(8%, 18%, 0) rotate(calc(var(--aurora-angle) + 10deg)) scale(1.12, 1.4);
   }
 }
+.brand-aurora-waves {
+  position: absolute;
+  inset: 0;
+  mask-image: radial-gradient(ellipse at center, transparent 0%, #0004 32%, #000 75%);
+  translate: var(--aurora-x, 0px) var(--aurora-y, 0px);
+  transition: translate 450ms ease-out;
+}
+.brand-aurora-ribbon {
+  position: absolute;
+  left: -20%;
+  top: 12%;
+  width: 125%;
+  height: 34%;
+  border-radius: 50%;
+  background: linear-gradient(105deg,
+    transparent 10%,
+    color-mix(in srgb, var(--board-link) 70%, transparent) 34%,
+    color-mix(in srgb, var(--primary) 80%, transparent) 52%,
+    color-mix(in srgb, var(--plate-success) 65%, transparent) 72%,
+    transparent 92%);
+  filter: blur(clamp(8px, 1.5vw, 18px));
+  animation: aurora-wave 6s ease-in-out infinite alternate;
+  animation-delay: -2s;
+}
+.brand-aurora-ribbon-secondary {
+  left: -15%;
+  top: 56%;
+  opacity: 0.7;
+  animation-duration: 8s;
+  animation-delay: -4s;
+  animation-direction: alternate-reverse;
+  background: linear-gradient(100deg,
+    transparent 8%,
+    color-mix(in srgb, var(--action) 60%, transparent) 30%,
+    color-mix(in srgb, var(--board-link) 75%, transparent) 58%,
+    transparent 90%);
+}
+@keyframes aurora-wave {
+  from { transform: translate3d(-10%, -15%, 0) skewY(-8deg) scaleY(0.7); }
+  to { transform: translate3d(15%, 40%, 0) skewY(8deg) scaleY(1.6); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .brand-aurora-band {
+  .brand-aurora-band,
+  .brand-aurora-ribbon,
+  .brand-aurora-waves {
     animation: none;
     translate: none;
     transition: none;

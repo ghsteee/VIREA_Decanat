@@ -11,6 +11,11 @@ test("Сияние движется само, реагирует на курсо
     band.evaluate((element) => getComputedStyle(element).transform);
   const firstFrame = await transform();
   await expect.poll(transform).not.toBe(firstFrame);
+  const ribbon = panel.locator(".brand-aurora-ribbon").first();
+  const ribbonFrame = () =>
+    ribbon.evaluate((element) => getComputedStyle(element).transform);
+  const firstRibbon = await ribbonFrame();
+  await expect.poll(ribbonFrame).not.toBe(firstRibbon);
   const position = () =>
     band.evaluate((element) => getComputedStyle(element).translate);
   const initial = await position();
@@ -30,6 +35,8 @@ test("Сияние движется само, реагирует на курсо
   await panel.hover();
   expect(await position()).toBe(reduced);
   const still = await transform();
+  const stillRibbon = await ribbonFrame();
   await page.waitForTimeout(180);
   expect(await transform()).toBe(still);
+  expect(await ribbonFrame()).toBe(stillRibbon);
 });

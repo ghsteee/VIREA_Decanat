@@ -45,6 +45,10 @@ export function BrandAurora() {
       <span className="brand-aurora-band" />
       <span className="brand-aurora-band" />
       <span className="brand-aurora-band" />
+      <div className="brand-aurora-waves">
+        <span className="brand-aurora-ribbon" />
+        <span className="brand-aurora-ribbon brand-aurora-ribbon-secondary" />
+      </div>
     </div>
   );
 }
