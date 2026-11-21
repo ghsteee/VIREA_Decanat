@@ -538,3 +538,42 @@ nav[aria-label="Разделы"] :focus-visible {
     transition: none;
   }
 }
+
+/* Небольшие движения не меняют размеры карточек и области нажатия. */
+@media (prefers-reduced-motion: no-preference) {
+  #cabinet-content > main > section,
+  #cabinet-content > main > div > section {
+    animation: card-appear 320ms ease-out both;
+  }
+  .empty-state .empty-art {
+    animation: mascot-float 7s ease-in-out infinite;
+    transform-origin: center bottom;
+  }
+  .empty-state:hover .empty-art {
+    animation-play-state: paused;
+  }
+  button:not(:disabled),
+  a {
+    transition: background-color 160ms ease, color 160ms ease, filter 160ms ease;
+  }
+  button:not(:disabled) > svg,
+  a > svg {
+    transition: transform 180ms ease;
+  }
+  button:not(:disabled):hover > svg,
+  a:hover > svg {
+    transform: translateY(-2px);
+  }
+  button:not(:disabled):active,
+  a:active {
+    filter: brightness(0.92);
+  }
+}
+@keyframes card-appear {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mascot-float {
+  0%, 100% { transform: translateY(0) rotate(-0.35deg); }
+  50% { transform: translateY(-5px) rotate(0.35deg); }
+}

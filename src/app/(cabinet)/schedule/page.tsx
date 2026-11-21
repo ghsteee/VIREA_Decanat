@@ -181,7 +181,7 @@ export default async function SchedulePage({
             </h1>
             <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
               {week && view !== "month" && view !== "session"
-                ? `Неделя ${week.number} · ${week.odd ? "нечётная" : "чётная"} · `
+                ? `Неделя ${week.number} · `
                 : ""}
               {group?.code}
             </p>
