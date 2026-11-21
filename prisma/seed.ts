@@ -1124,6 +1124,65 @@ async function main() {
       },
     ],
   });
+  // Отметки вымышленного журнала только для уже проведённых занятий.
+  for (const [studentId, groupId] of [
+    [danila.profileId, group.biso.id],
+    [ksenia.profileId, group.kmbo.id],
+    [marat.profileId, group.khebo.id],
+  ]) {
+    const lessons = await db.lesson.findMany({
+      where: {
+        groupId,
+        termId: term.id,
+        status: "scheduled",
+        endsAt: { lt: at(today, "00:00") },
+      },
+      select: { id: true },
+      orderBy: [{ startsAt: "asc" }, { subjectId: "asc" }],
+    });
+    await db.lessonAttendance.createMany({
+      data: lessons.map((lesson, index) => ({
+        studentId,
+        lessonId: lesson.id,
+        present: index % 7 !== 2,
+      })),
+    });
+  }
+  await db.subjectAchievement.createMany({
+    data: [
+      {
+        studentId: ksenia.profileId,
+        subjectId: subjects.databases,
+        title: "Спроектировать схему для студенческого проекта",
+        earned: true,
+      },
+      {
+        studentId: ksenia.profileId,
+        subjectId: subjects.databases,
+        title: "Разобрать план запроса на семинаре",
+        earned: false,
+      },
+      {
+        studentId: danila.profileId,
+        subjectId: subjects.databases,
+        title: "Решить дополнительную задачу по индексам",
+        earned: false,
+      },
+      {
+        studentId: danila.profileId,
+        subjectId: subjects.calculus,
+        title: "Представить альтернативное доказательство",
+        earned: true,
+      },
+      {
+        studentId: ksenia.profileId,
+        subjectId: subjects.ml,
+        title: "Сравнить две модели на открытом наборе данных",
+        earned: true,
+      },
+    ].map((item) => ({ ...item, termId: term.id })),
+  });
+
   // Прошлая сессия Ксении (весна 2026): средний 4,6
   const spring = await db.academicTerm.create({
     data: {
