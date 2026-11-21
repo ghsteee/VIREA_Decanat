@@ -78,8 +78,9 @@ export default async function RequestsPage({
             >
               Заявки
             </h1>
-            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
-              Текущие: {activeCount} · Всего: {total}
+            <p className="mt-1 grid gap-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+              <span>Текущие: {activeCount}</span>
+              <span>Всего: {total}</span>
             </p>
           </div>
           <Link
