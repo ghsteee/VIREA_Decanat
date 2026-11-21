@@ -15,8 +15,12 @@ export type SubjectStanding = {
   name: string;
   points: number;
   missingPoints: number;
-  works: { done: number; total: number; kind: string };
-  status: "admitted" | "at_risk" | "not_admitted";
+  labs: { done: number; total: number };
+  assessments: { title: string; result: string; heldOn: Date | null }[];
+  status: "admitted" | "at_risk" | "not_admitted" | "unpublished";
+  attendance: { present: number; recorded: number };
+  assignments: { title: string; done: boolean; dueAt: Date | null }[];
+  achievements: { title: string; earned: boolean }[];
   checklist: { title: string; done: boolean; dueAt: Date | null }[];
 };
 
@@ -25,40 +29,85 @@ export async function getStudy(
   groupId: string,
   now = new Date(),
 ) {
+  const day = new Date(mskDate(now));
   const term = await db.academicTerm.findFirst({
-    where: { startsOn: { lte: now }, endsOn: { gte: now } },
+    where: { startsOn: { lte: day }, endsOn: { gte: day } },
     orderBy: { startsOn: "desc" },
   });
   if (!term) return null;
 
-  const assessments = await db.assessment.findMany({
-    where: { groupId, termId: term.id },
-    include: { subject: true, results: { where: { studentId } } },
-    orderBy: { title: "asc" },
-  });
-  const items = await db.admissionItem.findMany({
-    where: { studentId, termId: term.id },
-    orderBy: { sortOrder: "asc" },
-  });
-  const sessionStarted = term.sessionStartsOn
-    ? term.sessionStartsOn <= now
-    : false;
-
-  const bySubject = new Map<string, typeof assessments>();
-  for (const a of assessments)
-    bySubject.set(a.subjectId, [...(bySubject.get(a.subjectId) ?? []), a]);
-
-  const subjects: SubjectStanding[] = [...bySubject.values()].map((list) => {
-    const subject = list[0].subject;
+  const groupTerm = { groupId, termId: term.id };
+  const studentTerm = { studentId, termId: term.id };
+  const [courses, marks] = await Promise.all([
+    db.subject.findMany({
+      where: {
+        OR: [
+          { assessments: { some: groupTerm } },
+          { lessons: { some: groupTerm } },
+          { admission: { some: studentTerm } },
+          { achievements: { some: studentTerm } },
+        ],
+      },
+      include: {
+        assessments: {
+          where: groupTerm,
+          include: { results: { where: { studentId } } },
+          orderBy: { title: "asc" },
+        },
+        admission: { where: studentTerm, orderBy: { sortOrder: "asc" } },
+        achievements: {
+          where: studentTerm,
+          select: { title: true, earned: true },
+          orderBy: { title: "asc" },
+        },
+      },
+      orderBy: { name: "asc" },
+    }),
+    db.lessonAttendance.findMany({
+      where: {
+        studentId,
+        lesson: { ...groupTerm, status: "scheduled", endsAt: { lte: now } },
+      },
+      select: { present: true, lesson: { select: { subjectId: true } } },
+    }),
+  ]);
+  const attendance = new Map<string, SubjectStanding["attendance"]>();
+  for (const mark of marks) {
+    const key = mark.lesson.subjectId;
+    const counts = attendance.get(key) ?? { present: 0, recorded: 0 };
+    counts.recorded++;
+    if (mark.present) counts.present++;
+    attendance.set(key, counts);
+  }
+  const sessionStarted = !!term.sessionStartsOn && term.sessionStartsOn <= day;
+  const subjects: SubjectStanding[] = courses.map((subject) => {
+    const list = subject.assessments;
     const points = list.reduce((sum, assessment) => {
       const result = assessment.results[0];
       return sum + (result?.scale === "points100" ? (result.value ?? 0) : 0);
     }, 0);
     const missingPoints = Math.max(0, ADMISSION_POINTS - points);
     const mandatory = list.filter((a) => MANDATORY.has(a.kind));
-    const labs = list.filter((a) => a.kind === "lab");
-    const shown = labs.length ? labs : mandatory;
-    const own = items.filter((i) => i.subjectId === subject.id);
+    const own = subject.admission;
+    const admissionByTitle = new Map(own.map((item) => [item.title, item]));
+    const assignments = mandatory.map((a) => {
+      const item = admissionByTitle.get(a.title);
+      const result = a.results[0];
+      const done = item
+        ? item.status === "done"
+        : !!result &&
+          (result.scale === "pass_fail"
+            ? result.passed === true
+            : result.scale === "grade5"
+              ? (result.value ?? 0) >= 3
+              : result.value !== null);
+      return {
+        title: a.title,
+        done,
+        dueAt: item?.dueAt ?? null,
+        lab: a.kind === "lab",
+      };
+    });
     const titled = new Set(own.map((i) => i.title));
     const checklist = [
       ...own.map((i) => ({
@@ -66,34 +115,56 @@ export async function getStudy(
         done: i.status === "done",
         dueAt: i.dueAt,
       })),
-      ...mandatory
-        .filter(
-          (a) => !titled.has(a.title) && (!own.length || !a.results.length),
-        )
-        .map((a) => ({
-          title: a.title,
-          done: a.results.length > 0,
-          dueAt: null,
-        })),
+      ...assignments.filter(
+        (a) => !titled.has(a.title) && (!own.length || !a.done),
+      ),
     ];
+    const labs = assignments.filter((a) => a.lab);
     const ok = missingPoints === 0 && checklist.every((item) => item.done);
     return {
       subjectId: subject.id,
       name: subject.name,
       points,
       missingPoints,
-      works: {
-        done: shown.filter((a) => a.results.length).length,
-        total: shown.length,
-        kind: labs.length ? "лаб" : "работ",
+      assessments: list.map((a) => {
+        const result = a.results[0];
+        let label = "Результат пока не опубликован";
+        if (result?.scale === "pass_fail" && result.passed !== null)
+          label = result.passed ? "Зачтено" : "Не зачтено";
+        if (result?.scale === "grade5" && result.value !== null)
+          label = `Оценка: ${result.value}`;
+        if (result?.scale === "points100" && result.value !== null)
+          label =
+            a.maxPoints === null
+              ? `Баллы: ${result.value}`
+              : `${result.value} из ${a.maxPoints} баллов`;
+        return { title: a.title, result: label, heldOn: a.heldOn };
+      }),
+      labs: {
+        done: labs.filter((a) => a.done).length,
+        total: labs.length,
       },
-      status: ok ? "admitted" : sessionStarted ? "not_admitted" : "at_risk",
+      attendance: attendance.get(subject.id) ?? { present: 0, recorded: 0 },
+      assignments: mandatory.length
+        ? assignments
+        : own.map((i) => ({
+            title: i.title,
+            done: i.status === "done",
+            dueAt: i.dueAt,
+          })),
+      achievements: subject.achievements,
+      status: !list.length
+        ? "unpublished"
+        : ok
+          ? "admitted"
+          : sessionStarted
+            ? "not_admitted"
+            : "at_risk",
       checklist,
     };
   });
-  subjects.sort(
-    (a, b) => Number(a.status === "admitted") - Number(b.status === "admitted"),
-  );
+  const priority = { not_admitted: 0, at_risk: 1, admitted: 2, unpublished: 3 };
+  subjects.sort((a, b) => priority[a.status] - priority[b.status]);
 
   // Средний балл — по экзаменам прошлых закрытых сессий (п. 4.5)
   const exams = await db.assessmentResult.findMany({
