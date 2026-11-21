@@ -13,6 +13,7 @@ import {
   BoardHead,
   LessonRow,
 } from "@/components/board/lesson-row";
+import { Flaps } from "@/components/board/flaps";
 import { ScheduleSwipe } from "@/components/board/schedule-swipe";
 import {
   dayRange,
@@ -146,8 +147,13 @@ export default async function SchedulePage({
       <header className="schedule-picker">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-none tracking-[0.03em] lg:text-[46px]">
-              Расписание
+            <h1 className="m-0 leading-none">
+              <Flaps
+                value="РАСПИСАНИЕ"
+                label="Расписание"
+                flipOnMount
+                className="align-top text-[clamp(1.75rem,7vw,2.75rem)]"
+              />
             </h1>
             <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
               {week

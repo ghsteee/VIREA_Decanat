@@ -220,6 +220,37 @@
     var(--flap-notch) calc(100% - 2px)
   );
 }
+@media (prefers-reduced-motion: no-preference) {
+  .flap-letter {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    clip-path: inset(0 0 50%);
+  }
+  .flap[data-flip]::before {
+    content: attr(data-flip);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    background: inherit;
+    clip-path: inset(50% 0 0);
+    animation: unfold-letter 260ms ease-out backwards;
+    animation-delay: inherit;
+  }
+  @keyframes unfold-letter {
+    from {
+      transform: perspective(5em) rotateX(-92deg);
+      filter: brightness(0.68);
+    }
+    to {
+      transform: perspective(5em) rotateX(0);
+    }
+  }
+}
+
 .flaps-change .flap {
   background: linear-gradient(#fad0da 0 50%, #f6b9c7 50% 100%);
   color: #1d1b18;
