@@ -32,13 +32,10 @@ async function checkNav(page: Page, viewport: (typeof sizes)[number]) {
   const nav = page.getByRole("navigation", { name: "Разделы", exact: true });
   await expect(nav).toHaveCount(1);
   const box = (await nav.boundingBox())!;
-  if (viewport.width >= 1024) {
-    expect(box.x).toBe(0);
-    expect(box.height).toBe(viewport.height);
-  } else {
-    expect(box.y).toBeGreaterThan(viewport.height / 2);
-    expect(box.width).toBeLessThanOrEqual(viewport.width);
-  }
+  expect(box.y).toBeLessThan(32);
+  expect(box.width).toBeLessThanOrEqual(viewport.width);
+  const menu = page.getByRole("button", { name: "Меню профиля" });
+  await expect(menu).toBeVisible();
 }
 
 for (const size of sizes) {

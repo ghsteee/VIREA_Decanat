@@ -1,73 +1,93 @@
-import { cn } from "@/lib/utils";
+import {
+  Check,
+  FileText,
+  FolderCheck,
+  Inbox,
+  Stamp,
+  CircleX,
+} from "lucide-react";
+import type { ApplicationStatus } from "@prisma/client";
+import { dayMonth, mskDate, mskTime } from "@/lib/time";
 
-export const ROUTE_STEPS = [
-  "submitted",
-  "in_progress",
-  "ready",
-  "issued",
+const steps = [
+  { key: "submitted", label: "Подана", icon: Inbox },
+  { key: "in_progress", label: "В работе", icon: FileText },
+  { key: "ready", label: "Готова", icon: Stamp },
+  { key: "issued", label: "Выдана", icon: FolderCheck },
 ] as const;
-export type RouteStatus = (typeof ROUTE_STEPS)[number] | "rejected";
-
-const LABEL: Record<(typeof ROUTE_STEPS)[number], string> = {
-  submitted: "подана",
-  in_progress: "в работе",
-  ready: "готова",
-  issued: "выдана",
+type Event = {
+  toStatus: string;
+  createdAt: Date;
+  pickupNote: string | null;
 };
 
-/** Компактный маршрут заявки «Подана → В работе → Готова → Выдана» (A4). */
-export function CompactRoute({
+export function RequestRoute({
   status,
-  dates,
+  events,
 }: {
-  status: RouteStatus;
-  dates: Partial<Record<(typeof ROUTE_STEPS)[number], string>>;
+  status: ApplicationStatus;
+  events: Event[];
 }) {
-  const current = status === "rejected" ? 1 : ROUTE_STEPS.indexOf(status);
+  const history = new Map(events.map((e) => [e.toStatus, e]));
+  const rejected = status === "rejected";
+  const stations = rejected
+    ? [
+        ...steps.filter((s) => history.has(s.key)),
+        { key: "rejected", label: "Отказ", icon: CircleX },
+      ]
+    : steps;
+  const current = stations.findIndex((s) => s.key === status);
   return (
-    <ol aria-label="Этапы заявки" className="relative grid grid-cols-4">
-      <span
-        aria-hidden
-        className="absolute left-[12.5%] right-[12.5%] top-[6px] h-[3px] bg-border"
-      />
-      <span
-        aria-hidden
-        className="absolute left-[12.5%] top-[6px] h-[3px] bg-primary"
-        style={{ width: `${(Math.max(current, 0) / 3) * 75}%` }}
-      />
-      {ROUTE_STEPS.map((step, i) => {
-        const done = i < current;
-        const now = i === current;
-        return (
-          <li
-            key={step}
-            aria-current={now ? "step" : undefined}
-            className="relative flex flex-col items-center gap-1 text-center"
-          >
-            <i
-              className={cn(
-                "box-border size-[15px] rounded-full",
-                done && "bg-primary",
-                now &&
-                  "bg-plate-change shadow-[0_0_0_4px_rgb(249_193_206/0.45)]",
-                !done && !now && "border-[3px] border-border bg-bg",
-              )}
-            />
-            <span
-              className={cn(
-                "font-board text-[15px] font-bold uppercase tracking-[0.06em]",
-                now && "rounded-[3px] bg-plate-change px-1 text-plate-ink",
-                !done && !now && "text-text-muted",
-              )}
+    <div className="request-route" data-state={status}>
+      <ol
+        aria-label="Маршрут заявки"
+        style={{
+          gridTemplateColumns: `repeat(${stations.length}, minmax(0,1fr))`,
+        }}
+      >
+        {stations.map(({ key, label, icon: Icon }, i) => {
+          const event = history.get(key);
+          return (
+            <li
+              key={key}
+              aria-current={i === current ? "step" : undefined}
+              data-past={i < current}
             >
-              {LABEL[step]}
-            </span>
-            <span className="text-[11px] text-text-muted">
-              {dates[step] ?? ""}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+              {i < stations.length - 1 && (
+                <svg
+                  aria-hidden="true"
+                  className="route-track"
+                  viewBox="0 0 100 24"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    d="M0 12 H30 C39 12 36 3 45 3 H56 C65 3 62 12 71 12 H100"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+              )}
+              <span className="route-stop">
+                {i < current ? (
+                  <Check aria-hidden size={14} />
+                ) : (
+                  <Icon aria-hidden size={16} />
+                )}
+              </span>
+              <b>{label}</b>
+              {event && (
+                <time dateTime={event.createdAt.toISOString()}>
+                  {dayMonth(mskDate(event.createdAt))}
+                  <br />
+                  {mskTime(event.createdAt)}
+                </time>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {status === "ready" && history.get(status)?.pickupNote && (
+        <p>{history.get(status)?.pickupNote}</p>
+      )}
+    </div>
   );
 }
