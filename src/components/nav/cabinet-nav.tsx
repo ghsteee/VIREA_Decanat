@@ -30,6 +30,7 @@ const NOTIFICATIONS: Item = { href: "/feed", label: "Уведомления", ic
 const STAFF: Item[] = [
   { href: "/staff", label: "Заявки", icon: FileText },
   { href: "/staff/schedule", label: "Расписание", icon: CalendarDays },
+  { href: "/staff/session", label: "Сессия", icon: GraduationCap },
   { href: "/staff/announcements", label: "Объявления", icon: Megaphone },
   { href: "/profile", label: "Профиль", icon: UserRound },
 ];

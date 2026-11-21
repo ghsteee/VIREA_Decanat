@@ -1183,6 +1183,33 @@ async function main() {
     ].map((item) => ({ ...item, termId: term.id })),
   });
 
+  // Пользователь разрешил произвольное распределение форм контроля в демо.
+  // Даты сессии назначает дирекция через редактор, здесь они не выдумываются.
+  for (const currentGroup of Object.values(group)) {
+    const courses = await db.subject.findMany({
+      where: {
+        OR: [
+          { lessons: { some: { groupId: currentGroup.id, termId: term.id } } },
+          {
+            assessments: {
+              some: { groupId: currentGroup.id, termId: term.id },
+            },
+          },
+        ],
+      },
+      orderBy: { name: "asc" },
+    });
+    await db.assessment.createMany({
+      data: courses.map((course, index) => ({
+        groupId: currentGroup.id,
+        termId: term.id,
+        subjectId: course.id,
+        kind: index % 2 === 0 ? ("exam" as const) : ("credit" as const),
+        title: index % 2 === 0 ? "Экзамен" : "Зачёт",
+      })),
+    });
+  }
+
   // Прошлая сессия Ксении (весна 2026): средний 4,6
   const spring = await db.academicTerm.create({
     data: {

@@ -13,6 +13,7 @@ const MANDATORY = new Set(["lab", "practice", "test", "essay"]);
 export type SubjectStanding = {
   subjectId: string;
   name: string;
+  controlTypes: ("exam" | "credit")[];
   points: number;
   missingPoints: number;
   labs: { done: number; total: number };
@@ -89,6 +90,12 @@ export async function getStudy(
     const missingPoints = Math.max(0, ADMISSION_POINTS - points);
     const mandatory = list.filter((a) => MANDATORY.has(a.kind));
     const own = subject.admission;
+    const hasStanding =
+      own.length > 0 ||
+      list.some(
+        (a) =>
+          (a.kind !== "exam" && a.kind !== "credit") || a.results.length > 0,
+      );
     const admissionByTitle = new Map(own.map((item) => [item.title, item]));
     const assignments = mandatory.map((a) => {
       const item = admissionByTitle.get(a.title);
@@ -124,6 +131,9 @@ export async function getStudy(
     return {
       subjectId: subject.id,
       name: subject.name,
+      controlTypes: (["exam", "credit"] as const).filter((kind) =>
+        list.some((assessment) => assessment.kind === kind),
+      ),
       points,
       missingPoints,
       assessments: list.map((a) => {
@@ -153,7 +163,7 @@ export async function getStudy(
             dueAt: i.dueAt,
           })),
       achievements: subject.achievements,
-      status: !list.length
+      status: !hasStanding
         ? "unpublished"
         : ok
           ? "admitted"

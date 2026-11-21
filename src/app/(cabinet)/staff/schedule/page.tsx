@@ -36,6 +36,12 @@ export default async function StaffSchedulePage({
           <p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
             Выбери группу и день, затем пару
           </p>
+          <Link
+            href="/staff/session"
+            className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-board-row px-4 font-semibold text-board-link"
+          >
+            Расписание сессии →
+          </Link>
         </div>
         {sp.done ? (
           <p

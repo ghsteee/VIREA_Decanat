@@ -1,5 +1,6 @@
 import type { SubjectStanding } from "@/server/queries/study";
 import { ActivityRings } from "./activity-rings";
+import { SubjectControl } from "./subject-control";
 import { Flaps } from "./flaps";
 import { cn } from "@/lib/utils";
 import { dayMonth, mskDate } from "@/lib/time";
@@ -30,6 +31,7 @@ export function SubjectDetails({ subject: s }: { subject: SubjectStanding }) {
           >
             {s.name}
           </h2>
+          <SubjectControl types={s.controlTypes} />
           <p className={cn("mt-1 text-sm font-semibold", status.cls)}>
             {status.label}
           </p>
