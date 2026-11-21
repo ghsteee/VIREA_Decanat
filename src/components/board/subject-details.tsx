@@ -1,6 +1,6 @@
 import type { SubjectStanding } from "@/server/queries/study";
 import { ActivityRings } from "./activity-rings";
-import { Flaps } from "./flaps";
+import { SubjectScore } from "./subject-score";
 import { cn } from "@/lib/utils";
 import { dayMonth, mskDate } from "@/lib/time";
 const STATUS = {
@@ -22,29 +22,19 @@ export function SubjectDetails({ subject: s }: { subject: SubjectStanding }) {
       aria-labelledby={`subject-${s.subjectId}`}
       className="min-w-0 text-text"
     >
-      <header className="flex items-start justify-between gap-3">
-        <div>
+      <header>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h2
             id={`subject-${s.subjectId}`}
             className="font-board text-2xl font-bold uppercase leading-tight"
           >
             {s.name}
           </h2>
-          <p className={cn("mt-1 text-sm font-semibold", status.cls)}>
-            {status.label}
-          </p>
+          <SubjectScore subject={s} />
         </div>
-        {known && (
-          <div className="shrink-0 text-right">
-            <Flaps
-              value={String(s.points)}
-              label={`Рейтинг: ${s.points} из 100`}
-            />
-            <div aria-hidden className="mt-0.5 text-xs text-text-muted">
-              из 100
-            </div>
-          </div>
-        )}
+        <p className={cn("mt-1 text-sm font-semibold", status.cls)}>
+          {status.label}
+        </p>
       </header>
       <ActivityRings subject={s} showLegend />
       {(s.assignments.length > 0 ||

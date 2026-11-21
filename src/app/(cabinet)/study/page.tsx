@@ -1,61 +1,11 @@
-import { SubjectCarousel } from "@/components/board/subject-carousel";
+import { SubjectGrid } from "@/components/board/subject-grid";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
-import { getStudy, type SubjectStanding } from "@/server/queries/study";
+import { getStudy } from "@/server/queries/study";
 import { Flaps } from "@/components/board/flaps";
-import { dayMonth, mskDate } from "@/lib/time";
+import { dayMonth } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
-
-function plural(n: number, one: string, few: string, many: string) {
-  const m10 = n % 10;
-  const m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
-  return many;
-}
-
-/** G2: сводка одной фразой. */
-function summary(subjects: SubjectStanding[]) {
-  if (!subjects.length) return <>Дисциплины семестра пока не опубликованы.</>;
-  if (subjects.every((s) => s.status === "unpublished"))
-    return <>Данные о допуске пока не опубликованы.</>;
-  const risky = subjects.filter(
-    (s) => s.status === "at_risk" || s.status === "not_admitted",
-  );
-  if (!risky.length)
-    return <>По опубликованным ведомостям допуск к сессии есть.</>;
-  const s = risky[0];
-  const pending = s.checklist.filter((item) => !item.done);
-  const due = pending
-    .flatMap((item) => (item.dueAt ? [item.dueAt] : []))
-    .sort((a, b) => a.getTime() - b.getTime())[0];
-  const count = pending.length;
-  const requirements = [
-    count ? `сдать ${count} ${plural(count, "работу", "работы", "работ")}` : "",
-    s.missingPoints
-      ? `набрать ${s.missingPoints} ${plural(s.missingPoints, "балл", "балла", "баллов")}`
-      : "",
-  ]
-    .filter(Boolean)
-    .join(" и ");
-  return (
-    <>
-      {s.status === "not_admitted"
-        ? "Допуска нет по дисциплине "
-        : "Для допуска по дисциплине "}
-      <b className="text-board-soon">«{s.name}»</b>
-      {s.status === "at_risk" ? ` осталось ${requirements}` : ""}
-      {s.status === "at_risk" && due
-        ? `. Ближайший срок — ${dayMonth(mskDate(due))}`
-        : ""}
-      {risky.length > 1
-        ? `. Проверить нужно ещё ${risky.length - 1} ${plural(risky.length - 1, "дисциплину", "дисциплины", "дисциплин")}`
-        : ""}
-      .
-    </>
-  );
-}
 
 export default async function StudyPage() {
   const user = await requireUser();
@@ -84,37 +34,43 @@ export default async function StudyPage() {
   ] as const;
   return (
     <main className="cabinet-page flex flex-col gap-5 pb-4">
-      <header className="grid items-center gap-5 bg-board p-4 text-board-text md:rounded-3xl md:p-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(19rem,1fr)]">
+      <header className="grid items-center gap-5 px-3 py-4 text-text md:px-0 md:py-5 lg:grid-cols-[minmax(0,1fr)_auto]">
         <div>
           <h1 className="font-board text-[34px] font-extrabold uppercase leading-none lg:text-[46px]">
             Учёба
           </h1>
-          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-board-muted">
+          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-text-muted">
             {study.term.name}
             {study.term.sessionStartsOn &&
               ` · сессия с ${dayMonth(study.term.sessionStartsOn)}`}
           </p>
-          <p className="mt-3 text-sm">{summary(study.subjects)}</p>
         </div>
-        <dl className="grid grid-cols-3 gap-2 rounded-xl bg-board-row p-3">
+        <dl className="flex flex-wrap items-start gap-x-5 gap-y-3 sm:gap-x-9">
           {metrics.map(([label, value]) => (
-            <div key={label}>
-              <dt className="text-xs font-semibold text-board-muted">
-                {label}
-              </dt>
+            <div key={label} className="min-w-0">
+              <dt className="text-sm font-semibold text-text-muted">{label}</dt>
               <dd className="mt-2">
                 {value && (label !== "Допуск" || rated) ? (
-                  <Flaps value={value} label={`${label}: ${value}`} />
+                  <Flaps size="lg" value={value} label={`${label}: ${value}`} />
                 ) : (
-                  <span aria-label="Нет данных">—</span>
+                  <span
+                    className="font-board text-3xl font-bold"
+                    aria-label="Нет данных"
+                  >
+                    —
+                  </span>
                 )}
               </dd>
             </div>
           ))}
         </dl>
       </header>
-      {study.subjects.length > 0 && (
-        <SubjectCarousel subjects={study.subjects} />
+      {study.subjects.length > 0 ? (
+        <SubjectGrid subjects={study.subjects} />
+      ) : (
+        <p className="px-3 md:px-0">
+          Дисциплины семестра пока не опубликованы.
+        </p>
       )}
       <div className="mx-3 divide-y divide-border rounded-xl border border-border bg-surface px-4 md:mx-0">
         <details>
