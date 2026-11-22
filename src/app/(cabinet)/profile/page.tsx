@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { QrCode, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { logout } from "@/app/login/actions";
 import { ThemeSwitch } from "@/components/nav/theme-switch";
@@ -40,7 +40,7 @@ export default async function ProfilePage() {
         {profile ? (
           <article
             aria-label="Студенческий билет"
-            className="relative flex flex-col gap-3 rounded-[10px] bg-board-row px-3.5 pb-1 pt-3.5"
+            className="relative flex flex-col gap-3 rounded-[10px] bg-board-row p-3.5"
           >
             <div className="flex items-baseline justify-between">
               <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
@@ -86,13 +86,6 @@ export default async function ProfilePage() {
                 {profile.funding === "budget" ? "бюджет" : "договор"}
                 {user.isGroupHead ? " · староста" : ""}
               </span>
-            </div>
-            <div className="mt-1 flex min-h-12 items-center justify-between border-t border-dashed border-board-line font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-dim">
-              <span className="flex items-center gap-2">
-                <QrCode size={18} aria-hidden />
-                QR на проходной — скоро
-              </span>
-              <ChevronRight size={16} aria-hidden />
             </div>
           </article>
         ) : (
