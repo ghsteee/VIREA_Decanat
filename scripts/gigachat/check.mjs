@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { request } from "node:https";
+import { rootCertificates } from "node:tls";
 
 const key = process.env.GIGACHAT_AUTH_KEY?.trim();
 const bundle = process.env.GIGACHAT_CA_BUNDLE?.trim();
@@ -58,7 +59,7 @@ try {
   if (!key) throw new Error("В контейнере пустой GIGACHAT_AUTH_KEY.");
   if (!bundle) throw new Error("В контейнере пустой GIGACHAT_CA_BUNDLE.");
   stage = "сертификаты";
-  const ca = await readFile(bundle);
+  const ca = [...rootCertificates, await readFile(bundle)];
   stage = "OAuth";
   const token = await json(
     "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",

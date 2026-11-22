@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { request } from "node:https";
+import { rootCertificates } from "node:tls";
 
 const TOKEN_URL = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth";
 const CHAT_URL = "https://api.giga.chat/v1/chat/completions";
@@ -29,7 +30,7 @@ class ProviderError extends Error {
 
 async function postJson(
   url: string,
-  ca: Buffer,
+  ca: (string | Buffer)[],
   body: string,
   headers: Record<string, string>,
   timeout: number,
@@ -82,7 +83,7 @@ async function postJson(
   });
 }
 
-async function accessToken(ca: Buffer, key: string) {
+async function accessToken(ca: (string | Buffer)[], key: string) {
   if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000)
     return cachedToken.value;
   const body = new URLSearchParams({
@@ -121,7 +122,7 @@ export async function chooseSections(question: string, source: string) {
   if (running) return { kind: "busy" } as const;
   running = true;
   try {
-    const ca = await readFile(bundle);
+    const ca = [...rootCertificates, await readFile(bundle)];
     const token = await accessToken(ca, key);
     const response = (await postJson(
       CHAT_URL,
