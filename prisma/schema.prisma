@@ -336,18 +336,22 @@ enum AssessmentKind {
 }
 
 model Assessment {
-  id        String         @id @default(uuid()) @db.Uuid
-  groupId   String         @db.Uuid
-  group     Group          @relation(fields: [groupId], references: [id])
-  subjectId String         @db.Uuid
-  subject   Subject        @relation(fields: [subjectId], references: [id])
-  termId    String         @db.Uuid
-  term      AcademicTerm   @relation(fields: [termId], references: [id])
-  kind      AssessmentKind
-  title     String
-  heldOn    DateTime?      @db.Date
+  id              String         @id @default(uuid()) @db.Uuid
+  groupId         String         @db.Uuid
+  group           Group          @relation(fields: [groupId], references: [id])
+  subjectId       String         @db.Uuid
+  subject         Subject        @relation(fields: [subjectId], references: [id])
+  termId          String         @db.Uuid
+  term            AcademicTerm   @relation(fields: [termId], references: [id])
+  kind            AssessmentKind
+  title           String
+  heldOn          DateTime?      @db.Date
+  /// Время сессии хранится в UTC, в интерфейсе — московское.
+  sessionStartsAt DateTime?      @db.Timestamptz(6)
+  sessionRoom     String?
+  sessionVersion  Int            @default(1)
   /// Максимум баллов в рейтинге за семестр (демо-положение, раздел 2)
-  maxPoints Int?
+  maxPoints       Int?
 
   results AssessmentResult[]
 
