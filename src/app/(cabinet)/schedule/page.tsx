@@ -14,7 +14,11 @@ import {
   LessonRow,
 } from "@/components/board/lesson-row";
 import { ScheduleSwipe } from "@/components/board/schedule-swipe";
-import { ConceptNote } from "@/components/concept-note";
+import { LessonBreak } from "@/components/board/lesson-break";
+import { lessonBreaks } from "@/lib/lesson-breaks";
+import { MonthCalendar } from "@/components/board/month-calendar";
+import { SessionSchedule } from "@/components/board/session-schedule";
+import { calendarMonth } from "@/lib/calendar-month";
 import {
   dayRange,
   getAcademicWeek,
@@ -38,9 +42,19 @@ import { cn } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 type Search = Promise<{ date?: string; view?: string }>;
+type ScheduleView = "day" | "week" | "month" | "session";
+const VIEWS: Record<ScheduleView, string> = {
+  day: "День",
+  week: "Неделя",
+  month: "Месяц",
+  session: "Сессия",
+};
 
 function validDate(s?: string) {
-  return s && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s))
+  return s &&
+    /^\d{4}-\d{2}-\d{2}$/.test(s) &&
+    !Number.isNaN(Date.parse(s)) &&
+    mskDate(mskDayStart(s)) === s
     ? s
     : null;
 }
@@ -114,38 +128,59 @@ export default async function SchedulePage({
   const sp = await searchParams;
   const today = mskDate();
   const date = validDate(sp.date) ?? today;
-  const view = sp.view === "week" ? "week" : "day";
+  const dateTitle = new Intl.DateTimeFormat("ru-RU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Europe/Moscow",
+  }).format(mskDayStart(date));
+  const view: ScheduleView =
+    sp.view && Object.hasOwn(VIEWS, sp.view)
+      ? (sp.view as ScheduleView)
+      : "day";
   const monday = weekStart(date);
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
   const weekFrom = mskDayStart(monday);
   const weekTo = mskDayStart(addDays(monday, 7));
+  const month = calendarMonth(date);
+  const markRange =
+    view === "month"
+      ? ([mskDayStart(month.from), mskDayStart(month.to)] as const)
+      : ([weekFrom, weekTo] as const);
 
   const range =
-    view === "week" ? ([weekFrom, weekTo] as const) : dayRange(date);
+    view === "month"
+      ? markRange
+      : view === "week"
+        ? ([weekFrom, weekTo] as const)
+        : dayRange(date);
   const [group, week, changedDays, lessons, movedOut] = await Promise.all([
     db.group.findUnique({
       where: { id: user.groupId },
       select: { code: true },
     }),
     getAcademicWeek(date),
-    getChangedDays(user.groupId, weekFrom, weekTo),
-    getLessons(user.groupId, ...range),
-    getMovedOut(user.groupId, ...range),
+    view === "session"
+      ? new Set<string>()
+      : getChangedDays(user.groupId, ...markRange),
+    view === "session" ? [] : getLessons(user.groupId, ...range),
+    view === "session" ? [] : getMovedOut(user.groupId, ...range),
   ]);
 
-  const link = (d: string, v = view) =>
-    `/schedule?date=${d}${v === "week" ? "&view=week" : ""}`;
+  const link = (d: string, v: ScheduleView = view) =>
+    `/schedule?date=${d}${v === "day" ? "" : `&view=${v}`}`;
+  const breaks = view === "day" ? lessonBreaks(lessons) : null;
 
   return (
-    <main className="mx-auto flex min-h-[calc(100dvh-88px)] max-w-[480px] flex-col bg-board text-board-text lg:min-h-dvh">
-      <header className="flex flex-col gap-3 px-3.5 pb-2.5 pt-3.5">
-        <div className="flex items-end justify-between gap-2">
+    <main className="cabinet-page schedule-page">
+      <header className="schedule-picker">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]">
+            <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-none tracking-[0.03em] lg:text-[46px]">
               Расписание
             </h1>
             <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
-              {week
+              {week && view !== "month" && view !== "session"
                 ? `Неделя ${week.number} · ${week.odd ? "нечётная" : "чётная"} · `
                 : ""}
               {group?.code}
@@ -156,7 +191,7 @@ export default async function SchedulePage({
             aria-label="Вид"
             className="inline-flex rounded-lg bg-board-row p-[3px]"
           >
-            {(["day", "week"] as const).map((v) => (
+            {(Object.keys(VIEWS) as ScheduleView[]).map((v) => (
               <Link
                 key={v}
                 href={link(date, v)}
@@ -173,85 +208,118 @@ export default async function SchedulePage({
                     : undefined
                 }
               >
-                {v === "day" ? "День" : "Неделя"}
+                {VIEWS[v]}
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-lg bg-board-row px-1">
-          <Link
-            href={link(addDays(monday, -7))}
-            aria-label="Предыдущая неделя"
-            className="grid size-11 place-items-center text-board-muted"
+        {view !== "session" ? (
+          <div className="flex items-center justify-between rounded-lg bg-board-row px-1">
+            <Link
+              href={link(
+                view === "month" ? month.previous : addDays(monday, -7),
+              )}
+              aria-label={
+                view === "month" ? "Предыдущий месяц" : "Предыдущая неделя"
+              }
+              className="grid size-11 place-items-center text-board-muted"
+            >
+              <ChevronLeft size={18} aria-hidden />
+            </Link>
+            <Link
+              href={link(today, view === "month" ? "month" : "day")}
+              className="flex min-h-11 items-center px-3 font-semibold text-board-link no-underline"
+            >
+              Сегодня
+            </Link>
+            <Link
+              href={link(view === "month" ? month.next : addDays(monday, 7))}
+              aria-label={
+                view === "month" ? "Следующий месяц" : "Следующая неделя"
+              }
+              className="grid size-11 place-items-center text-board-muted"
+            >
+              <ChevronRight size={18} aria-hidden />
+            </Link>
+          </div>
+        ) : null}
+        {view === "day" || view === "week" ? (
+          <nav
+            aria-label="Дни недели"
+            className="grid grid-cols-7 items-center gap-[3px] md:gap-1"
           >
-            <ChevronLeft size={18} aria-hidden />
-          </Link>
-          <Link
-            href={link(today, "day")}
-            className="flex min-h-11 items-center px-3 font-semibold text-board-link no-underline"
-          >
-            Сегодня
-          </Link>
-          <Link
-            href={link(addDays(monday, 7))}
-            aria-label="Следующая неделя"
-            className="grid size-11 place-items-center text-board-muted"
-          >
-            <ChevronRight size={18} aria-hidden />
-          </Link>
-        </div>
-        <nav
-          aria-label="Дни недели"
-          className="grid grid-cols-7 items-center gap-[3px]"
-        >
-          {days.map((d) => {
-            const selected = view === "day" && d === date;
-            return (
-              <Link
-                key={d}
-                href={link(d, "day")}
-                aria-current={selected ? "date" : undefined}
-                className={cn(
-                  "relative flex min-h-[52px] flex-col items-center justify-center gap-px rounded-md no-underline",
-                  selected ? "" : "bg-board-row text-board-muted",
-                )}
-                style={
-                  selected
-                    ? { background: "var(--board-text)", color: "var(--board)" }
-                    : undefined
-                }
-              >
-                <span className="text-[10px] font-bold uppercase tracking-[0.1em]">
-                  {weekdayShort(d)}
-                </span>
-                <b
+            {days.map((d) => {
+              const selected = view === "day" && d === date;
+              return (
+                <Link
+                  key={d}
+                  href={link(d, "day")}
+                  aria-current={selected ? "date" : undefined}
                   className={cn(
-                    "font-board text-[22px] font-extrabold leading-[22px]",
-                    !selected && "text-board-text",
+                    "relative flex min-h-[52px] flex-col items-center justify-center gap-px rounded-md no-underline",
+                    selected ? "" : "bg-board-row text-board-muted",
                   )}
+                  style={
+                    selected
+                      ? {
+                          background: "var(--board-text)",
+                          color: "var(--board)",
+                        }
+                      : undefined
+                  }
                 >
-                  {d.slice(8)}
-                </b>
-                {changedDays.has(d) ? (
-                  <i
-                    aria-hidden
-                    className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-plate-change"
-                  />
-                ) : null}
-                <span className="sr-only">
-                  {weekdayFull(d)}, {dayMonth(d)}
-                  {d === today ? ", сегодня" : ""}
-                  {changedDays.has(d) ? ", есть изменения" : ""}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em]">
+                    {weekdayShort(d)}
+                  </span>
+                  <b
+                    className={cn(
+                      "font-board text-[22px] font-extrabold leading-[22px]",
+                      !selected && "text-board-text",
+                    )}
+                  >
+                    {d.slice(8)}
+                  </b>
+                  {changedDays.has(d) ? (
+                    <i
+                      aria-hidden
+                      className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-plate-change"
+                    />
+                  ) : null}
+                  <span className="sr-only">
+                    {weekdayFull(d)}, {dayMonth(d)}
+                    {d === today ? ", сегодня" : ""}
+                    {changedDays.has(d) ? ", есть изменения" : ""}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+        ) : null}
       </header>
 
-      <div className="flex flex-1 flex-col px-3 pb-3">
-        {view === "day" ? (
+      <section className="schedule-results" aria-labelledby="schedule-period">
+        <h2
+          id="schedule-period"
+          className="mb-3 font-board text-[28px] font-bold uppercase leading-tight"
+        >
+          {view === "month"
+            ? month.title
+            : view === "session"
+              ? "Расписание сессии"
+              : view === "day"
+                ? dateTitle
+                : `Неделя · ${dayMonth(monday)} — ${dayMonth(days[6])}`}
+        </h2>
+        {view === "month" ? (
+          <MonthCalendar
+            date={date}
+            lessons={lessons}
+            changedDays={changedDays}
+          />
+        ) : view === "session" ? (
+          <SessionSchedule groupId={user.groupId} />
+        ) : view === "day" ? (
           <ScheduleSwipe
             previous={link(addDays(date, -1), "day")}
             next={link(addDays(date, 1), "day")}
@@ -262,10 +330,11 @@ export default async function SchedulePage({
                 role="table"
                 aria-label={`Пары, ${weekdayFull(date)} ${dayMonth(date)}`}
               >
-                <BoardHead />
+                <BoardHead wide />
                 {lessons.map((l) => (
                   <div key={l.id} role="rowgroup">
-                    <LessonRow lesson={l} details />
+                    <LessonBreak gap={breaks?.get(l.id)} />
+                    <LessonRow lesson={l} details wide />
                     {l.state.kind !== "cancelled" && l.state.kind !== "past" ? (
                       <BoardDetailRow>
                         <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1.5">
@@ -301,60 +370,46 @@ export default async function SchedulePage({
             ) : null}
           </ScheduleSwipe>
         ) : (
-          days.map((d) => {
-            const dayLessons = lessons.filter((l) => mskDate(l.startsAt) === d);
-            return (
-              <section
-                key={d}
-                aria-label={`${weekdayFull(d)} ${dayMonth(d)}`}
-                className="mb-2"
-              >
-                <h2 className="m-0 border-t border-board-line pt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-board-head">
-                  {weekdayFull(d)} · {dayMonth(d)}
-                  {d === today ? " · сегодня" : ""}
-                </h2>
-                <MovedOut items={movedOut.filter((move) => move.date === d)} />
-                {dayLessons.length ? (
-                  <div
-                    role="table"
-                    aria-label={`Пары, ${weekdayFull(d)} ${dayMonth(d)}`}
-                  >
-                    {dayLessons.map((l) => (
-                      <LessonRow key={l.id} lesson={l} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="py-2 text-[13px] text-board-muted">Пар нет</p>
-                )}
-              </section>
-            );
-          })
+          <div className="schedule-week">
+            {days.map((d) => {
+              const dayLessons = lessons.filter(
+                (l) => mskDate(l.startsAt) === d,
+              );
+              const dayBreaks = lessonBreaks(dayLessons);
+              return (
+                <section
+                  key={d}
+                  aria-label={`${weekdayFull(d)} ${dayMonth(d)}`}
+                  className="rounded-xl bg-board-row p-3"
+                >
+                  <h2 className="m-0 pb-2 text-[13px] font-bold uppercase tracking-[0.12em] text-board-head">
+                    {weekdayFull(d)} · {dayMonth(d)}
+                    {d === today ? " · сегодня" : ""}
+                  </h2>
+                  <MovedOut
+                    items={movedOut.filter((move) => move.date === d)}
+                  />
+                  {dayLessons.length ? (
+                    <div
+                      role="table"
+                      aria-label={`Пары, ${weekdayFull(d)} ${dayMonth(d)}`}
+                    >
+                      {dayLessons.map((l) => (
+                        <div key={l.id} role="rowgroup">
+                          <LessonBreak gap={dayBreaks.get(l.id)} />
+                          <LessonRow lesson={l} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="py-2 text-[13px] text-board-muted">Пар нет</p>
+                  )}
+                </section>
+              );
+            })}
+          </div>
         )}
-
-        <div className="mt-auto flex flex-wrap gap-x-3.5 gap-y-1.5 border-t border-board-line px-0.5 pt-3 text-xs text-board-muted">
-          <span>
-            <b className="font-board uppercase tracking-[0.06em] text-board-soon">
-              скоро
-            </b>{" "}
-            — меньше часа
-          </span>
-          <span>
-            <b className="font-board uppercase tracking-[0.06em] text-board-change">
-              перенос
-            </b>{" "}
-            — новое время
-          </span>
-          <span>
-            <b className="rounded-[3px] bg-plate-danger px-1 font-board uppercase tracking-[0.06em] text-white">
-              отмена
-            </b>{" "}
-            — пары не будет
-          </span>
-        </div>
-      </div>
-      <div className="bg-bg px-4 py-4">
-        <ConceptNote />
-      </div>
+      </section>
     </main>
   );
 }

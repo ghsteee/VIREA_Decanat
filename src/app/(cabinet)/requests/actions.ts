@@ -8,10 +8,10 @@ import { pickupSlotAvailable } from "@/server/pickup";
 import { requireUser } from "@/server/auth/guards";
 import type { Field } from "@/server/applications";
 
-export type SubmitState = { error?: string };
+export type SubmitState = { error?: string; slotUnavailable?: boolean };
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const SLOT_UNAVAILABLE =
-  "Это окно больше недоступно. Обнови страницу и выбери другое.";
+  "Это окно больше недоступно. Выбери другое или согласуй время с дирекцией.";
 
 /** A1, A2: заявка из каталога; данные профиля подставляет сервер. */
 export async function submitApplication(
@@ -52,7 +52,7 @@ export async function submitApplication(
 
   const slotId = String(form.get("slotId") ?? "") || null;
   if (slotId && (delivery !== "pickup" || !UUID.test(slotId)))
-    return { error: SLOT_UNAVAILABLE };
+    return { error: SLOT_UNAVAILABLE, slotUnavailable: true };
 
   // Повторная подача — только своей отклонённой заявки
   const previousId = String(form.get("previousId") ?? "") || null;
@@ -112,7 +112,7 @@ export async function submitApplication(
         },
       });
     });
-    if (!app) return { error: SLOT_UNAVAILABLE };
+    if (!app) return { error: SLOT_UNAVAILABLE, slotUnavailable: true };
     id = app.id;
   } catch (e) {
     if (
@@ -121,7 +121,7 @@ export async function submitApplication(
     ) {
       const columns = e.meta?.target;
       if (slotId && Array.isArray(columns) && columns.includes("slotId"))
-        return { error: SLOT_UNAVAILABLE };
+        return { error: SLOT_UNAVAILABLE, slotUnavailable: true };
       return { error: "Эту заявку уже подали заново." };
     }
     throw e;

@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-illustration";
-import { ChevronLeft } from "lucide-react";
+import { Bell, ChevronDown, ChevronLeft } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
 import { Plate } from "@/components/board/plate";
-import { ConceptNote } from "@/components/concept-note";
 import { mskDate, mskTime, weekdayShort } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { NotificationKind } from "@prisma/client";
@@ -120,10 +119,10 @@ export default async function FeedPage({
   const home = user.role === "staff" ? "/staff" : "/";
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
+    <main className="cabinet-page flex flex-col">
       <section
         aria-labelledby="feed-title"
-        className="flex flex-col gap-3 bg-board px-3 pb-1 pt-2 text-board-text"
+        className="min-w-0 flex flex-col gap-3 bg-board px-3 pb-1 pt-2 text-board-text md:rounded-3xl md:p-6"
       >
         <Link
           href={home}
@@ -143,17 +142,15 @@ export default async function FeedPage({
             {fresh.length ? `${fresh.length} новых` : "новых нет"}
           </p>
         </div>
-        <nav
-          aria-label="Фильтр"
-          className="-mr-3 flex gap-1.5 overflow-x-auto pr-3"
-        >
+        <nav aria-label="Фильтр" className="flex flex-wrap gap-1.5">
           {(Object.keys(FILTERS) as FilterKey[]).map((key) => (
             <Link
               key={key}
+              prefetch={false}
               href={key === "all" ? "/feed" : `/feed?f=${key}`}
               aria-current={f === key ? "true" : undefined}
               className={cn(
-                "flex h-10 flex-none items-center rounded-full px-3 text-[13px] font-semibold no-underline",
+                "flex min-h-11 flex-none items-center rounded-full px-3 text-[13px] font-semibold no-underline",
                 f === key ? "" : "bg-board-row text-board-text",
               )}
               style={
@@ -196,7 +193,7 @@ export default async function FeedPage({
                     {href ? (
                       <Link
                         href={href}
-                        className="flex min-h-8 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
+                        className="flex min-h-11 items-center font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
                       >
                         Открыть ›
                       </Link>
@@ -207,7 +204,7 @@ export default async function FeedPage({
             })}
           </ul>
         ) : (
-          <div className="flex items-center gap-2 border-t border-board-line px-0.5 py-2">
+          <div className="empty-state border-t border-board-line">
             <EmptyIllustration
               scene={f === "deadlines" ? "deadlines" : "notifications"}
             />
@@ -218,14 +215,17 @@ export default async function FeedPage({
             </p>
           </div>
         )}
-      </section>
-
-      <div className="flex flex-col px-4 pb-3 pt-3.5">
-        {earlier.length ? (
-          <>
-            <h2 className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-text-muted">
-              Раньше
-            </h2>
+        {earlier.length > 0 && (
+          <details key={f} className="notification-stack">
+            <summary>
+              <Bell size={19} aria-hidden />
+              <span>
+                <strong>Раньше</strong>
+                <small>{earlier[0].notification.title}</small>
+              </span>
+              <b>{earlier.length}</b>
+              <ChevronDown size={18} aria-hidden />
+            </summary>
             <ul className="m-0 list-none border-b border-border p-0">
               {earlier.map((r) => {
                 const d = r.notification.publishedAt;
@@ -234,6 +234,11 @@ export default async function FeedPage({
                   <>
                     <span>{plate(r.notification)}</span>
                     <b className="text-[14.5px]">{r.notification.title}</b>
+                    {r.notification.body && (
+                      <span className="text-sm text-text-muted">
+                        {r.notification.body}
+                      </span>
+                    )}
                   </>
                 );
                 return (
@@ -261,8 +266,8 @@ export default async function FeedPage({
                 );
               })}
             </ul>
-          </>
-        ) : null}
+          </details>
+        )}
         <p className="mt-3.5 text-[13px] leading-[18px] text-text-muted">
           Важное дублируем в push и на почту — включается в{" "}
           <Link href="/profile" className="underline underline-offset-2">
@@ -270,8 +275,7 @@ export default async function FeedPage({
           </Link>
           .
         </p>
-        <ConceptNote className="mt-3 text-[11px] leading-[15px] text-text-muted" />
-      </div>
+      </section>
     </main>
   );
 }

@@ -4,20 +4,10 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
-import { VerticalRoute } from "@/components/board/vertical-route";
-import { ConceptNote } from "@/components/concept-note";
+import { RequestRoute } from "@/components/board/route";
 import { STATUS_LABEL, num } from "@/server/applications";
-import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-const STEP = {
-  submitted: 1,
-  in_progress: 2,
-  ready: 3,
-  issued: 4,
-  rejected: 0,
-} as const;
 
 export default async function RequestsPage() {
   const user = await requireUser();
@@ -49,10 +39,10 @@ export default async function RequestsPage() {
   const moving = active.length - toFix;
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
+    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:gap-6">
       <section
         aria-labelledby="rq-title"
-        className="flex flex-col gap-4 bg-board px-3.5 pb-3.5 pt-4 text-board-text"
+        className="min-w-0 flex flex-col gap-4 bg-board px-3.5 pb-3.5 pt-4 text-board-text md:rounded-3xl md:p-6"
       >
         <div>
           <h1
@@ -84,7 +74,7 @@ export default async function RequestsPage() {
                 size="sm"
               />
             </div>
-            <VerticalRoute status={top.status} events={top.events} />
+            <RequestRoute status={top.status} events={top.events} />
           </article>
         ) : null}
 
@@ -122,21 +112,9 @@ export default async function RequestsPage() {
               <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link">
                 {STATUS_LABEL[a.status]}
               </span>
-              <span
-                aria-hidden
-                className="col-span-2 grid grid-cols-4 gap-[3px]"
-              >
-                {[1, 2, 3, 4].map((i) => (
-                  <i
-                    key={i}
-                    className={cn(
-                      "h-1 rounded-sm bg-board-line",
-                      i < STEP[a.status] && "bg-board-link",
-                      i === STEP[a.status] && "bg-plate-change",
-                    )}
-                  />
-                ))}
-              </span>
+              <div className="col-span-2">
+                <RequestRoute status={a.status} events={a.events} />
+              </div>
               <span className="col-span-2 text-[12.5px] text-board-muted">
                 № {num(a.number)} · обычно {a.type.leadTime}
               </span>
@@ -144,7 +122,7 @@ export default async function RequestsPage() {
           ),
         )}
         {!active.length ? (
-          <div className="flex items-center gap-2">
+          <div className="empty-state">
             <EmptyIllustration scene="requests" />
             <p className="m-0 text-[15px]">
               Заявок пока нет. Можно заказать справку и следить за её статусом.
@@ -153,7 +131,7 @@ export default async function RequestsPage() {
         ) : null}
       </section>
 
-      <div className="flex flex-col px-4 pb-3 pt-4">
+      <div className="flex min-w-0 flex-col px-4 pb-3 pt-4 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
         <h2 className="mb-1 font-board text-[22px] font-extrabold uppercase leading-[26px] tracking-[0.03em]">
           Заказать
         </h2>
@@ -172,7 +150,6 @@ export default async function RequestsPage() {
             </li>
           ))}
         </ul>
-        <ConceptNote className="mt-4 text-[11px] leading-[15px] text-text-muted" />
       </div>
     </main>
   );

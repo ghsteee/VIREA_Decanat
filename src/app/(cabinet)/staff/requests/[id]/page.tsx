@@ -1,6 +1,6 @@
+import { RequestRoute } from "@/components/board/route";
 import { pickupLabel } from "@/server/pickup";
 import Link from "next/link";
-import { ConceptNote } from "@/components/concept-note";
 import { requireStaff } from "@/server/auth/guards";
 import {
   NEXT,
@@ -46,7 +46,7 @@ export default async function StaffRequestPage({
   const options = NEXT[app.status];
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[640px] flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text">
+    <main className="cabinet-page flex flex-col gap-4 bg-board px-4 pb-6 pt-4 text-board-text md:rounded-3xl">
       <Link
         href="/staff"
         className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted"
@@ -74,6 +74,7 @@ export default async function StaffRequestPage({
           </div>
           <Flaps value={num(app.number)} size="sm" />
         </div>
+        <RequestRoute status={app.status} events={app.events} />
         <dl className="m-0 grid grid-cols-[120px_minmax(0,1fr)] gap-x-2.5 gap-y-1.5 text-[13.5px]">
           {(app.type.fields as Field[]).map((f) =>
             data[f.key] !== undefined ? (
@@ -129,7 +130,6 @@ export default async function StaffRequestPage({
           </ol>
         </div>
       </section>
-      <ConceptNote className="text-[11px] text-board-muted" />
     </main>
   );
 }

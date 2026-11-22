@@ -5,8 +5,7 @@ import { requireUser } from "@/server/auth/guards";
 import { notFound } from "next/navigation";
 import { requireOwnApplication, num, type Field } from "@/server/applications";
 import { Flaps } from "@/components/board/flaps";
-import { VerticalRoute } from "@/components/board/vertical-route";
-import { ConceptNote } from "@/components/concept-note";
+import { RequestRoute } from "@/components/board/route";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +26,8 @@ export default async function RequestPage({
   const rejected = app.events.find((e) => e.toStatus === "rejected");
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
-      <section className="flex flex-col gap-4 bg-board px-3.5 pb-4 pt-2 text-board-text">
+    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-6">
+      <section className="flex flex-col gap-4 bg-board px-3.5 pb-4 pt-2 text-board-text md:rounded-3xl md:p-6">
         <Link
           href="/requests"
           className="-ml-1 flex min-h-11 items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted no-underline"
@@ -56,6 +55,7 @@ export default async function RequestPage({
         </div>
         {rejected ? (
           <div className="flex flex-col gap-2 rounded-[10px] border border-plate-danger bg-board-row p-3">
+            <RequestRoute status={app.status} events={app.events} />
             <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-danger-text">
               Отказ
             </span>
@@ -71,11 +71,11 @@ export default async function RequestPage({
           </div>
         ) : (
           <div className="rounded-[10px] bg-board-row px-3 py-3.5">
-            <VerticalRoute status={app.status} events={app.events} />
+            <RequestRoute status={app.status} events={app.events} />
           </div>
         )}
       </section>
-      <div className="flex flex-col gap-3 px-4 py-4">
+      <div className="flex flex-col gap-3 px-4 py-4 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
         <dl className="m-0 grid grid-cols-[130px_minmax(0,1fr)] gap-x-2.5 gap-y-1.5 text-[14px]">
           {fields.map((f) =>
             data[f.key] !== undefined ? (
@@ -94,7 +94,6 @@ export default async function RequestPage({
               : "электронно"}
           </dd>
         </dl>
-        <ConceptNote />
       </div>
     </main>
   );

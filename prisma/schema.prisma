@@ -124,6 +124,10 @@ model StudentProfile {
   deadlineProgress DeadlineProgress[]
   applications     Application[]
 
+  attendance   LessonAttendance[]
+  achievements SubjectAchievement[]
+  portfolio    PortfolioItem[]
+
   @@index([groupId])
 }
 
@@ -160,11 +164,12 @@ model AcademicTerm {
   /// Начало сессии — для статуса допуска (демо-положение, п. 3.3)
   sessionStartsOn DateTime? @db.Date
 
-  weeks       AcademicWeek[]
-  lessons     Lesson[]
-  assessments Assessment[]
-  standings   StudentTermStanding[]
-  admission   AdmissionItem[]
+  weeks        AcademicWeek[]
+  lessons      Lesson[]
+  assessments  Assessment[]
+  standings    StudentTermStanding[]
+  admission    AdmissionItem[]
+  achievements SubjectAchievement[]
 }
 
 model AcademicWeek {
@@ -183,10 +188,11 @@ model Subject {
   /// Короткое название для табло
   shortName String?
 
-  lessons     Lesson[]
-  assessments Assessment[]
-  deadlines   Deadline[]
-  admission   AdmissionItem[]
+  lessons      Lesson[]
+  assessments  Assessment[]
+  deadlines    Deadline[]
+  admission    AdmissionItem[]
+  achievements SubjectAchievement[]
 }
 
 model Teacher {
@@ -259,6 +265,8 @@ model Lesson {
   teachers LessonTeacher[]
   changes  LessonChange[]
 
+  attendance LessonAttendance[]
+
   @@index([groupId, startsAt])
 }
 
@@ -328,18 +336,22 @@ enum AssessmentKind {
 }
 
 model Assessment {
-  id        String         @id @default(uuid()) @db.Uuid
-  groupId   String         @db.Uuid
-  group     Group          @relation(fields: [groupId], references: [id])
-  subjectId String         @db.Uuid
-  subject   Subject        @relation(fields: [subjectId], references: [id])
-  termId    String         @db.Uuid
-  term      AcademicTerm   @relation(fields: [termId], references: [id])
-  kind      AssessmentKind
-  title     String
-  heldOn    DateTime?      @db.Date
+  id              String         @id @default(uuid()) @db.Uuid
+  groupId         String         @db.Uuid
+  group           Group          @relation(fields: [groupId], references: [id])
+  subjectId       String         @db.Uuid
+  subject         Subject        @relation(fields: [subjectId], references: [id])
+  termId          String         @db.Uuid
+  term            AcademicTerm   @relation(fields: [termId], references: [id])
+  kind            AssessmentKind
+  title           String
+  heldOn          DateTime?      @db.Date
+  /// Время сессии хранится в UTC, в интерфейсе — московское.
+  sessionStartsAt DateTime?      @db.Timestamptz(6)
+  sessionRoom     String?
+  sessionVersion  Int            @default(1)
   /// Максимум баллов в рейтинге за семестр (демо-положение, раздел 2)
-  maxPoints Int?
+  maxPoints       Int?
 
   results AssessmentResult[]
 
@@ -390,6 +402,74 @@ enum AdmissionItemStatus {
   done
   pending
   overdue
+}
+
+/// Одна отметка журнала за занятие. Отсутствие строки означает, что отметки нет.
+model LessonAttendance {
+  studentId String         @db.Uuid
+  lessonId  String         @db.Uuid
+  present   Boolean
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, lessonId])
+}
+
+/// Опубликованная дополнительная цель студента; не входит в рейтинг и допуск.
+model SubjectAchievement {
+  id        String         @id @default(uuid()) @db.Uuid
+  studentId String         @db.Uuid
+  termId    String         @db.Uuid
+  subjectId String         @db.Uuid
+  title     String
+  earned    Boolean        @default(false)
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  term      AcademicTerm   @relation(fields: [termId], references: [id], onDelete: Cascade)
+  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, termId, subjectId, title])
+}
+
+enum PortfolioKind {
+  work
+  participation
+  award
+}
+
+enum PortfolioAward {
+  winner
+  prize
+}
+
+model PortfolioItem {
+  id          String                @id @default(uuid()) @db.Uuid
+  studentId   String                @db.Uuid
+  student     StudentProfile        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  kind        PortfolioKind
+  award       PortfolioAward?
+  title       String                @db.VarChar(160)
+  eventName   String?               @db.VarChar(120)
+  description String                @default("") @db.VarChar(2000)
+  occurredOn  DateTime?             @db.Date
+  projectUrl  String?               @db.VarChar(500)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  attachments PortfolioAttachment[]
+
+  @@index([studentId, occurredOn])
+}
+
+model PortfolioAttachment {
+  id          String        @id @default(uuid()) @db.Uuid
+  itemId      String        @db.Uuid
+  item        PortfolioItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  storageKey  String        @unique @db.Uuid
+  name        String        @db.VarChar(120)
+  contentType String
+  bytes       Int
+  createdAt   DateTime      @default(now())
+
+  @@index([itemId])
 }
 
 model AdmissionItem {

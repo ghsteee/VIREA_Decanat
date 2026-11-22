@@ -24,13 +24,27 @@ services:
       context: .
       target: runner
     restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health', {signal: AbortSignal.timeout(4000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
     env_file: .env
     environment:
+      PORTFOLIO_STORAGE_DIR: /app/storage/portfolio
       DATABASE_URL: postgresql://dekanych:${POSTGRES_PASSWORD}@db:5432/dekanych
       # Сертификаты НУЦ Минцифры — только для запросов к GigaChat (GIGACHAT_CA_BUNDLE в .env),
       # не для всего приложения: остальные соединения проверяются обычными корневыми сертификатами.
     volumes:
       - ./deploy/certs:/certs:ro
+      - portfolio-data:/app/storage/portfolio
     depends_on:
       db:
         condition: service_healthy
@@ -43,7 +57,10 @@ services:
     profiles: ["tools"]
     env_file: .env
     environment:
+      PORTFOLIO_STORAGE_DIR: /app/storage/portfolio
       DATABASE_URL: postgresql://dekanych:${POSTGRES_PASSWORD}@db:5432/dekanych
+    volumes:
+      - portfolio-data:/app/storage/portfolio
     depends_on:
       db:
         condition: service_healthy
@@ -66,5 +83,6 @@ services:
 
 volumes:
   db-data:
+  portfolio-data:
   caddy-data:
   caddy-config:

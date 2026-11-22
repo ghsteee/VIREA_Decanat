@@ -7,7 +7,6 @@ import {
   LessonRow,
 } from "@/components/board/lesson-row";
 import { ReadStats } from "@/components/staff/read-stats";
-import { ConceptNote } from "@/components/concept-note";
 import { dayRange, getLessons } from "@/server/queries/schedule";
 import { mskDate } from "@/lib/time";
 
@@ -28,7 +27,7 @@ export default async function StaffSchedulePage({
   const lessons = group ? await getLessons(group.id, ...dayRange(date)) : [];
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[1100px] flex-col gap-5 bg-board px-4 pb-6 pt-4 text-board-text lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-7 lg:px-8 lg:pt-7">
+    <main className="cabinet-page cabinet-columns flex flex-col gap-5 bg-board px-4 pb-6 pt-4 text-board-text lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.65fr)] lg:gap-7 lg:px-8 lg:pt-7 md:rounded-3xl">
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em] lg:text-[46px] lg:leading-[44px]">
@@ -37,6 +36,12 @@ export default async function StaffSchedulePage({
           <p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
             Выбери группу и день, затем пару
           </p>
+          <Link
+            href={group ? `/staff/session?group=${group.id}` : "/staff/session"}
+            className="mt-3 inline-flex min-h-11 items-center rounded-lg bg-board-row px-4 font-semibold text-board-link"
+          >
+            Редактор сессии
+          </Link>
         </div>
         {sp.done ? (
           <p
@@ -109,7 +114,6 @@ export default async function StaffSchedulePage({
         </h2>
         <ReadStats authorId={user.id} kinds={["lesson_change"]} />
       </aside>
-      <ConceptNote className="text-[11px] text-board-muted lg:col-span-2" />
     </main>
   );
 }

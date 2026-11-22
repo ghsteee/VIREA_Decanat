@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { QrCode, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { logout } from "@/app/login/actions";
-import { setTheme } from "./actions";
+import { ThemeSwitch } from "@/components/nav/theme-switch";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
-import { ConceptNote } from "@/components/concept-note";
-import { cn } from "@/lib/utils";
 import { PushToggle } from "@/components/push-toggle";
 import { vapidPublicKey } from "@/server/push";
 import { EmailSettings } from "@/components/email-settings";
@@ -14,12 +12,6 @@ import { assistantEnabled } from "@/server/gigachat";
 import { emailConfigured } from "@/server/email";
 
 export const dynamic = "force-dynamic";
-
-const THEMES = [
-  { value: "light", label: "Светлая" },
-  { value: "dark", label: "Тёмная" },
-  { value: "system", label: "Как система" },
-] as const;
 
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -41,15 +33,15 @@ export default async function ProfilePage() {
   const theme = prefs?.theme ?? "system";
 
   return (
-    <main className="mx-auto flex max-w-[480px] flex-col">
-      <section className="flex flex-col gap-3.5 bg-board px-3.5 pb-4 pt-4 text-board-text">
+    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-2 lg:gap-6">
+      <section className="flex min-w-0 flex-col gap-3.5 bg-board px-3.5 pb-4 pt-4 text-board-text md:rounded-3xl md:p-6">
         <h1 className="m-0 font-board text-[34px] font-extrabold uppercase leading-[34px] tracking-[0.03em]">
           Профиль
         </h1>
         {profile ? (
           <article
             aria-label="Студенческий билет"
-            className="relative flex flex-col gap-3 rounded-[10px] bg-board-row px-3.5 pb-1 pt-3.5"
+            className="relative flex flex-col gap-3 rounded-[10px] bg-board-row p-3.5"
           >
             <div className="flex items-baseline justify-between">
               <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
@@ -96,13 +88,6 @@ export default async function ProfilePage() {
                 {user.isGroupHead ? " · староста" : ""}
               </span>
             </div>
-            <div className="mt-1 flex min-h-12 items-center justify-between border-t border-dashed border-board-line font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-dim">
-              <span className="flex items-center gap-2">
-                <QrCode size={18} aria-hidden />
-                QR на проходной — скоро
-              </span>
-              <ChevronRight size={16} aria-hidden />
-            </div>
           </article>
         ) : (
           <p className="m-0 text-[15px] text-board-muted">
@@ -111,7 +96,7 @@ export default async function ProfilePage() {
         )}
       </section>
 
-      <div className="flex flex-col gap-5 px-4 py-4">
+      <div className="flex min-w-0 flex-col gap-5 px-4 py-4 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
         {user.isGroupHead ? (
           <Link
             href="/group-head"
@@ -156,28 +141,7 @@ export default async function ProfilePage() {
           >
             Тема
           </h2>
-          <form
-            action={setTheme}
-            role="group"
-            aria-label="Тема"
-            className="grid grid-cols-3 rounded-[10px] bg-surface-muted p-[3px]"
-          >
-            {THEMES.map((t) => (
-              <button
-                key={t.value}
-                type="submit"
-                name="theme"
-                value={t.value}
-                aria-pressed={theme === t.value}
-                className={cn(
-                  "min-h-10 rounded-lg font-board text-[15px] font-bold uppercase tracking-[0.06em]",
-                  theme === t.value ? "bg-text text-bg" : "text-text-muted",
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </form>
+          <ThemeSwitch theme={theme} />
         </section>
 
         <form action={logout}>
@@ -188,7 +152,6 @@ export default async function ProfilePage() {
             Выйти
           </button>
         </form>
-        <ConceptNote />
       </div>
     </main>
   );

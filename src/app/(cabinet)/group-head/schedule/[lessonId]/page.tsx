@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { requireGroupHead } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { LessonForm } from "@/components/staff/forms";
-import { ConceptNote } from "@/components/concept-note";
 import { pairByStart } from "@/lib/pairs";
 import { mskDate, mskTime } from "@/lib/time";
 import { updateGroupLesson } from "../../actions";
@@ -30,7 +29,7 @@ export default async function GroupLessonPage({
   });
 
   return (
-    <main className="mx-auto flex max-w-[560px] flex-col gap-4 bg-board px-4 py-4 text-board-text">
+    <main className="cabinet-page flex flex-col gap-4 bg-board px-4 py-4 text-board-text md:rounded-3xl">
       <Link
         href="/group-head"
         className="flex min-h-11 items-center text-board-link"
@@ -57,7 +56,6 @@ export default async function GroupLessonPage({
           }))}
         />
       </section>
-      <ConceptNote />
     </main>
   );
 }
