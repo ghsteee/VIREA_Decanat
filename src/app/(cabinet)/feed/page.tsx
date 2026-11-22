@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-illustration";
-import { ChevronLeft } from "lucide-react";
+import { Bell, ChevronDown, ChevronLeft } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
@@ -119,7 +119,7 @@ export default async function FeedPage({
   const home = user.role === "staff" ? "/staff" : "/";
 
   return (
-    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:gap-6">
+    <main className="cabinet-page flex flex-col">
       <section
         aria-labelledby="feed-title"
         className="min-w-0 flex flex-col gap-3 bg-board px-3 pb-1 pt-2 text-board-text md:rounded-3xl md:p-6"
@@ -146,6 +146,7 @@ export default async function FeedPage({
           {(Object.keys(FILTERS) as FilterKey[]).map((key) => (
             <Link
               key={key}
+              prefetch={false}
               href={key === "all" ? "/feed" : `/feed?f=${key}`}
               aria-current={f === key ? "true" : undefined}
               className={cn(
@@ -214,14 +215,17 @@ export default async function FeedPage({
             </p>
           </div>
         )}
-      </section>
-
-      <div className="flex min-w-0 flex-col px-4 pb-3 pt-3.5 md:mt-5 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0">
-        {earlier.length ? (
-          <>
-            <h2 className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-text-muted">
-              Раньше
-            </h2>
+        {earlier.length > 0 && (
+          <details key={f} className="notification-stack">
+            <summary>
+              <Bell size={19} aria-hidden />
+              <span>
+                <strong>Раньше</strong>
+                <small>{earlier[0].notification.title}</small>
+              </span>
+              <b>{earlier.length}</b>
+              <ChevronDown size={18} aria-hidden />
+            </summary>
             <ul className="m-0 list-none border-b border-border p-0">
               {earlier.map((r) => {
                 const d = r.notification.publishedAt;
@@ -230,6 +234,11 @@ export default async function FeedPage({
                   <>
                     <span>{plate(r.notification)}</span>
                     <b className="text-[14.5px]">{r.notification.title}</b>
+                    {r.notification.body && (
+                      <span className="text-sm text-text-muted">
+                        {r.notification.body}
+                      </span>
+                    )}
                   </>
                 );
                 return (
@@ -257,8 +266,8 @@ export default async function FeedPage({
                 );
               })}
             </ul>
-          </>
-        ) : null}
+          </details>
+        )}
         <p className="mt-3.5 text-[13px] leading-[18px] text-text-muted">
           Важное дублируем в push и на почту — включается в{" "}
           <Link href="/profile" className="underline underline-offset-2">
@@ -266,7 +275,7 @@ export default async function FeedPage({
           </Link>
           .
         </p>
-      </div>
+      </section>
     </main>
   );
 }

@@ -2,22 +2,15 @@ import Link from "next/link";
 import { QrCode, ChevronRight } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { logout } from "@/app/login/actions";
-import { setTheme } from "./actions";
+import { ThemeSwitch } from "@/components/nav/theme-switch";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
-import { cn } from "@/lib/utils";
 import { PushToggle } from "@/components/push-toggle";
 import { vapidPublicKey } from "@/server/push";
 import { EmailSettings } from "@/components/email-settings";
 import { emailConfigured } from "@/server/email";
 
 export const dynamic = "force-dynamic";
-
-const THEMES = [
-  { value: "light", label: "Светлая" },
-  { value: "dark", label: "Тёмная" },
-  { value: "system", label: "Как система" },
-] as const;
 
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -146,28 +139,7 @@ export default async function ProfilePage() {
           >
             Тема
           </h2>
-          <form
-            action={setTheme}
-            role="group"
-            aria-label="Тема"
-            className="grid grid-cols-3 rounded-[10px] bg-surface-muted p-[3px]"
-          >
-            {THEMES.map((t) => (
-              <button
-                key={t.value}
-                type="submit"
-                name="theme"
-                value={t.value}
-                aria-pressed={theme === t.value}
-                className={cn(
-                  "min-h-11 rounded-lg font-board text-[15px] font-bold uppercase tracking-[0.06em]",
-                  theme === t.value ? "bg-text text-bg" : "text-text-muted",
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </form>
+          <ThemeSwitch theme={theme} />
         </section>
 
         <form action={logout}>

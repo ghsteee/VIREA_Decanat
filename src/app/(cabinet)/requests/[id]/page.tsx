@@ -5,7 +5,7 @@ import { requireUser } from "@/server/auth/guards";
 import { notFound } from "next/navigation";
 import { requireOwnApplication, num, type Field } from "@/server/applications";
 import { Flaps } from "@/components/board/flaps";
-import { VerticalRoute } from "@/components/board/vertical-route";
+import { RequestRoute } from "@/components/board/route";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +55,7 @@ export default async function RequestPage({
         </div>
         {rejected ? (
           <div className="flex flex-col gap-2 rounded-[10px] border border-plate-danger bg-board-row p-3">
+            <RequestRoute status={app.status} events={app.events} />
             <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-danger-text">
               Отказ
             </span>
@@ -70,7 +71,7 @@ export default async function RequestPage({
           </div>
         ) : (
           <div className="rounded-[10px] bg-board-row px-3 py-3.5">
-            <VerticalRoute status={app.status} events={app.events} />
+            <RequestRoute status={app.status} events={app.events} />
           </div>
         )}
       </section>

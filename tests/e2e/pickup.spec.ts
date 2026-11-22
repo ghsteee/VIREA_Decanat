@@ -30,6 +30,8 @@ test("A3: студент выбирает свободное окно без п�
   await page.getByRole("button", { name: /Студент — Данила/ }).click();
   await expect(page).not.toHaveURL(/\/login$/);
   await page.goto("/requests/new?type=study_certificate");
+  await page.getByLabel("Куда нужна справка").fill("Демо проверки слота");
+  await page.getByRole("button", { name: "Далее" }).click();
   await page.getByRole("radio", { name: /Забрать в дирекции/ }).check();
   const selector = page.getByLabel("Время выдачи");
   await expect(selector.locator(`option[value="${busy.id}"]`)).toHaveCount(0);
@@ -38,7 +40,8 @@ test("A3: студент выбирает свободное окно без п�
   const label = await free.textContent();
   if (!id || !label) throw new Error("Сид не дал свободного окна");
   await selector.selectOption(id);
-  await page.getByLabel("Куда нужна справка").fill("Демо проверки слота");
+  await page.getByRole("button", { name: "Проверить заявку" }).click();
+  await expect(page.getByText(label, { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Отправить заявку" }).click();
   await expect(page.getByRole("status")).toContainText("Заявка отправлена");
   await expect(page.getByText(label, { exact: true })).toBeVisible();
