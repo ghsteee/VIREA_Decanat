@@ -61,7 +61,8 @@ export default async function StaffSessionPage({
       term: term!.id,
       subject,
       ...(assessment ? { assessment } : {}),
-    });
+    }) +
+    "#session-edit";
 
   return (
     <main className="cabinet-page flex flex-col gap-4 p-3 md:p-6">
@@ -136,7 +137,10 @@ export default async function StaffSessionPage({
               ))}
             </ul>
           </section>
-          <section className="min-w-0 rounded-2xl border border-border bg-surface">
+          <section
+            id="session-edit"
+            className="min-w-0 rounded-2xl border border-border bg-surface"
+          >
             {selected ? (
               <>
                 <h2 className="p-4 font-board text-2xl font-bold uppercase">
