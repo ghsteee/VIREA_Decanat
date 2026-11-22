@@ -2,6 +2,8 @@ name: Проверки демо на 360 px
 
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:

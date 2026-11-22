@@ -92,9 +92,9 @@ for (const size of sizes) {
       exact: true,
     });
     await expect(requestsLink).toHaveAttribute("href", "/requests");
-    expect((await requestsLink.boundingBox())!.height).toBeGreaterThanOrEqual(
-      44,
-    );
+    expect(
+      await requestsLink.evaluate((link) => (link as HTMLElement).offsetHeight),
+    ).toBeGreaterThanOrEqual(44);
     await requestsLink.focus();
     await requestsLink.press("Enter");
     await expect(

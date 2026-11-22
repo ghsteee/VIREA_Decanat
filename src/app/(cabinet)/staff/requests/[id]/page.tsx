@@ -1,3 +1,4 @@
+import { RequestRoute } from "@/components/board/route";
 import { pickupLabel } from "@/server/pickup";
 import Link from "next/link";
 import { requireStaff } from "@/server/auth/guards";
@@ -73,6 +74,7 @@ export default async function StaffRequestPage({
           </div>
           <Flaps value={num(app.number)} size="sm" />
         </div>
+        <RequestRoute status={app.status} events={app.events} />
         <dl className="m-0 grid grid-cols-[120px_minmax(0,1fr)] gap-x-2.5 gap-y-1.5 text-[13.5px]">
           {(app.type.fields as Field[]).map((f) =>
             data[f.key] !== undefined ? (

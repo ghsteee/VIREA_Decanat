@@ -82,7 +82,7 @@ export default async function LoginPage() {
               Для жюри — вход без пароля
             </h2>
             <p className="m-0 mb-1 text-[13px] leading-[18px] text-text-muted">
-              Все данные вымышленные. Демо каждое утро пересоздаётся.
+              Все данные в демонстрационных аккаунтах вымышленные.
             </p>
             {DEMO.map((d) => (
               <form key={d.key} action={demoLogin}>

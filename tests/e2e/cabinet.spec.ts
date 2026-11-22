@@ -203,7 +203,16 @@ test("S4 и S9: подача заявки, смена статуса и 404 дл
   const destination = `Учебная проверка ${Date.now()}`;
   await login(page, danila);
   await page.goto("/requests/new?type=study_certificate");
+  await page.getByRole("button", { name: "Далее" }).click();
+  await expect(page.getByLabel("Куда нужна справка")).toBeFocused();
   await page.getByLabel("Куда нужна справка").fill(destination);
+  await page.getByRole("button", { name: "Далее" }).click();
+  await page.getByRole("button", { name: "Проверить заявку" }).click();
+  await expect(page.getByText(destination, { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Шаг 1. Данные" }).click();
+  await expect(page.getByLabel("Куда нужна справка")).toHaveValue(destination);
+  await page.getByRole("button", { name: "Далее" }).click();
+  await page.getByRole("button", { name: "Проверить заявку" }).click();
   await page.getByRole("button", { name: "Отправить заявку" }).click();
   await expect(page.getByRole("status")).toContainText("Заявка отправлена");
   const requestPath = new URL(page.url()).pathname;
@@ -231,6 +240,11 @@ test("S4 и S9: подача заявки, смена статуса и 404 дл
   const response = await other.goto(requestPath);
   expect(response?.status()).toBe(404);
   expect(await response?.text()).not.toContain(destination);
+  expect(
+    (
+      await other.goto(`/requests/new?type=study_certificate&from=${id}`)
+    )?.status(),
+  ).toBe(404);
   expect((await other.goto("/staff"))?.status()).toBe(404);
   await other.close();
 });

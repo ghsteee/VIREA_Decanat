@@ -8,7 +8,7 @@ import { Flaps } from "@/components/board/flaps";
 import { BrandAurora } from "@/components/brand-aurora";
 import { BrandMark } from "@/components/brand-mark";
 import { ConceptNote } from "@/components/concept-note";
-import { CompactRoute } from "@/components/board/route";
+import { RequestRoute } from "@/components/board/route";
 import { DeadlineCheck } from "@/components/deadline-check";
 import {
   getAcademicWeek,
@@ -85,12 +85,6 @@ export default async function TodayPage() {
     format_changed: "Изменился формат",
     restored: "Пара восстановлена",
   };
-  const appDates = app
-    ? Object.fromEntries(
-        app.events.map((e) => [e.toStatus, dayMonth(mskDate(e.createdAt))]),
-      )
-    : {};
-
   return (
     <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,1fr)] lg:gap-6">
       <div className="flex min-w-0 flex-col [&>section:last-child]:grow">
@@ -105,6 +99,7 @@ export default async function TodayPage() {
               Деканыч
             </div>
             <Link
+              prefetch={false}
               href="/feed"
               aria-label={
                 unread ? `Уведомления, ${unread} новых` : "Уведомления"
@@ -343,12 +338,7 @@ export default async function TodayPage() {
                 № {String(app.number).padStart(4, "0")}
               </span>
             </div>
-            <CompactRoute status={app.status} dates={appDates} />
-            {app.status === "ready" ? (
-              <p className="m-0 text-[14px] text-text-muted">
-                {app.events.at(-1)?.pickupNote ?? "Справка готова"}
-              </p>
-            ) : null}
+            <RequestRoute status={app.status} events={app.events} />
             <Link
               href="/requests"
               className="flex min-h-11 items-center justify-center rounded-[10px] bg-action px-4 py-2 font-semibold text-on-action no-underline hover:brightness-95 active:brightness-90"

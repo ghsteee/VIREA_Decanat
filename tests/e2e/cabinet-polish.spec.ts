@@ -62,6 +62,7 @@ test("N1: предзагрузка не читает сообщение, пос�
       )
       .toBe(true);
     await page.reload();
+    await page.locator(".notification-stack summary").click();
     await expect(page.getByText(body, { exact: true })).toBeVisible();
     await expect(
       page.getByRole("main").locator('img[src*="empty-notifications"]'),
@@ -200,6 +201,7 @@ test("P3: без настроенных каналов остаются рабо
     Boolean(process.env.SMTP_HOST || process.env.VAPID_PUBLIC_KEY),
     "Сценарий предназначен для среды без внешних каналов",
   );
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/login");
   await expect(
     page.getByRole("region", { name: "Деканыч" }).getByRole("button"),
@@ -214,6 +216,9 @@ test("P3: без настроенных каналов остаются рабо
   await expect(page.getByText(/сейчас недоступ/)).toHaveCount(0);
   await page.getByRole("button", { name: "Тёмная", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(
+    page.getByRole("button", { name: "Тёмная", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Как система", exact: true }).click();
   await expect(page.locator("html")).not.toHaveAttribute("data-theme");
   await page
