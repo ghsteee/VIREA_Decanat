@@ -78,6 +78,9 @@ const TEACHERS = [
   "Звёзднодолов Лука Петрович",
   "Плёсокручев Фрол Романович",
   "Медовикова Злата Сергеевна",
+  "Листосклонова Марфа Глебовна",
+  "Клеверосветов Савелий Игоревич",
+  "Янтарнорощина Ульяна Арсеньевна",
   "Росопадова Вера Ильинична",
 ] as const;
 
@@ -94,6 +97,19 @@ const SUBJECTS = {
   stats: { name: "Теория вероятностей", short: "Теорвер" },
   orgchem: { name: "Органическая химия", short: "Органика" },
   physchem: { name: "Физическая химия", short: "Физхимия" },
+  networks: { name: "Компьютерные сети", short: "Комп. сети" },
+  os: { name: "Операционные системы", short: "ОС" },
+  infosec: { name: "Основы информационной безопасности", short: "Основы ИБ" },
+  optimization: { name: "Методы оптимизации", short: "Оптимизация" },
+  numerical: { name: "Численные методы", short: "Числ. методы" },
+  visualization: { name: "Визуализация данных", short: "Визуализация" },
+  processes: {
+    name: "Процессы и аппараты химической технологии",
+    short: "ПАХТ",
+  },
+  analytical: { name: "Аналитическая химия", short: "Аналит. химия" },
+  materials: { name: "Материаловедение", short: "Материаловедение" },
+  ecology: { name: "Промышленная экология", short: "Пром. экология" },
 } as const;
 type SubjectKey = keyof typeof SUBJECTS;
 
@@ -757,6 +773,76 @@ async function main() {
     ],
   };
 
+  // Добавляем пары в свободные окна, оставляя выходные и резервные слоты.
+  const expandedCourses = {
+    biso: {
+      student: danila,
+      teacher: "Листосклонова",
+      room: "В-410",
+      courses: [
+        ["networks", "Настроить учебную сеть"],
+        ["os", "Разобрать права доступа к файлам"],
+        ["infosec", "Составить модель угроз для учебного проекта"],
+      ],
+    },
+    kmbo: {
+      student: ksenia,
+      teacher: "Клеверосветов",
+      room: "Б-418",
+      courses: [
+        ["optimization", "Решить задачу линейного программирования"],
+        ["numerical", "Сравнить методы поиска корней"],
+        ["visualization", "Подготовить диаграммы по учебным данным"],
+      ],
+    },
+    khebo: {
+      student: marat,
+      teacher: "Янтарнорощина",
+      room: "Г-415",
+      courses: [
+        ["processes", "Рассчитать параметры теплообменника"],
+        ["analytical", "Подготовить отчёт по титрованию"],
+        ["materials", "Сравнить свойства полимеров"],
+        ["ecology", "Построить схему очистки воды"],
+      ],
+    },
+  } satisfies Record<
+    keyof typeof group,
+    {
+      student: typeof danila;
+      teacher: string;
+      room: string;
+      courses: [SubjectKey, string][];
+    }
+  >;
+  const groupKeys = ["biso", "kmbo", "khebo"] as const;
+  for (const key of groupKeys) {
+    const { teacher, room: classroom, courses } = expandedCourses[key];
+    const slots = templates[key];
+    let index = 0;
+    for (const day of [1, 2, 3, 4, 5]) {
+      const occupied = new Set(
+        slots.filter((slot) => slot.day === day).map((slot) => slot.pair),
+      );
+      const target = day === 5 ? 4 : 5;
+      for (const pair of [2, 3, 4, 5, 1, 6]) {
+        if (occupied.size >= target) break;
+        if (occupied.has(pair)) continue;
+        slots.push({
+          day,
+          pair,
+          subject: courses[index % courses.length][0],
+          kind:
+            index % 3 === 0 ? "lecture" : index % 3 === 1 ? "practice" : "lab",
+          room: classroom,
+          teacher,
+        });
+        occupied.add(pair);
+        index++;
+      }
+    }
+  }
+
   // У группы Данилы «сегодня» и «завтра» — ровно как в макетах
   const scriptedDays = new Set([today, tomorrow]);
   const lessonRows: Prisma.LessonCreateManyInput[] = [];
@@ -859,6 +945,22 @@ async function main() {
       kind: "practice",
       room: "А-305",
       teacher: "Плёсокручев",
+    },
+    {
+      date: tomorrow,
+      pair: 3,
+      subject: "networks",
+      kind: "lab",
+      room: expandedCourses.biso.room,
+      teacher: expandedCourses.biso.teacher,
+    },
+    {
+      date: tomorrow,
+      pair: 4,
+      subject: "os",
+      kind: "practice",
+      room: expandedCourses.biso.room,
+      teacher: expandedCourses.biso.teacher,
     },
   ];
   const tagged: Record<string, string> = {};
@@ -1124,6 +1226,50 @@ async function main() {
       },
     ],
   });
+  for (const key of groupKeys) {
+    const { student: demoStudent, courses } = expandedCourses[key];
+    for (const [index, [subject, title]] of courses.entries()) {
+      const profileId = demoStudent.profileId;
+      await rating(group[key].id, profileId, subject, [
+        {
+          title: "Самостоятельная работа",
+          kind: "practice",
+          max: 30,
+          got: 24 + index,
+        },
+        { title, kind: "lab", max: 40, got: index % 2 === 0 ? 35 : null },
+        {
+          title: "Итоговая контрольная",
+          kind: "test",
+          max: 30,
+          got: index % 2 === 0 ? 26 : null,
+        },
+      ]);
+      if (index % 2 !== 0) {
+        await db.admissionItem.create({
+          data: {
+            studentId: profileId,
+            subjectId: subjects[subject],
+            termId: term.id,
+            title,
+            dueAt: at(addDays(today, 4 + index), "18:00"),
+            status: "pending",
+            sortOrder: 1,
+          },
+        });
+      }
+      await db.subjectAchievement.create({
+        data: {
+          studentId: profileId,
+          subjectId: subjects[subject],
+          termId: term.id,
+          title: "Представить свой вариант решения на семинаре",
+          earned: index % 3 === 0,
+        },
+      });
+    }
+  }
+
   // Отметки вымышленного журнала только для уже проведённых занятий.
   for (const [studentId, groupId] of [
     [danila.profileId, group.biso.id],
@@ -1336,6 +1482,29 @@ async function main() {
     data: { readAt: at(today, "09:00") },
   });
 
+  const recipientsByGroup = {
+    biso: bisoUsers,
+    kmbo: kmboUsers,
+    khebo: kheboUsers,
+  };
+  for (const key of groupKeys) {
+    for (const [index, [subject, title]] of expandedCourses[key].courses
+      .slice(0, 2)
+      .entries()) {
+      await deadline({
+        title,
+        subject,
+        dueAt: at(addDays(today, 2 + index * 3), "18:00"),
+        publishedAt: at(addDays(today, -3), "12:00"),
+        authorId: irina.id,
+        authorRole: "staff",
+        groups: [group[key].id],
+        recipients: recipientsByGroup[key],
+        readAll: index === 0,
+      });
+    }
+  }
+
   const ann = await db.announcement.create({
     data: {
       authorId: irina.id,
@@ -1445,6 +1614,53 @@ async function main() {
       },
     }),
   };
+
+  const transcript = await db.applicationType.create({
+    data: {
+      code: "academic_transcript",
+      title: "Выписка об успеваемости",
+      leadTime: "3–5 дней",
+      sortOrder: 7,
+      deliveryMethods: ["pickup", "electronic"],
+      fields: [
+        field("period", "За какой период", "text"),
+        field("destination", "Куда нужна выписка", "text", false),
+      ],
+    },
+  });
+  const duplicateCard = await db.applicationType.create({
+    data: {
+      code: "student_card_duplicate",
+      title: "Дубликат студенческого билета",
+      leadTime: "до 7 дней",
+      sortOrder: 8,
+      deliveryMethods: ["pickup"],
+      fields: [field("reason", "Почему нужен дубликат", "text")],
+    },
+  });
+  const consultation = await db.applicationType.create({
+    data: {
+      code: "study_consultation",
+      title: "Консультация по учёбе",
+      leadTime: "1–2 дня",
+      sortOrder: 9,
+      deliveryMethods: ["electronic"],
+      fields: [
+        field("topic", "Тема консультации", "text"),
+        field("availability", "Когда удобно", "text", false),
+      ],
+    },
+  });
+  const personalUpdate = await db.applicationType.create({
+    data: {
+      code: "profile_correction",
+      title: "Уточнение данных в профиле",
+      leadTime: "до 5 дней",
+      sortOrder: 10,
+      deliveryMethods: ["electronic"],
+      fields: [field("description", "Что нужно уточнить", "text")],
+    },
+  });
 
   const snapshot = (
     last: string,
@@ -1611,7 +1827,7 @@ async function main() {
     number,
     keyof typeof group,
     number,
-    keyof typeof types,
+    keyof typeof queueForms,
     ("submitted" | "in_progress" | "ready" | "issued")[],
     number,
   ][] = [
@@ -1627,6 +1843,12 @@ async function main() {
       -5,
     ],
   ];
+  const queueForms = {
+    study: { destination: "По месту требования", copies: 1 },
+    stipend: { period: "Октябрь 2026", copies: 1 },
+    retake: { subject: "Математический анализ" },
+    military: { commissariat: "Военный комиссариат (демо)", copies: 1 },
+  };
   for (const [number, gKey, idx, typeKey, chain, offset] of queue) {
     const st = extrasByGroup[gKey][idx];
     const profile = await db.studentProfile.findUniqueOrThrow({
@@ -1639,10 +1861,7 @@ async function main() {
       groupId: group[gKey].id,
       typeId: types[typeKey].id,
       studentUserId: st.userId,
-      formData:
-        typeKey === "retake"
-          ? { subject: "Математический анализ" }
-          : { destination: "По месту требования", copies: 1 },
+      formData: queueForms[typeKey],
       profile: snapshot(
         profile.lastName,
         profile.firstName,
@@ -1658,6 +1877,83 @@ async function main() {
       })),
     });
   }
+  type DemoApplication = Parameters<typeof application>[0];
+  type DemoStatus = DemoApplication["events"][number]["to"];
+  const demoRequests: {
+    typeId: string;
+    formData: DemoApplication["formData"];
+    delivery: DemoApplication["delivery"];
+    chain: DemoStatus[];
+  }[] = [
+    {
+      typeId: transcript.id,
+      formData: { period: "Текущий семестр" },
+      delivery: "electronic",
+      chain: ["submitted", "in_progress"],
+    },
+    {
+      typeId: duplicateCard.id,
+      formData: { reason: "Повреждён держатель билета" },
+      delivery: "pickup",
+      chain: ["submitted", "in_progress", "ready"],
+    },
+    {
+      typeId: consultation.id,
+      formData: {
+        topic: "Как закрыть лабораторные до сессии",
+        availability: "После 16:00",
+      },
+      delivery: "electronic",
+      chain: ["submitted"],
+    },
+    {
+      typeId: personalUpdate.id,
+      formData: { description: "Уточнить название образовательной программы" },
+      delivery: "electronic",
+      chain: ["submitted", "in_progress", "rejected"],
+    },
+    {
+      typeId: types.stipend.id,
+      formData: { period: "Октябрь 2026", copies: 1 },
+      delivery: "pickup",
+      chain: ["submitted", "in_progress", "ready", "issued"],
+    },
+  ];
+  let number = 197;
+  for (const key of groupKeys) {
+    const demoStudent = expandedCourses[key].student;
+    const profile = await db.studentProfile.findUniqueOrThrow({
+      where: { id: demoStudent.profileId },
+    });
+    for (const [index, request] of demoRequests.entries()) {
+      await application({
+        number: number++,
+        studentId: demoStudent.profileId,
+        studentUserId: demoStudent.userId,
+        groupId: group[key].id,
+        typeId: request.typeId,
+        formData: request.formData,
+        delivery: request.delivery,
+        profile: snapshot(
+          profile.lastName,
+          profile.firstName,
+          profile.middleName ?? undefined,
+          group[key].code,
+        ),
+        events: request.chain.map((to, step) => ({
+          to,
+          at: at(addDays(today, -13 - index + step), "11:30"),
+          by: step === 0 ? demoStudent.userId : irina.id,
+          reason:
+            to === "rejected"
+              ? "Укажи, как именно должна называться программа."
+              : undefined,
+          pickup: to === "ready" ? "Кабинет 214, 10:00–17:00" : undefined,
+        })),
+      });
+    }
+  }
+
   // Номера заявок задали вручную — сдвигаем счётчик, чтобы новые не совпали
   await db.$executeRawUnsafe(
     `SELECT setval(pg_get_serial_sequence('"Application"', 'number'), (SELECT MAX("number") FROM "Application"))`,
