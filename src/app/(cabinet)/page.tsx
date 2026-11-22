@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-illustration";
 import { redirect } from "next/navigation";
-import { Bell, ChevronRight, Navigation } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, Navigation } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { Flaps } from "@/components/board/flaps";
@@ -203,15 +203,24 @@ export default async function TodayPage() {
           <section
             id="assistant"
             aria-labelledby="today-assistant-title"
-            className="today-details-wide min-w-0 rounded-2xl border border-border bg-surface p-3 md:p-4"
+            className="today-details-wide min-w-0"
           >
-            <h2
-              id="today-assistant-title"
-              className="mb-3 font-board text-2xl font-extrabold uppercase"
-            >
-              ИИ-помощник
-            </h2>
-            <AssistantForm />
+            <details className="group rounded-2xl border border-border bg-surface">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-3 md:px-4 [&::-webkit-details-marker]:hidden">
+                <span
+                  id="today-assistant-title"
+                  className="font-board text-2xl font-extrabold uppercase"
+                >
+                  ИИ-помощник
+                </span>
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-bg text-primary motion-safe:transition-transform group-open:rotate-180">
+                  <ChevronDown size={19} aria-hidden />
+                </span>
+              </summary>
+              <div className="border-t border-border p-3 md:p-4">
+                <AssistantForm />
+              </div>
+            </details>
           </section>
         )}
 
