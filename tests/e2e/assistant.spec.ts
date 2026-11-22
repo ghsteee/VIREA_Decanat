@@ -12,10 +12,15 @@ test("AI2: черновик редактируется до отправки, а
     assistant.getByRole("heading", { name: "ИИ-помощник" }),
   ).toBeVisible();
   await expect(assistant.locator('input[type="file"], select')).toHaveCount(0);
-  await page
-    .getByLabel("Твой вопрос")
-    .fill("Сколько баллов нужно для допуска?");
-  await page.getByRole("button", { name: "Спросить", exact: true }).click();
+  const question = assistant.getByLabel("Твой вопрос");
+  const send = assistant.getByRole("button", { name: "Спросить" });
+  await expect(send).toBeDisabled();
+  await question.fill("Сколько баллов нужно");
+  await question.press("Shift+Enter");
+  await question.pressSequentially("для допуска?");
+  await expect(question).toHaveValue("Сколько баллов нужно\nдля допуска?");
+  await expect(send).toBeEnabled();
+  await question.press("Enter");
   await expect(page.getByText(/Помощник сейчас недоступен/)).toBeVisible();
   await page.getByRole("link", { name: "Открыть демо-положение" }).click();
   await expect(page.locator("#p-3-1")).toBeVisible();

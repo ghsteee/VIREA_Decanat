@@ -6,6 +6,7 @@
 | --- | --- | --- | --- |
 | Lucide | Иконки | lucide.dev | ISC |
 | shadcn/ui | Компоненты интерфейса | ui.shadcn.com | MIT |
+| Kokonut UI | Поле и анимация ожидания помощника | [Реестр Kokonut UI](https://kokonutui.com/docs/ai/ai-prompt) | MIT, текст в `src/components/kokonutui/LICENSE` |
 | Days One | Только надпись логотипа «Деканыч» (переведена в кривые) | fonts.google.com/specimen/Days+One | SIL OFL 1.1 |
 | Sofia Sans Extra Condensed | Заголовки, плитки и статусы в стиле табло, раздаём со своего сервера (`@fontsource-variable/sofia-sans-extra-condensed`) | fonts.google.com/specimen/Sofia+Sans+Extra+Condensed | SIL OFL 1.1 |
 | Onest | Шрифт текста интерфейса, раздаём со своего сервера (`@fontsource-variable/onest`) | fonts.google.com/specimen/Onest | SIL OFL 1.1 |
