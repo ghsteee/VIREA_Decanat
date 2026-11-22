@@ -1035,3 +1035,45 @@ html:has(.study-dialog[open]) {
     }
   }
 }
+
+@layer components {
+  .today-page,
+  .today-details {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .today-details-wide {
+    grid-column: 1 / -1;
+  }
+
+  @container cabinet (48rem <= width < 64rem) {
+    .today-details {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: 1.5rem;
+    }
+  }
+
+  @container cabinet (width >= 64rem) {
+    .today-page {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(1rem, 1.6vw, 2rem);
+    }
+
+    .today-details {
+      padding: clamp(1rem, 1.6vw, 2rem);
+    }
+  }
+
+  @container cabinet (width >= 90rem) {
+    .today-page {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    }
+
+    .today-details {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

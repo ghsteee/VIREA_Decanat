@@ -78,8 +78,8 @@ export default async function TodayPage() {
     restored: "Пара восстановлена",
   };
   return (
-    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,1fr)] lg:gap-6">
-      <div className="flex min-w-0 flex-col [&>section:last-child]:grow">
+    <main className="cabinet-page today-page">
+      <div className="flex min-w-0 flex-col">
         <section
           aria-labelledby="today-title"
           className="min-w-0 bg-board px-3 pb-1 pt-3 text-board-text md:rounded-3xl md:p-6"
@@ -188,11 +188,11 @@ export default async function TodayPage() {
         )}
       </div>
 
-      <div className="min-w-0 flex flex-col gap-5 px-4 pb-3 pt-4 md:mt-5 md:grid md:grid-cols-2 md:gap-x-6 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0 lg:flex">
+      <div className="today-details min-w-0 px-4 pb-3 pt-4 md:rounded-3xl md:bg-surface">
         {next?.roomLabel ? (
           <Link
             href={`/schedule?date=${today}#lesson-${next.id}`}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-[14px] md:col-span-2 bg-action font-semibold text-on-action no-underline"
+            className="today-details-wide flex min-h-12 items-center justify-center gap-2 rounded-[14px] bg-action font-semibold text-on-action no-underline"
           >
             <Navigation size={18} aria-hidden />
             Как дойти до {next.roomLabel}
@@ -203,7 +203,7 @@ export default async function TodayPage() {
           <section
             id="assistant"
             aria-labelledby="today-assistant-title"
-            className="min-w-0 rounded-2xl border border-border bg-surface p-3 md:col-span-2 md:p-4"
+            className="today-details-wide min-w-0 rounded-2xl border border-border bg-surface p-3 md:p-4"
           >
             <h2
               id="today-assistant-title"

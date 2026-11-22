@@ -38,7 +38,7 @@ export function AssistantForm() {
                 Учебное объяснение
               </p>
             )}
-            <p className="whitespace-pre-line text-[15px] leading-relaxed">
+            <p className="max-w-[68ch] whitespace-pre-line text-[15px] leading-relaxed">
               {state.answer ?? state.message}
             </p>
             {!!state.sections?.length && (
