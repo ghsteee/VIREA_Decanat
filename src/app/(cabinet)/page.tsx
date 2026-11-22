@@ -43,10 +43,9 @@ export default async function TodayPage() {
   const now = new Date();
   const today = mskDate(now);
   const tomorrow = addDays(today, 1);
-  const [lessons, nextDay, week, deadlines, app, unread, changes, results] =
+  const [lessons, week, deadlines, app, unread, changes, results] =
     await Promise.all([
       getLessons(user.groupId, ...dayRange(today), now),
-      getLessons(user.groupId, ...dayRange(tomorrow), now),
       getAcademicWeek(today),
       getWeekDeadlines(user.groupId, user.studentProfileId, now),
       getTopApplication(user.studentProfileId),
@@ -59,12 +58,15 @@ export default async function TodayPage() {
       getNewResults(user.studentProfileId, now),
     ]);
 
-  const next = lessons.find(
-    (l) => l.state.kind !== "past" && l.state.kind !== "cancelled",
+  const scheduled = lessons.filter(
+    (lesson) => lesson.state.kind !== "cancelled",
   );
-  const tomorrowFirst = nextDay.find((l) => l.state.kind !== "cancelled");
-  const closest = next ?? tomorrowFirst;
-  const closestDate = next ? today : tomorrow;
+  const next = scheduled.find((lesson) => lesson.state.kind !== "past");
+  const emptyMessage = scheduled.length
+    ? "На сегодня пар больше нет"
+    : lessons.length
+      ? "Сегодня все пары отменены"
+      : "Сегодня пар нет";
   const when = (date: Date) => `${dayMonth(mskDate(date))}, ${mskTime(date)}`;
   const changeLabels = {
     moved: "Перенос",
@@ -122,39 +124,30 @@ export default async function TodayPage() {
             />
           </div>
 
-          {closest ? (
+          {next ? (
             <div role="table" aria-label="Ближайшая пара">
               <BoardHead />
-              <LessonRow lesson={closest} details />
+              <LessonRow lesson={next} details />
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2.5 border-t border-board-line px-0.5 pb-1.5 pt-[18px] text-center">
-              <Flaps value="––:––" label="Пар нет" tone="dim" />
-              {lessons.length > 0 && (
-                <p className="font-board text-2xl font-extrabold uppercase">
-                  Пар больше нет
-                </p>
-              )}
-            </div>
-          )}
-
-          {closest ? (
-            <Link
-              href={`/schedule?date=${closestDate}#lesson-${closest.id}`}
-              className="flex min-h-11 items-center justify-between border-t border-board-line px-0.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
-            >
-              {next ? "Всё расписание на сегодня" : "Расписание на завтра"}
-              <ChevronRight size={16} aria-hidden />
-            </Link>
-          ) : null}
-          {lessons.length === 0 && (
             <div className="empty-state border-t border-board-line">
               <EmptyIllustration scene="today" />
               <p className="m-0 font-board text-2xl font-extrabold uppercase">
-                Сегодня пар нет
+                {emptyMessage}
               </p>
             </div>
           )}
+          <Link
+            href={
+              next
+                ? `/schedule?date=${today}#lesson-${next.id}`
+                : `/schedule?date=${tomorrow}`
+            }
+            className="flex min-h-11 items-center justify-between border-t border-board-line px-0.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
+          >
+            {next ? "Всё расписание на сегодня" : "Расписание на завтра"}
+            <ChevronRight size={16} aria-hidden />
+          </Link>
         </section>
 
         {changes.length > 0 && (
