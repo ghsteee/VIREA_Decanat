@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   answerSections,
+  questionTopic,
   requestDraft,
   sectionAnchor,
 } from "../../src/server/assistant-protocol";
@@ -34,4 +35,31 @@ test("черновик открывается по запросу, справо�
   assert.equal(requestDraft("Нужна ли справка об обучении?"), null);
   assert.equal(requestDraft("Мне не нужна справка для военкомата"), null);
   assert.equal(requestDraft("Когда начинается летняя практика?"), null);
+});
+
+test("вопросы по кабинету и положению идут к своим источникам", () => {
+  const examples = {
+    schedule: ["Какие пары у меня завтра?", "Когда мой экзамен?"],
+    study: [
+      "Как у меня с успеваемостью?",
+      "Сколько у меня баллов по базам данных?",
+      "Мои оценки за занятия",
+    ],
+    requests: ["Готова ли справка об обучении?", "Что с заявкой №0187?"],
+    rules: [
+      "Сколько готовится справка об обучении?",
+      "Сколько баллов нужно для допуска?",
+      "Как пересдать экзамен?",
+      "Нужна справка в военкомат",
+      "Как записаться на летнюю практику?",
+    ],
+    private: [
+      "Какие оценки у другого студента?",
+      "Готова ли справка моей подруги?",
+    ],
+  } as const;
+  for (const [topic, questions] of Object.entries(examples)) {
+    for (const question of questions)
+      assert.equal(questionTopic(question), topic, question);
+  }
 });

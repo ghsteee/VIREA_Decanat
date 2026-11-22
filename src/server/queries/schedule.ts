@@ -271,6 +271,52 @@ export function dayRange(date: string): [Date, Date] {
   return [from, new Date(from.getTime() + 86_400_000)];
 }
 
+/** Ближайшая действующая пара в опубликованном расписании группы. */
+export async function getNextLesson(
+  groupId: string,
+  now: Date,
+  includeCurrent: boolean,
+) {
+  const lesson = await db.lesson.findFirst({
+    where: {
+      groupId,
+      status: "scheduled",
+      ...(includeCurrent
+        ? { endsAt: { gt: now } }
+        : { startsAt: { gte: now } }),
+    },
+    orderBy: { startsAt: "asc" },
+    select: { id: true, startsAt: true },
+  });
+  if (!lesson) return null;
+  const rows = await getLessons(
+    groupId,
+    ...dayRange(mskDate(lesson.startsAt)),
+    now,
+  );
+  return (
+    rows.find(
+      ({ id, state }) => id === lesson.id && state.kind !== "cancelled",
+    ) ?? null
+  );
+}
+
+/** Сессия текущего семестра группы из серверной сессии. */
+export async function getSessionSchedule(groupId: string, now = new Date()) {
+  const term = await db.academicTerm.findFirst({
+    where: { startsOn: { lte: now }, endsOn: { gte: now } },
+    orderBy: { startsOn: "desc" },
+  });
+  const exams = term
+    ? await db.assessment.findMany({
+        where: { groupId, termId: term.id, kind: { in: ["exam", "credit"] } },
+        include: { subject: true },
+        orderBy: [{ heldOn: { sort: "asc", nulls: "last" } }, { title: "asc" }],
+      })
+    : [];
+  return { term, exams };
+}
+
 /** Номер учебной недели и её чётность. */
 export async function getAcademicWeek(date: string) {
   const day = mskDayStart(date);

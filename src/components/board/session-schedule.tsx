@@ -1,21 +1,10 @@
 import Link from "next/link";
-import { db } from "@/server/db";
+import { getSessionSchedule } from "@/server/queries/schedule";
 import { dayMonth, mskDate, mskTime } from "@/lib/time";
 
 /** groupId передаётся только из серверной сессии страницы расписания. */
 export async function SessionSchedule({ groupId }: { groupId: string }) {
-  const now = new Date();
-  const term = await db.academicTerm.findFirst({
-    where: { startsOn: { lte: now }, endsOn: { gte: now } },
-    orderBy: { startsOn: "desc" },
-  });
-  const exams = term
-    ? await db.assessment.findMany({
-        where: { groupId, termId: term.id, kind: { in: ["exam", "credit"] } },
-        include: { subject: true },
-        orderBy: [{ heldOn: { sort: "asc", nulls: "last" } }, { title: "asc" }],
-      })
-    : [];
+  const { term, exams } = await getSessionSchedule(groupId);
   return (
     <div className="flex flex-col gap-4">
       {term ? (

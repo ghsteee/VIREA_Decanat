@@ -3,7 +3,15 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
 import { assistantRules } from "@/server/assistant-docs";
-import { answerSections, requestDraft } from "@/server/assistant-protocol";
+import {
+  answerSections,
+  questionTopic,
+  requestDraft,
+} from "@/server/assistant-protocol";
+import { noAnswer, type PersonalAnswer } from "@/server/assistant-personal";
+import { answerRequests } from "@/server/assistant-requests";
+import { answerSchedule } from "@/server/assistant-schedule";
+import { answerStudy } from "@/server/assistant-study";
 import {
   assistantConfigured,
   assistantEnabled,
@@ -14,13 +22,13 @@ import { hitRateLimit } from "@/server/rate-limit";
 export type AssistantState = {
   question?: string;
   message?: string;
+  link?: PersonalAnswer["link"];
   sections?: { number: string; heading: string | null; text: string }[];
   draft?: { code: string; label: string };
 };
 
-const noAnswer = "В демо-положении ответа нет. Уточни в дирекции.";
 const unavailable =
-  "Помощник сейчас недоступен. Правила можно прочитать в демо-положении.";
+  "Не удалось проверить демо-положение. Попробуй позже или открой его по ссылке.";
 
 export async function askAssistant(
   _previous: AssistantState,
@@ -38,6 +46,25 @@ export async function askAssistant(
   if (!limit.allowed)
     return { message: "Лимит вопросов на этот час исчерпан. Попробуй позже." };
 
+  const topic = questionTopic(question);
+  if (topic === "private") return { question, message: noAnswer };
+  if (topic === "requests")
+    return {
+      question,
+      ...(await answerRequests(question, user.studentProfileId)),
+    };
+  if (topic === "schedule")
+    return user.groupId
+      ? { question, ...(await answerSchedule(question, user.groupId)) }
+      : { question, message: noAnswer };
+  if (topic === "study")
+    return user.groupId
+      ? {
+          question,
+          ...(await answerStudy(question, user.studentProfileId, user.groupId)),
+        }
+      : { question, message: noAnswer };
+
   const draft = requestDraft(question);
   if (draft)
     return {
@@ -46,12 +73,10 @@ export async function askAssistant(
       message:
         "Черновик готов. Проверь поля, затем самостоятельно отправь заявку.",
     };
-  if (/(чужи[ех]|другого студент|одногруппник)/iu.test(question))
-    return { question, message: noAnswer };
-  if (!assistantConfigured()) return { question, message: unavailable };
+  if (!assistantConfigured()) return { question, message: noAnswer };
 
   const rules = await assistantRules();
-  if (!rules?.sections.length) return { question, message: unavailable };
+  if (!rules?.sections.length) return { question, message: noAnswer };
   const source = rules.sections
     .map(({ number, heading, text }) => `${number}. ${heading ?? ""}\n${text}`)
     .join("\n")
@@ -71,7 +96,8 @@ export async function askAssistant(
     rules.sections.map((section) => section.number),
   );
   if (answer.kind === "invalid") return { question, message: unavailable };
-  if (answer.kind === "no-match") return { question, message: noAnswer };
+  if (answer.kind === "no-match")
+    return { question, message: `${noAnswer} Уточни в дирекции.` };
   return {
     question,
     sections: answer.numbers.flatMap((number) =>
