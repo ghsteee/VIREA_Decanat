@@ -9,6 +9,8 @@ import { BrandSwirl } from "@/components/ui/swirl";
 import { BrandMark } from "@/components/brand-mark";
 import { RequestRoute } from "@/components/board/route";
 import { DeadlineCheck } from "@/components/deadline-check";
+import { AssistantForm } from "./assistant/assistant-form";
+import { assistantEnabled } from "@/server/gigachat";
 import {
   dayRange,
   getAcademicWeek,
@@ -196,6 +198,22 @@ export default async function TodayPage() {
             Как дойти до {next.roomLabel}
           </Link>
         ) : null}
+
+        {assistantEnabled() && (
+          <section
+            id="assistant"
+            aria-labelledby="today-assistant-title"
+            className="min-w-0 rounded-2xl border border-border bg-surface p-3 md:col-span-2 md:p-4"
+          >
+            <h2
+              id="today-assistant-title"
+              className="mb-3 font-board text-2xl font-extrabold uppercase"
+            >
+              ИИ-помощник
+            </h2>
+            <AssistantForm />
+          </section>
+        )}
 
         <section aria-labelledby="dl-title">
           <h2

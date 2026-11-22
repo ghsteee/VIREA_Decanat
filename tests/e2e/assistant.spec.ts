@@ -6,7 +6,12 @@ test("AI2: черновик редактируется до отправки, а
   await page.goto("/login");
   await page.getByRole("button", { name: /Студентка — Ксения/ }).click();
   await expect(page).not.toHaveURL(/\/login$/);
-  await page.goto("/assistant");
+  await page.goto("/");
+  const assistant = page.getByRole("region", { name: "ИИ-помощник" });
+  await expect(
+    assistant.getByRole("heading", { name: "ИИ-помощник" }),
+  ).toBeVisible();
+  await expect(assistant.locator('input[type="file"], select')).toHaveCount(0);
   await page
     .getByLabel("Твой вопрос")
     .fill("Сколько баллов нужно для допуска?");
@@ -14,6 +19,7 @@ test("AI2: черновик редактируется до отправки, а
   await expect(page.getByText(/Помощник сейчас недоступен/)).toBeVisible();
   await page.getByRole("link", { name: "Открыть демо-положение" }).click();
   await expect(page.locator("#p-3-1")).toBeVisible();
+  await expect(page.locator("#p-11-3")).toContainText("при штатном сбросе");
 
   await page.goto("/assistant");
   await page.getByLabel("Твой вопрос").fill("Нужна справка в военкомат");

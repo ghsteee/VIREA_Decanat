@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit"],
   experimental: { serverActions: { bodySizeLimit: "30mb" } },
   outputFileTracingIncludes: {
+    "/": ["./docs/knowledge/polozhenie-demo.md"],
+    "/assistant": ["./docs/knowledge/polozhenie-demo.md"],
+    "/assistant/rules": ["./docs/knowledge/polozhenie-demo.md"],
     "/study/portfolio/export": [
       "./public/fonts/*.ttf",
       "./node_modules/pdfkit/js/data/**/*",

@@ -23,15 +23,8 @@ export default async function AssistantPage() {
         Помощник
       </h1>
       <p className="text-board-muted">
-        Ответы по вымышленному положению ВТУ ВИРЭА. Вопрос передаётся GigaChat.
-        Используй только учебные примеры без личных данных.
+        Вопросы об учёбе, разделах кабинета и правилах ВТУ ВИРЭА.
       </p>
-      <Link
-        href="/assistant/rules"
-        className="flex min-h-11 items-center text-board-link"
-      >
-        Открыть демо-положение
-      </Link>
       <AssistantForm />
       <ConceptNote />
     </main>

@@ -3,22 +3,30 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
 import { assistantRules } from "@/server/assistant-docs";
-import { answerSections, requestDraft } from "@/server/assistant-protocol";
+import {
+  parseAssistantAnswer,
+  requestDraft,
+} from "@/server/assistant-protocol";
 import {
   assistantConfigured,
   assistantEnabled,
-  chooseSections,
+  generateAssistantAnswer,
 } from "@/server/gigachat";
+import { assistantPages } from "@/server/assistant-site";
 import { hitRateLimit } from "@/server/rate-limit";
 
 export type AssistantState = {
   question?: string;
   message?: string;
-  sections?: { number: string; heading: string | null; text: string }[];
+  answer?: string;
+  sections?: readonly string[];
+  kind?: "campus" | "study";
+  pages?: { href: string; title: string }[];
   draft?: { code: string; label: string };
 };
 
-const noAnswer = "В демо-положении ответа нет. Уточни в дирекции.";
+const noAnswer =
+  "Не нашёл подтверждённого ответа. Если вопрос о кабинете или правилах вуза, уточни в дирекции.";
 const unavailable =
   "Помощник сейчас недоступен. Правила можно прочитать в демо-положении.";
 
@@ -54,9 +62,11 @@ export async function askAssistant(
   if (!rules?.sections.length) return { question, message: unavailable };
   const source = rules.sections
     .map(({ number, heading, text }) => `${number}. ${heading ?? ""}\n${text}`)
-    .join("\n")
-    .slice(0, 22_000);
-  const result = await chooseSections(question, source);
+    .join("\n\n");
+  const site = assistantPages
+    .map(({ id, title, description }) => `${id} — ${title}. ${description}`)
+    .join("\n");
+  const result = await generateAssistantAnswer(question, source, site);
   if (result.kind === "busy")
     return {
       question,
@@ -65,16 +75,17 @@ export async function askAssistant(
     };
   if (result.kind !== "ok") return { question, message: unavailable };
 
-  // Only genuine document excerpts reach the UI. The model never returns page links or free text.
-  const numbers = answerSections(
+  const answer = parseAssistantAnswer(
     result.reply,
     rules.sections.map((section) => section.number),
+    assistantPages.map((page) => page.id),
   );
-  if (!numbers?.length) return { question, message: noAnswer };
+  if (!answer) return { question, message: noAnswer };
   return {
     question,
-    sections: numbers.flatMap((number) =>
-      rules.sections.filter((section) => section.number === number),
-    ),
+    ...answer,
+    pages: assistantPages
+      .filter(({ id }) => answer.pages.includes(id))
+      .map(({ href, title }) => ({ href, title })),
   };
 }

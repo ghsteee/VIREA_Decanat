@@ -13,7 +13,7 @@ export default async function RulesPage() {
   if (!assistantEnabled() || user.role !== "student" || !user.studentProfileId)
     notFound();
   const rules = await assistantRules();
-  if (!rules) notFound();
+  if (!rules.sections.length) notFound();
   return (
     <main className="mx-auto flex max-w-[560px] flex-col gap-4 bg-board p-4 text-board-text">
       <Link
@@ -25,6 +25,9 @@ export default async function RulesPage() {
       <h1 className="m-0 font-board text-[30px] font-extrabold">
         {rules.title}
       </h1>
+      <p className="text-sm text-board-muted">
+        Демо-положение · версия {rules.version}
+      </p>
       {rules.sections.map((section) => (
         <section
           id={sectionAnchor(section.number)}
@@ -35,7 +38,9 @@ export default async function RulesPage() {
             Пункт {section.number}
             {section.heading ? ` · ${section.heading}` : ""}
           </h2>
-          <p className="whitespace-pre-line">{section.text}</p>
+          <p className="whitespace-pre-line">
+            {section.text.replaceAll("**", "")}
+          </p>
         </section>
       ))}
       <ConceptNote />

@@ -1,21 +1,54 @@
-export function answerSections(
+type AssistantAnswer = {
+  kind: "campus" | "study";
+  answer: string;
+  sections: string[];
+  pages: string[];
+};
+
+export function parseAssistantAnswer(
   reply: string,
   allowed: Iterable<string>,
-): string[] | null {
-  const valid = new Set(allowed);
+  pageIds: Iterable<string> = [],
+): AssistantAnswer | null {
   const normalized = reply
     .trim()
     .replace(/^\x60\x60\x60(?:json)?\s*([\s\S]*?)\s*\x60\x60\x60$/i, "$1");
   try {
-    const answer: unknown = JSON.parse(normalized);
-    if (!Array.isArray(answer) || answer.length > 3) return null;
-    if (
-      answer.some(
-        (section) => typeof section !== "string" || !valid.has(section),
+    const parsed: unknown = JSON.parse(normalized);
+    if (!parsed || typeof parsed !== "object") return null;
+    const { answer, kind, sections, pages } = parsed as Record<string, unknown>;
+    if (typeof answer !== "string" || !answer.trim() || answer.length > 1200)
+      return null;
+    if (kind === "study") {
+      if (
+        !Array.isArray(sections) ||
+        sections.length ||
+        !Array.isArray(pages) ||
+        pages.length
       )
+        return null;
+      return { answer: answer.trim(), kind, sections: [], pages: [] };
+    }
+    if (kind !== "campus") return null;
+    const validSections = new Set(allowed);
+    const validPages = new Set(pageIds);
+    if (
+      !Array.isArray(sections) ||
+      !Array.isArray(pages) ||
+      sections.length + pages.length === 0 ||
+      sections.length + pages.length > 4 ||
+      sections.some(
+        (section) => typeof section !== "string" || !validSections.has(section),
+      ) ||
+      pages.some((page) => typeof page !== "string" || !validPages.has(page))
     )
       return null;
-    return [...new Set(answer as string[])];
+    return {
+      answer: answer.trim(),
+      kind,
+      sections: [...new Set(sections as string[])],
+      pages: [...new Set(pages as string[])],
+    };
   } catch {
     return null;
   }

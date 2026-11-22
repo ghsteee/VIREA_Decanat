@@ -1,20 +1,19 @@
 import "server-only";
-import { db } from "@/server/db";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import {
+  DEMO_REGULATIONS_PATH,
+  DEMO_REGULATIONS_VERSION,
+  parseRegulations,
+} from "@/lib/demo-regulations";
 
 export async function assistantRules() {
-  return db.helpDocument.findFirst({
-    where: {
-      source: "docs/knowledge/polozhenie-demo.md",
-      publishedAt: { not: null },
-    },
-    orderBy: { publishedAt: "desc" },
-    select: {
-      title: true,
-      sections: {
-        orderBy: { sortOrder: "asc" },
-        take: 60,
-        select: { number: true, heading: true, text: true },
-      },
-    },
-  });
+  const sections = parseRegulations(
+    await readFile(join(process.cwd(), DEMO_REGULATIONS_PATH), "utf8"),
+  );
+  return {
+    title: "Положение об учёбе и услугах дирекции ВТУ ВИРЭА",
+    version: DEMO_REGULATIONS_VERSION,
+    sections,
+  };
 }

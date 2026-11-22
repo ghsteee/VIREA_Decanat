@@ -1,3 +1,8 @@
+import {
+  DEMO_REGULATIONS_PATH,
+  DEMO_REGULATIONS_VERSION,
+  parseRegulations,
+} from "../src/lib/demo-regulations";
 /**
  * Демо-данные «Деканыча» (задача 3.5). Полностью пересоздаёт данные:
  *   npm run db:seed
@@ -223,51 +228,10 @@ async function wipe() {
   if (failures) console.error("Не удалось удалить вложения демо:", failures);
 }
 
-/** Разбор демо-положения на пункты для помощника (AI1). */
-function parseRegulations(markdown: string) {
-  const lines = markdown.split(/\r?\n/);
-  const sections: { number: string; heading: string; text: string }[] = [];
-  let heading = "";
-  let current: { number: string; heading: string; lines: string[] } | null =
-    null;
-  const flush = () => {
-    if (current) {
-      sections.push({
-        number: current.number,
-        heading: current.heading,
-        text: current.lines.join("\n").trim(),
-      });
-    }
-    current = null;
-  };
-  for (const line of lines) {
-    const h = line.match(/^## (\d+)\. (.+)$/);
-    if (h) {
-      flush();
-      heading = h[2];
-      continue;
-    }
-    const p = line.match(/^(\d+\.\d+)\. (.*)$/);
-    if (p) {
-      flush();
-      current = { number: p[1], heading, lines: [p[2]] };
-      continue;
-    }
-    if (current && !line.startsWith("#") && !line.startsWith(">")) {
-      current.lines.push(line);
-    }
-  }
-  flush();
-  return sections;
-}
-
 // ─── Основной сценарий ───────────────────────────────────────────────────
 
 async function main() {
-  const regulationsPath = join(
-    process.cwd(),
-    "docs/knowledge/polozhenie-demo.md",
-  );
+  const regulationsPath = join(process.cwd(), DEMO_REGULATIONS_PATH);
   const sections = parseRegulations(readFileSync(regulationsPath, "utf8"));
   if (!sections.length)
     throw new Error("В демо-положении не найдено ни одного пункта");
@@ -2052,8 +2016,8 @@ async function main() {
   await db.helpDocument.create({
     data: {
       title: "Положение об учёбе и услугах дирекции ВТУ ВИРЭА (демо)",
-      source: "docs/knowledge/polozhenie-demo.md",
-      version: "1.0",
+      source: DEMO_REGULATIONS_PATH,
+      version: DEMO_REGULATIONS_VERSION,
       publishedAt: new Date(),
       sections: {
         create: sections.map((s, i) => ({
