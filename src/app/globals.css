@@ -371,7 +371,12 @@
 }
 @layer base {
   html {
-    scroll-padding-block: 5rem 1rem;
+    scroll-padding-block: 1rem calc(5.5rem + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-block: 5rem 1rem;
+    }
   }
   :where(input, textarea, select) {
     max-width: 100%;
@@ -608,9 +613,6 @@ html:has(.study-dialog[open]) {
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
-.split-tab small {
-  display: none;
-}
 .account-anchor {
   position: relative;
   flex-shrink: 0;
@@ -687,40 +689,6 @@ html:has(.study-dialog[open]) {
 .account-panel form {
   border-top: 1px solid var(--border);
   color: var(--danger-text);
-}
-@media (max-width: 56rem) {
-  .cabinet-wordmark {
-    display: none;
-  }
-  .cabinet-bar-inner {
-    justify-content: center;
-  }
-}
-@media (max-width: 40rem) {
-  .split-tab span {
-    display: none;
-  }
-  .split-tab {
-    padding: 0.25rem 0.16rem;
-    flex-direction: column;
-    gap: 0.1rem;
-  }
-  .split-tab small {
-    display: block;
-    font-size: 0.61rem;
-  }
-  .split-tab[aria-current] {
-    margin-inline: 0.15rem;
-  }
-  .cabinet-bar-inner {
-    justify-content: space-between;
-  }
-  .account-trigger {
-    padding: 3px;
-  }
-  .account-trigger > svg {
-    display: none;
-  }
 }
 .theme-switch {
   display: inline-flex;

@@ -60,3 +60,38 @@ test("S5: Ксения видит работы, ближайший срок и �
     ),
   ).toBe(true);
 });
+
+test("G1: поиск по названию дисциплины, открытие результата и сброс", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByRole("button", { name: /Студентка — Ксения/ }).click();
+  await expect(page).not.toHaveURL(/\/login$/);
+  await page.goto("/study");
+  const cards = page.getByRole("list", { name: "Карточки дисциплин" });
+  const buttons = cards.getByRole("button");
+  const initialNames = await buttons.allTextContents();
+  expect(initialNames.length).toBeGreaterThan(1);
+  const search = page.getByRole("searchbox", { name: "Поиск по дисциплинам" });
+  await search.fill("теорвер");
+  await expect(buttons).toHaveText(["Теория вероятностей"]);
+  await search.fill("  ЗЫ   Дан  ");
+  await expect(buttons).toHaveCount(1);
+  const result = buttons.filter({ hasText: "Базы данных" });
+  await result.press("Enter");
+  await expect(page.getByRole("dialog", { name: "Базы данных" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(result).toBeFocused();
+  await expect(search).toHaveValue("  ЗЫ   Дан  ");
+  await search.fill("несуществующий предмет");
+  await expect(buttons).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Дисциплин с таким названием нет" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Очистить поиск" }).click();
+  await expect(search).toBeFocused();
+  await expect(search).toHaveValue("");
+  await expect(buttons).toHaveText(initialNames);
+});
