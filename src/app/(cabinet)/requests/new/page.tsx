@@ -23,7 +23,7 @@ export default async function NewRequestPage({
     : null;
   if (!type) notFound();
 
-  const assistantDraft =
+  const assistantDraft: Record<string, string | number> | undefined =
     assistantEnabled() && sp.draft === "assistant"
       ? type.code === "military_certificate"
         ? { commissariat: "Военкомат по месту учёта", copies: 1 }

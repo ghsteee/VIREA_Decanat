@@ -22,6 +22,15 @@ test("AI2: черновик редактируется до отправки, а
   await expect(page.getByLabel("Военкомат")).toHaveValue(
     "Военкомат по месту учёта",
   );
+  const destination = page.getByLabel("Военкомат");
+  await destination.fill("Тестовый военкомат");
+  for (const name of ["Далее", "Проверить заявку"]) {
+    const button = page.getByRole("button", { name, exact: true });
+    if (await button.isVisible()) await button.click();
+  }
+  await expect(
+    page.getByText("Тестовый военкомат", { exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Отправить заявку" }),
   ).toBeVisible();
