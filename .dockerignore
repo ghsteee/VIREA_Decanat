@@ -1,4 +1,8 @@
 node_modules
+storage
+tmp
+output
+test-results
 .next
 .git
 .env
