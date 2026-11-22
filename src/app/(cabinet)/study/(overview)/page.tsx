@@ -65,11 +65,13 @@ export default async function StudyPage() {
             </dt>
             {study.lastSession && study.average !== null ? (
               <dd className="mt-2">
-                <Flaps
-                  size="lg"
-                  value={gradeFormat.format(study.lastSession.average)}
-                  label={`Средний балл за последнюю закрытую сессию: ${gradeFormat.format(study.lastSession.average)}`}
-                />
+                <span
+                  role="img"
+                  aria-label={`Средний балл за последнюю закрытую сессию: ${gradeFormat.format(study.lastSession.average)}`}
+                  className="inline-flex h-[1.25em] items-center whitespace-nowrap rounded-[0.18em] bg-[var(--flap-bottom)] px-[0.32em] font-board text-[30px] font-extrabold leading-none text-[var(--flap-digit)] tabular-nums"
+                >
+                  {gradeFormat.format(study.lastSession.average)}
+                </span>
                 <span className="mt-1 block text-xs text-text-muted">
                   {study.lastSession.term}
                 </span>

@@ -103,8 +103,8 @@ test("S5: Ксения видит работы, ближайший срок и �
         name: "Средний балл за последнюю закрытую сессию: 4,6",
       });
       await expect(last).toBeVisible();
-      await expect(last.locator(".flap-sep")).toHaveText(",");
-      await expect(last.locator(".flap")).toHaveCount(2);
+      await expect(last).toHaveText("4,6");
+      await expect(last.locator("span")).toHaveCount(0);
       await expect(
         page.getByText("За всё время 4,2", { exact: true }),
       ).toBeVisible();
