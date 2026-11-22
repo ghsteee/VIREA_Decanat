@@ -121,19 +121,13 @@ test("E2 и G1: дирекция меняет форму и расписание
     await login(page, /Дирекция — Ирина/);
     await page.goto(route);
     await expect(
-      page.getByRole("heading", { name: "Расписание сессии" }),
+      page.getByRole("heading", { name: "Редактор сессии" }),
     ).toBeVisible();
-    const card = page
-      .locator("details")
-      .filter({ hasText: "Базы данных" })
-      .first();
-    await card.locator("summary").click();
+    await page.getByRole("link", { name: /^Базы данных/ }).click();
+    const card = page.locator("#session-edit");
     await stale.goto(route);
-    const staleCard = stale
-      .locator("details")
-      .filter({ hasText: "Базы данных" })
-      .first();
-    await staleCard.locator("summary").click();
+    await stale.getByRole("link", { name: /^Базы данных/ }).click();
+    const staleCard = stale.locator("#session-edit");
     await card
       .getByRole("combobox", { name: "Форма контроля", exact: true })
       .selectOption("exam");
@@ -193,13 +187,11 @@ test("E2 и G1: дирекция меняет форму и расписание
       quality: 85,
       fullPage: true,
     });
-    const student = await context
-      .browser()!
-      .newPage({
-        viewport: { width: 360, height: 900 },
-        baseURL,
-        reducedMotion: "reduce",
-      });
+    const student = await context.browser()!.newPage({
+      viewport: { width: 360, height: 900 },
+      baseURL,
+      reducedMotion: "reduce",
+    });
     try {
       await login(student, /Студент — Данила/);
       await student.goto("/study");
@@ -275,11 +267,10 @@ test("E2: можно назначить форму без даты и повто
     await page.goto(
       `/staff/session?group=${assessment.groupId}&term=${term.id}`,
     );
-    const card = page
-      .locator("details")
-      .filter({ hasText: subject.name })
-      .first();
-    await card.locator("summary").click();
+    await page
+      .getByRole("link", { name: new RegExp(`^${subject.name}`) })
+      .click();
+    const card = page.locator("#session-edit");
     await card
       .getByRole("combobox", { name: "Форма контроля", exact: true })
       .selectOption("credit");
@@ -354,11 +345,8 @@ test("E2: чужой институт недоступен в редакторе
         .getByRole("combobox", { name: "Группа", exact: true })
         .locator(`option[value="${group.id}"]`),
     ).toHaveCount(0);
-    const card = page
-      .locator("details")
-      .filter({ hasText: "Базы данных" })
-      .first();
-    await card.locator("summary").click();
+    await page.getByRole("link", { name: /^Базы данных/ }).click();
+    const card = page.locator("#session-edit");
     await card.getByLabel("Аудитория", { exact: true }).fill("Подмена");
     await card.locator("form").evaluate(
       (form, ids) => {

@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { expect, test, type Page } from "@playwright/test";
 import { unzipSync } from "fflate";
-import { mkdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 
 const db = new PrismaClient();
 test.afterAll(() => db.$disconnect());
@@ -59,8 +59,10 @@ test("G4: портфолио сохраняет награду и файл, вы
   expect(pdf.status()).toBe(200);
   expect(pdf.headers()["content-type"]).toBe("application/pdf");
   expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
-  await mkdir("tmp/pdfs", { recursive: true });
-  await writeFile("tmp/pdfs/portfolio-check.pdf", await pdf.body());
+  await writeFile(
+    test.info().outputPath("portfolio-check.pdf"),
+    await pdf.body(),
+  );
   const zip = await page.request.get("/study/portfolio/export?format=zip");
   expect(zip.status()).toBe(200);
   const files = unzipSync(await zip.body());

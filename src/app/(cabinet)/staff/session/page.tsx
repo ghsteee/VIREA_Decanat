@@ -1,132 +1,202 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireStaff } from "@/server/auth/guards";
-import { requireStaffGroup, staffGroups } from "@/server/staff";
-import { db } from "@/server/db";
-import { sessionSubjects } from "@/server/queries/session-editor";
 import { SessionForm } from "@/components/staff/session-form";
 import { dayMonth, mskDate, mskTime } from "@/lib/time";
+import { requireStaff } from "@/server/auth/guards";
+import { db } from "@/server/db";
+import { sessionSubjects } from "@/server/queries/session-editor";
+import { requireStaffGroup, staffGroups } from "@/server/staff";
 
-export const dynamic = "force-dynamic";
-const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+type Filters = {
+  group?: string;
+  term?: string;
+  subject?: string;
+  assessment?: string;
+};
+const field =
+  "min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-text";
+const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
 export default async function StaffSessionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ group?: string; term?: string }>;
+  searchParams: Promise<Filters>;
 }) {
   const user = await requireStaff();
-  const sp = await searchParams;
-  if ((sp.group && !UUID.test(sp.group)) || (sp.term && !UUID.test(sp.term)))
+  const filters = await searchParams;
+  if (
+    [filters.group, filters.term, filters.subject, filters.assessment].some(
+      (id) => id !== undefined && (typeof id !== "string" || !uuid.test(id)),
+    )
+  )
     notFound();
   const [groups, terms] = await Promise.all([
     staffGroups(user.id),
     db.academicTerm.findMany({ orderBy: { startsOn: "desc" } }),
   ]);
-  const groupId = sp.group ?? groups[0]?.id;
+  const groupId = filters.group ?? groups[0]?.id;
   const group = groupId ? await requireStaffGroup(user.id, groupId) : null;
   const today = mskDate();
-  const term = sp.term
-    ? terms.find((t) => t.id === sp.term)
+  const term = filters.term
+    ? terms.find(({ id }) => id === filters.term)
     : (terms.find(
-        (t) => mskDate(t.startsOn) <= today && mskDate(t.endsOn) >= today,
+        (item) =>
+          mskDate(item.startsOn) <= today && mskDate(item.endsOn) >= today,
       ) ?? terms[0]);
-  if (sp.term && !term) notFound();
-  const courses = group && term ? await sessionSubjects(group.id, term.id) : [];
-  const select =
-    "min-h-11 min-w-0 rounded-xl border border-border bg-surface px-3 text-text";
+  if (filters.term && !term) notFound();
+  const subjects =
+    group && term ? await sessionSubjects(group.id, term.id) : [];
+  const selected = filters.subject
+    ? subjects.find(({ id }) => id === filters.subject)
+    : null;
+  if (filters.subject && !selected) notFound();
+  const assessment = filters.assessment
+    ? selected?.assessments.find(({ id }) => id === filters.assessment)
+    : selected?.assessments[0];
+  if (filters.assessment && !assessment) notFound();
+  const href = (subject: string, assessment?: string) =>
+    "/staff/session?" +
+    new URLSearchParams({
+      group: group!.id,
+      term: term!.id,
+      subject,
+      ...(assessment ? { assessment } : {}),
+    }) +
+    "#session-edit";
+
   return (
-    <main className="cabinet-page flex flex-col gap-5 p-4 md:p-6">
+    <main className="cabinet-page flex flex-col gap-4 p-3 md:p-6">
       <header className="rounded-2xl bg-board p-5 text-board-text">
         <Link
-          href="/staff/schedule"
+          href={group ? `/staff/schedule?group=${group.id}` : "/staff/schedule"}
           className="inline-flex min-h-11 items-center font-semibold text-board-link"
         >
           ← Расписание занятий
         </Link>
-        <h1 className="font-board text-[34px] font-bold uppercase">
-          Расписание сессии
+        <h1 className="font-board text-4xl font-bold uppercase">
+          Редактор сессии
         </h1>
-        <p className="mt-2 text-sm">
-          Назначь экзамены и зачёты, выбери дату, время и аудиторию.
-        </p>
       </header>
-      <form className="grid gap-3 rounded-2xl border border-border bg-surface p-4 sm:grid-cols-[1fr_1fr_auto]">
-        <label className="flex min-w-0 flex-col gap-1.5 text-sm font-semibold">
-          Группа
-          <select name="group" defaultValue={group?.id} className={select}>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.code}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex min-w-0 flex-col gap-1.5 text-sm font-semibold">
-          Семестр
-          <select name="term" defaultValue={term?.id} className={select}>
-            {terms.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button className="min-h-11 self-end rounded-xl bg-action px-5 py-3 font-semibold text-on-action">
-          Показать
-        </button>
-      </form>
-      {group && term && (
-        <section
-          aria-label={`Аттестации ${group.code}`}
-          className="grid items-start gap-3 lg:grid-cols-2"
-        >
-          {courses.map((course) => {
-            const entries = course.assessments.length
-              ? course.assessments
-              : [null];
-            return entries.map((a) => (
-              <details
-                key={`${group.id}-${term.id}-${course.id}-${entries.length === 1 ? "single" : a?.id}`}
-                className="min-w-0 rounded-2xl border border-border bg-surface"
-              >
-                <summary className="min-h-11 cursor-pointer p-4">
-                  <span className="font-semibold">{course.name}</span>
-                  <span className="mt-1 block text-sm text-text-muted">
-                    {a
-                      ? a.kind === "exam"
-                        ? "Экзамен"
-                        : "Зачёт"
-                      : "Форма контроля не назначена"}
-                    {a?.heldOn
-                      ? ` · ${dayMonth(mskDate(a.heldOn))}`
-                      : " · дата уточняется"}
-                    {a?.sessionStartsAt
-                      ? ` · ${mskTime(a.sessionStartsAt)}`
-                      : ""}
-                  </span>
-                </summary>
+      {groups.length > 0 && terms.length > 0 && (
+        <form className="grid items-end gap-3 rounded-2xl border border-border bg-surface p-4 sm:grid-cols-[1fr_1fr_auto]">
+          <label className="grid gap-2 text-sm font-semibold">
+            Группа
+            <select name="group" defaultValue={group?.id} className={field}>
+              {groups.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.code}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-semibold">
+            Семестр
+            <select name="term" defaultValue={term?.id} className={field}>
+              {terms.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="min-h-11 rounded-xl bg-action px-5 font-semibold text-on-action">
+            Показать дисциплины
+          </button>
+        </form>
+      )}
+      {subjects.length > 0 && group && term ? (
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(240px,1fr)_minmax(0,1.5fr)]">
+          <section className="rounded-2xl border border-border bg-surface p-4">
+            <h2 className="mb-2 font-board text-2xl font-bold uppercase">
+              Дисциплины
+            </h2>
+            <ul className="divide-y divide-border">
+              {subjects.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    href={href(item.id)}
+                    aria-current={selected?.id === item.id ? "page" : undefined}
+                    className="grid min-h-11 gap-1 rounded-lg px-2 py-3 aria-[current=page]:bg-board aria-[current=page]:text-board-text"
+                  >
+                    <span className="font-semibold">{item.name}</span>
+                    <span className="text-sm">
+                      {item.assessments.length
+                        ? item.assessments
+                            .map(
+                              (entry) =>
+                                (entry.kind === "exam" ? "Экзамен" : "Зачёт") +
+                                (entry.heldOn
+                                  ? ` · ${dayMonth(mskDate(entry.heldOn))}`
+                                  : " · дата уточняется"),
+                            )
+                            .join(", ")
+                        : "Форма контроля не назначена"}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section
+            id="session-edit"
+            className="min-w-0 rounded-2xl border border-border bg-surface"
+          >
+            {selected ? (
+              <>
+                <h2 className="p-4 font-board text-2xl font-bold uppercase">
+                  {selected.name}
+                </h2>
+                {selected.assessments.length > 1 && (
+                  <nav
+                    aria-label="Аттестации дисциплины"
+                    className="flex flex-wrap gap-2 px-4 pb-3"
+                  >
+                    {selected.assessments.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={href(selected.id, item.id)}
+                        aria-current={
+                          item.id === assessment?.id ? "page" : undefined
+                        }
+                        className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 aria-[current=page]:bg-board"
+                      >
+                        {item.title}
+                        {item.heldOn
+                          ? ` · ${dayMonth(mskDate(item.heldOn))}`
+                          : ""}
+                      </Link>
+                    ))}
+                  </nav>
+                )}
                 <SessionForm
+                  key={`${group.id}-${term.id}-${selected.id}-${filters.assessment ?? ""}`}
                   groupId={group.id}
                   termId={term.id}
-                  subjectId={course.id}
-                  assessmentId={a?.id}
-                  version={a?.sessionVersion}
-                  kind={a?.kind}
-                  date={a?.heldOn ? mskDate(a.heldOn) : ""}
-                  time={a?.sessionStartsAt ? mskTime(a.sessionStartsAt) : ""}
-                  room={a?.sessionRoom ?? ""}
+                  subjectId={selected.id}
+                  assessmentId={assessment?.id}
+                  version={assessment?.sessionVersion}
+                  kind={assessment?.kind}
+                  date={assessment?.heldOn ? mskDate(assessment.heldOn) : ""}
+                  time={
+                    assessment?.sessionStartsAt
+                      ? mskTime(assessment.sessionStartsAt)
+                      : ""
+                  }
+                  room={assessment?.sessionRoom ?? ""}
                   minDate={mskDate(term.startsOn)}
                   maxDate={mskDate(term.endsOn)}
                 />
-              </details>
-            ));
-          })}
-        </section>
-      )}
-      {!courses.length && (
+              </>
+            ) : (
+              <p className="p-4 text-text-muted">
+                Выбери дисциплину, чтобы назначить экзамен или зачёт.
+              </p>
+            )}
+          </section>
+        </div>
+      ) : (
         <p className="rounded-xl bg-surface p-4 text-text-muted">
-          В выбранном семестре у группы пока нет дисциплин.
+          Для выбранной группы и семестра нет дисциплин.
         </p>
       )}
     </main>

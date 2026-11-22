@@ -44,7 +44,7 @@ export default async function PortfolioPage({
             <div className="flex flex-wrap gap-2">
               <a
                 href="/study/portfolio/export?format=pdf"
-              download="portfolio.pdf"
+                download="portfolio.pdf"
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-board-row px-4 py-3 font-semibold text-board-link no-underline"
               >
                 <FileText size={18} aria-hidden />
@@ -52,7 +52,7 @@ export default async function PortfolioPage({
               </a>
               <a
                 href="/study/portfolio/export?format=zip"
-              download="portfolio.zip"
+                download="portfolio.zip"
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-board-row px-4 py-3 font-semibold text-board-link no-underline"
               >
                 <Download size={18} aria-hidden />
@@ -74,6 +74,12 @@ export default async function PortfolioPage({
           ))}
         </dl>
       </header>
+      {process.env.DEMO_LOGIN === "on" && (
+        <p className="rounded-xl border border-border bg-surface p-4 text-sm text-text-muted">
+          В демо используй только вымышленные данные и тестовые файлы. При
+          очередном сбросе добавленные записи и вложения удаляются.
+        </p>
+      )}
       {(sp.done || sp.removed) && (
         <p role="status" className="rounded-xl bg-surface p-4 font-semibold">
           {sp.removed ? "Запись удалена." : "Портфолио обновлено."}

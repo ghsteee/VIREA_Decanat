@@ -32,12 +32,20 @@ async function checkNav(page: Page, viewport: (typeof sizes)[number]) {
   const nav = page.getByRole("navigation", { name: "Разделы", exact: true });
   await expect(nav).toHaveCount(1);
   const box = (await nav.boundingBox())!;
+  expect(box.width).toBeLessThanOrEqual(viewport.width);
   if (viewport.width >= 1024) {
     expect(box.x).toBe(0);
     expect(box.height).toBe(viewport.height);
   } else {
-    expect(box.y).toBeGreaterThan(viewport.height / 2);
-    expect(box.width).toBeLessThanOrEqual(viewport.width);
+    expect(viewport.height - box.y - box.height).toBe(10);
+    expect(box.height).toBe(64);
+    expect(box.x).toBe(viewport.width >= 768 ? 24 : 10);
+    const staff = new URL(page.url()).pathname.startsWith("/staff");
+    await expect(nav.getByRole("link")).toHaveText(
+      staff
+        ? ["Заявки", "Расписание", "Сессия", "Объявления", "Профиль"]
+        : ["Сегодня", "Расписание", "Учёба", "Заявки", "Профиль"],
+    );
   }
 }
 

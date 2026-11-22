@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { expect, test, type Page } from "@playwright/test";
-import { addDays, dayMonth, mskDate, mskDayStart } from "../../src/lib/time";
+import { mskDate } from "../../src/lib/time";
 
 const db = new PrismaClient();
 test.afterAll(() => db.$disconnect());
@@ -125,54 +125,6 @@ test("A4: завершённая заявка доступна в истории
     }
   } finally {
     await db.application.delete({ where: { id: application.id } });
-  }
-});
-
-test("T1: ближайшая пара находится после свободных сегодня и завтра", async ({
-  page,
-}) => {
-  const user = await db.user.findUniqueOrThrow({
-    where: { login: "d.severov" },
-    include: { studentProfile: true },
-  });
-  const groupId = user.studentProfile!.groupId;
-  const next = await db.lesson.findFirstOrThrow({
-    where: {
-      groupId,
-      status: "scheduled",
-      startsAt: {
-        gte: mskDayStart(addDays(mskDate(), 2)),
-        lt: mskDayStart(addDays(mskDate(), 8)),
-      },
-    },
-    orderBy: { startsAt: "asc" },
-    include: { subject: true },
-  });
-  const earlier = await db.lesson.findMany({
-    where: {
-      groupId,
-      startsAt: { gte: mskDayStart(mskDate()), lt: next.startsAt },
-      status: "scheduled",
-    },
-    select: { id: true },
-  });
-  try {
-    await db.lesson.updateMany({
-      where: { id: { in: earlier.map((lesson) => lesson.id) } },
-      data: { status: "cancelled" },
-    });
-    await login(page);
-    await expect(
-      page.getByRole("table", { name: "Ближайшая пара" }),
-    ).toContainText(next.subject.name);
-    await expect(page.locator("[data-next-lesson-day]")).toContainText(
-      dayMonth(mskDate(next.startsAt)),
-    );
-  } finally {
-    await db.lesson.updateMany({
-      where: { id: { in: earlier.map((lesson) => lesson.id) } },
-      data: { status: "scheduled" },
-    });
   }
 });
 

@@ -1,9 +1,9 @@
+import Link from "next/link";
 import { SubjectGrid } from "@/components/board/subject-grid";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
 import { getStudy } from "@/server/queries/study";
 import { Flaps } from "@/components/board/flaps";
-import Link from "next/link";
 import { dayMonth } from "@/lib/time";
 
 export const dynamic = "force-dynamic";

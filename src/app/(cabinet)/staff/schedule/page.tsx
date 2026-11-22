@@ -37,10 +37,10 @@ export default async function StaffSchedulePage({
             Выбери группу и день, затем пару
           </p>
           <Link
-            href="/staff/session"
-            className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-board-row px-4 font-semibold text-board-link"
+            href={group ? `/staff/session?group=${group.id}` : "/staff/session"}
+            className="mt-3 inline-flex min-h-11 items-center rounded-lg bg-board-row px-4 font-semibold text-board-link"
           >
-            Расписание сессии →
+            Редактор сессии
           </Link>
         </div>
         {sp.done ? (

@@ -19,6 +19,7 @@ RUN npm ci
 
 # Сборка. Этот же этап используется для миграций и сидов (в нём есть Prisma CLI и tsx).
 FROM base AS builder
+RUN mkdir -p /app/storage/portfolio && chown 1001:1001 /app/storage/portfolio
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate && npm run build

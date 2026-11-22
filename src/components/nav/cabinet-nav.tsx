@@ -46,7 +46,9 @@ function isActive(pathname: string, href: string) {
 export function CabinetNav({ role }: { role: "student" | "staff" }) {
   const pathname = usePathname();
   const items = role === "staff" ? STAFF : STUDENT;
-
+  const mobileIndex = items.findIndex((item) =>
+    isActive(pathname, item.href),
+  );
   return (
     <>
       <nav
@@ -56,25 +58,31 @@ export function CabinetNav({ role }: { role: "student" | "staff" }) {
           gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
         }}
       >
-        {items.map(({ href, label, icon: Icon }) => {
-          const active = isActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[14px] text-[10.5px] no-underline",
-                active
-                  ? "bg-nav-active font-bold text-nav-active-text"
-                  : "text-nav-text",
-              )}
-            >
-              <Icon size={20} strokeWidth={2} aria-hidden />
-              {label}
-            </Link>
-          );
-        })}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-1 left-1 rounded-[14px] bg-nav-active motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out"
+          style={{
+            width: `calc((100% - 0.5rem) / ${items.length})`,
+            transform: `translateX(${Math.max(mobileIndex, 0) * 100}%)`,
+            opacity: mobileIndex < 0 ? 0 : 1,
+          }}
+        />
+        {items.map(({ href, label, icon: Icon }, index) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={index === mobileIndex ? "page" : undefined}
+            className={cn(
+              "relative flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[14px] text-[10.5px] no-underline",
+              index === mobileIndex
+                ? "font-bold text-nav-active-text"
+                : "text-nav-text",
+            )}
+          >
+            <Icon size={20} strokeWidth={2} aria-hidden />
+            {label}
+          </Link>
+        ))}
       </nav>
 
       <DesktopSidebar>

@@ -13,6 +13,7 @@ const MANDATORY = new Set(["lab", "practice", "test", "essay"]);
 export type SubjectStanding = {
   subjectId: string;
   name: string;
+  shortName: string | null;
   controlTypes: ("exam" | "credit")[];
   points: number;
   missingPoints: number;
@@ -131,6 +132,7 @@ export async function getStudy(
     return {
       subjectId: subject.id,
       name: subject.name,
+      shortName: subject.shortName,
       controlTypes: (["exam", "credit"] as const).filter((kind) =>
         list.some((assessment) => assessment.kind === kind),
       ),

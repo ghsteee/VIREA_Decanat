@@ -45,8 +45,25 @@ test("S1: расписание открывается сразу после вх
   await login(page, danila);
   await page.goto("/");
   const board = page.getByRole("table", { name: "Ближайшая пара" });
-  await expect(board).toBeVisible();
-  await expect(board.getByRole("row").nth(1)).toBeInViewport();
+  const activeToday = await db.lesson.count({
+    where: {
+      group: { code: "БИСО-03-25" },
+      startsAt: {
+        gte: mskDayStart(mskDate()),
+        lt: mskDayStart(addDays(mskDate(), 1)),
+      },
+      endsAt: { gt: new Date() },
+      status: "scheduled",
+    },
+  });
+  if (activeToday) {
+    await expect(board.getByRole("row").nth(1)).toBeInViewport();
+  } else {
+    await expect(board).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Расписание на завтра" }),
+    ).toBeVisible();
+  }
   await expect(page.getByText(concept)).toBeVisible();
   await expectMobileLayout(page);
   await page.goto("/schedule");
@@ -66,6 +83,68 @@ test("S1: расписание открывается сразу после вх
   await expect(row).toContainText(lesson.subject.name);
   await expect(row).toContainText(`до ${mskTime(lesson.endsAt)}`);
   await expectMobileLayout(page);
+});
+
+test("T1: завтрашняя пара не появляется на табло за сегодня", async ({
+  page,
+}, testInfo) => {
+  const student = await db.studentProfile.findFirstOrThrow({
+    where: { user: { login: "k.lavrova" } },
+    include: { group: true },
+  });
+  const lesson = await db.lesson.findFirstOrThrow({
+    where: { groupId: student.groupId },
+  });
+  const group = await db.group.create({
+    data: {
+      instituteId: student.group.instituteId,
+      course: 2,
+      code: "ДЕМО-" + crypto.randomUUID(),
+    },
+  });
+  const today = mskDate();
+  const tomorrow = addDays(today, 1);
+  try {
+    await db.studentProfile.update({
+      where: { id: student.id },
+      data: { groupId: group.id },
+    });
+    const upcoming = await db.lesson.create({
+      data: {
+        groupId: group.id,
+        termId: lesson.termId,
+        subjectId: lesson.subjectId,
+        kind: "lecture",
+        startsAt: new Date(tomorrow + "T09:00:00+03:00"),
+        endsAt: new Date(tomorrow + "T10:30:00+03:00"),
+      },
+    });
+    await login(page, ksenia);
+    const todayBoard = page.getByRole("region", {
+      name: "Сегодня",
+      exact: true,
+    });
+    await expect(
+      todayBoard.getByText("Сегодня пар нет", { exact: true }),
+    ).toBeVisible();
+    await expect(todayBoard.getByRole("table")).toHaveCount(0);
+    await todayBoard.screenshot({
+      path: testInfo.outputPath("today-no-lessons.jpg"),
+      quality: 87,
+    });
+    await todayBoard
+      .getByRole("link", { name: "Расписание на завтра" })
+      .click();
+    await expect(page).toHaveURL(new RegExp("date=" + tomorrow));
+    await expect(page.locator("#lesson-" + upcoming.id)).toBeVisible();
+  } finally {
+    await db.studentProfile.update({
+      where: { id: student.id },
+      data: { groupId: student.groupId },
+    });
+    await db.lesson.deleteMany({ where: { groupId: group.id } });
+    await db.group.delete({ where: { id: group.id } });
+  }
 });
 
 test("S2: перенос виден в расписании и ленте только нужной группы", async ({

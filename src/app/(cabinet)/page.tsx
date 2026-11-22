@@ -4,13 +4,13 @@ import { redirect } from "next/navigation";
 import { Bell, ChevronRight, Navigation } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { BoardHead, LessonRow } from "@/components/board/lesson-row";
-import { Flaps } from "@/components/board/flaps";
 import { BrandAurora } from "@/components/brand-aurora";
 import { BrandMark } from "@/components/brand-mark";
 import { ConceptNote } from "@/components/concept-note";
 import { RequestRoute } from "@/components/board/route";
 import { DeadlineCheck } from "@/components/deadline-check";
 import {
+  dayRange,
   getAcademicWeek,
   getLessons,
   kindLabel,
@@ -43,14 +43,9 @@ export default async function TodayPage() {
   const now = new Date();
   const today = mskDate(now);
   const tomorrow = addDays(today, 1);
-  const [upcoming, week, deadlines, app, unread, changes, results] =
+  const [lessons, week, deadlines, app, unread, changes, results] =
     await Promise.all([
-      getLessons(
-        user.groupId,
-        mskDayStart(today),
-        mskDayStart(addDays(today, 8)),
-        now,
-      ),
+      getLessons(user.groupId, ...dayRange(today), now),
       getAcademicWeek(today),
       getWeekDeadlines(user.groupId, user.studentProfileId, now),
       getTopApplication(user.studentProfileId),
@@ -63,20 +58,15 @@ export default async function TodayPage() {
       getNewResults(user.studentProfileId, now),
     ]);
 
-  const lessons = upcoming.filter(
-    (lesson) => mskDate(lesson.startsAt) === today,
+  const scheduled = lessons.filter(
+    (lesson) => lesson.state.kind !== "cancelled",
   );
-  const closest = upcoming.find(
-    (l) => l.state.kind !== "past" && l.state.kind !== "cancelled",
-  );
-  const closestDate = closest ? mskDate(closest.startsAt) : today;
-  const next = closestDate === today ? closest : undefined;
-  const closestDay =
-    closestDate === today
-      ? "Сегодня"
-      : closestDate === tomorrow
-        ? "Завтра"
-        : `${weekdayShort(closestDate)}, ${dayMonth(closestDate)}`;
+  const next = scheduled.find((lesson) => lesson.state.kind !== "past");
+  const emptyMessage = scheduled.length
+    ? "На сегодня пар больше нет"
+    : lessons.length
+      ? "Сегодня все пары отменены"
+      : "Сегодня пар нет";
   const when = (date: Date) => `${dayMonth(mskDate(date))}, ${mskTime(date)}`;
   const changeLabels = {
     moved: "Перенос",
@@ -135,52 +125,30 @@ export default async function TodayPage() {
             </div>
           </div>
 
-          {closest ? (
-            <div>
-              <p
-                className="border-t border-board-line px-0.5 py-2 text-xs font-bold text-board-link"
-                data-next-lesson-day
-              >
-                {closestDay} ·{" "}
-                {closest.state.kind === "now"
-                  ? "идёт сейчас"
-                  : "ближайшая пара"}
-              </p>
-              <div role="table" aria-label="Ближайшая пара">
-                <BoardHead />
-                <LessonRow lesson={closest} details />
-              </div>
+          {next ? (
+            <div role="table" aria-label="Ближайшая пара">
+              <BoardHead />
+              <LessonRow lesson={next} details />
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2.5 border-t border-board-line px-0.5 pb-1.5 pt-[18px] text-center">
-              <Flaps value="––:––" label="Пар нет" tone="dim" />
-              {lessons.length > 0 && (
-                <p className="font-board text-2xl font-extrabold uppercase">
-                  Пар больше нет
-                </p>
-              )}
-            </div>
-          )}
-
-          {closest ? (
-            <Link
-              href={`/schedule?date=${closestDate}#lesson-${closest.id}`}
-              className="flex min-h-11 items-center justify-between border-t border-board-line px-0.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
-            >
-              {next
-                ? "Всё расписание на сегодня"
-                : `Расписание · ${closestDay.toLowerCase()}`}
-              <ChevronRight size={16} aria-hidden />
-            </Link>
-          ) : null}
-          {lessons.length === 0 && (
             <div className="empty-state empty-state-compact border-t border-board-line">
               <EmptyIllustration scene="today" />
               <p className="m-0 font-board text-2xl font-extrabold uppercase">
-                Сегодня пар нет
+                {emptyMessage}
               </p>
             </div>
           )}
+          <Link
+            href={
+              next
+                ? `/schedule?date=${today}#lesson-${next.id}`
+                : `/schedule?date=${tomorrow}`
+            }
+            className="flex min-h-11 items-center justify-between border-t border-board-line px-0.5 font-board text-[15px] font-bold uppercase tracking-[0.06em] text-board-link no-underline"
+          >
+            {next ? "Всё расписание на сегодня" : "Расписание на завтра"}
+            <ChevronRight size={16} aria-hidden />
+          </Link>
         </section>
 
         {changes.length > 0 && (
