@@ -30,7 +30,7 @@ class ProviderError extends Error {
 
 async function postJson(
   url: string,
-  ca: (string | Buffer)[],
+  ca: string[],
   body: string,
   headers: Record<string, string>,
   timeout: number,
@@ -83,7 +83,7 @@ async function postJson(
   });
 }
 
-async function accessToken(ca: (string | Buffer)[], key: string) {
+async function accessToken(ca: string[], key: string) {
   if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000)
     return cachedToken.value;
   const body = new URLSearchParams({
@@ -122,7 +122,14 @@ export async function chooseSections(question: string, source: string) {
   if (running) return { kind: "busy" } as const;
   running = true;
   try {
-    const ca = [...rootCertificates, await readFile(bundle)];
+    const certificates = (await readFile(bundle, "utf8")).match(
+      /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g,
+    );
+    if (!certificates?.length)
+      throw Object.assign(new Error("Invalid CA bundle"), {
+        code: "INVALID_CA_BUNDLE",
+      });
+    const ca = [...rootCertificates, ...certificates];
     const token = await accessToken(ca, key);
     const response = (await postJson(
       CHAT_URL,

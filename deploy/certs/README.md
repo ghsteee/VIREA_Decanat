@@ -24,10 +24,10 @@ for f in root.crt sub.crt; do openssl x509 -in $f -noout -subject -issuer -endda
 
 Ожидается `CN = Russian Trusted Root CA` и `CN = Russian Trusted Sub CA`, `O = The Ministry of Digital Development and Communications`.
 
-Собрать в один файл и проверить соединение с GigaChat:
+При сборке добавь перенос строки между сертификатами. Исходные файлы могут заканчиваться сразу после маркера PEM.
 
 ```bash
-sudo sh -c 'cat root.crt sub.crt > russian_trusted_ca.pem' && sudo chmod 644 russian_trusted_ca.pem
+sudo sh -c '{ cat root.crt; printf "\n"; cat sub.crt; printf "\n"; } > russian_trusted_ca.pem' && sudo chmod 644 russian_trusted_ca.pem
 curl -sS --cacert russian_trusted_ca.pem -o /dev/null -w "%{http_code}\n" https://api.giga.chat/v1/models
 ```
 

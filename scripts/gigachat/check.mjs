@@ -59,7 +59,14 @@ try {
   if (!key) throw new Error("В контейнере пустой GIGACHAT_AUTH_KEY.");
   if (!bundle) throw new Error("В контейнере пустой GIGACHAT_CA_BUNDLE.");
   stage = "сертификаты";
-  const ca = [...rootCertificates, await readFile(bundle)];
+  const certificates = (await readFile(bundle, "utf8")).match(
+    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g,
+  );
+  if (!certificates?.length)
+    throw Object.assign(new Error("Invalid CA bundle"), {
+      code: "INVALID_CA_BUNDLE",
+    });
+  const ca = [...rootCertificates, ...certificates];
   stage = "OAuth";
   const token = await json(
     "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
