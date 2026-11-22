@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/server/db";
-import { dayMonth, mskDate } from "@/lib/time";
+import { dayMonth, mskDate, mskTime } from "@/lib/time";
 
 /** groupId передаётся только из серверной сессии страницы расписания. */
 export async function SessionSchedule({ groupId }: { groupId: string }) {
@@ -41,6 +41,11 @@ export async function SessionSchedule({ groupId }: { groupId: string }) {
                 ) : (
                   "Дата уточняется"
                 )}
+                {exam.sessionStartsAt && (
+                  <span className="mt-1 block text-lg text-board-text">
+                    {mskTime(exam.sessionStartsAt)}
+                  </span>
+                )}
               </div>
               <div className="min-w-0 flex-1 basis-44">
                 <h3 className="font-board text-[22px] font-extrabold uppercase leading-6">
@@ -53,6 +58,11 @@ export async function SessionSchedule({ groupId }: { groupId: string }) {
                     ? ` · ${exam.title}`
                     : ""}
                 </p>
+                {exam.sessionRoom && (
+                  <p className="mt-1 text-sm text-board-muted">
+                    Аудитория {exam.sessionRoom}
+                  </p>
+                )}
               </div>
             </li>
           ))}

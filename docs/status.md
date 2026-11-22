@@ -123,3 +123,5 @@
 - [ ] ИИ-помощник по демо-положению и редактируемый черновик заявки — AI1–AI3, Codex Алёны. [PR #61](https://github.com/ghsteee/VIREA_Decanat/pull/61). Ожидает проверки GigaChat и ревью.
 
 - [x] Разовый экспорт пары в календарь из вкладки «День» — дополнение к R2 и R3, Codex Алёны. Скачивание на 360 px проверено в Chromium и WebKit, время и аудитория сверены после разбора iCalendar. [PR #64](https://github.com/ghsteee/VIREA_Decanat/pull/64).
+
+- [x] Редактор сессии дирекции подготовлен в отдельной ветке. Кто: Codex Алёны. [Проверка](ai-log/entries/2026-11-22_1415_codex-alena_session-editor.md).
