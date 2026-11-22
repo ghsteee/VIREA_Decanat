@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SubjectGrid } from "@/components/board/subject-grid";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/guards";
@@ -20,6 +21,12 @@ export default async function StudyPage() {
           Учёба
         </h1>
         <p>Семестр ещё не начался или уже закончился.</p>
+        <Link
+          href="/study/portfolio"
+          className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-border bg-surface px-4 font-semibold text-primary"
+        >
+          Моё портфолио
+        </Link>
       </main>
     );
   }
@@ -44,6 +51,12 @@ export default async function StudyPage() {
             {study.term.sessionStartsOn &&
               ` · сессия с ${dayMonth(study.term.sessionStartsOn)}`}
           </p>
+          <Link
+            href="/study/portfolio"
+            className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-border bg-surface px-4 font-semibold text-primary"
+          >
+            Моё портфолио
+          </Link>
         </div>
         <dl className="flex flex-wrap items-start gap-x-5 gap-y-3 sm:gap-x-9">
           {metrics.map(([label, value]) => (

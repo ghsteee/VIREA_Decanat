@@ -10,6 +10,8 @@
  */
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { unlink } from "node:fs/promises";
+import { UUID } from "../src/lib/portfolio";
 import { join } from "node:path";
 import { hash } from "@node-rs/argon2";
 import {
@@ -181,14 +183,44 @@ const ARGON = {
 } as const;
 
 async function wipe() {
-  const tables = await db.$queryRaw<{ tablename: string }[]>`
-    SELECT tablename FROM pg_tables
-    WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
-  const list = tables.map((t) => `"public"."${t.tablename}"`).join(", ");
-  if (list)
-    await db.$executeRawUnsafe(
-      `TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`,
-    );
+  const attachments = await db.$transaction(
+    async (tx) => {
+      const tables = await tx.$queryRaw<{ tablename: string }[]>`
+      SELECT tablename FROM pg_tables
+      WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'
+      ORDER BY tablename`;
+      const list = tables
+        .map(
+          ({ tablename }) =>
+            '"public"."' + tablename.replaceAll('"', '""') + '"',
+        )
+        .join(", ");
+      await tx.$executeRawUnsafe(
+        "LOCK TABLE " + list + " IN ACCESS EXCLUSIVE MODE",
+      );
+      const files = await tx.portfolioAttachment.findMany({
+        select: { storageKey: true },
+      });
+      await tx.$executeRawUnsafe(
+        "TRUNCATE TABLE " + list + " RESTART IDENTITY CASCADE",
+      );
+      return files;
+    },
+    { timeout: 60_000 },
+  );
+  const storage =
+    process.env.PORTFOLIO_STORAGE_DIR ||
+    join(process.cwd(), "storage/portfolio");
+  let failures = 0;
+  for (const { storageKey } of attachments) {
+    if (!UUID.test(storageKey)) continue;
+    try {
+      await unlink(join(storage, storageKey));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") failures++;
+    }
+  }
+  if (failures) console.error("Не удалось удалить вложения демо:", failures);
 }
 
 /** Разбор демо-положения на пункты для помощника (AI1). */
@@ -1328,6 +1360,44 @@ async function main() {
       },
     ].map((item) => ({ ...item, termId: term.id })),
   });
+
+  for (const studentId of [
+    danila.profileId,
+    ksenia.profileId,
+    marat.profileId,
+  ]) {
+    await db.portfolioItem.createMany({
+      data: [
+        {
+          studentId,
+          kind: "work",
+          title: "Проект «Расписание команды»",
+          description:
+            "Демонстрационный проект студенческого сервиса: интерфейс расписания и командных задач.",
+          occurredOn: new Date(addDays(today, -20)),
+        },
+        {
+          studentId,
+          kind: "participation",
+          title: "Участие в командном хакатоне",
+          eventName: "Демо-хакатон «Код кампуса»",
+          description:
+            "Вымышленный пример участия: работа над прототипом в составе команды.",
+          occurredOn: new Date(addDays(today, -14)),
+        },
+        {
+          studentId,
+          kind: "award",
+          award: "winner",
+          title: "Диплом победителя",
+          eventName: "Демо-хакатон «Студенческие сервисы»",
+          description:
+            "Вымышленный пример награды. Добавляй только вымышленные сведения и тестовые файлы.",
+          occurredOn: new Date(addDays(today, -7)),
+        },
+      ],
+    });
+  }
 
   // Прошлая сессия Ксении (весна 2026): средний 4,6
   const spring = await db.academicTerm.create({
