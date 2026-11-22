@@ -14,9 +14,24 @@ test("S5: Ксения видит работы, ближайший срок и �
   });
   await expect(trigger.locator("svg g")).toHaveCount(3);
   await expect(trigger).not.toContainText("Посещения");
+  const cards = page.getByRole("list", { name: "Карточки дисциплин" });
+  expect(
+    await cards.evaluate(
+      (el) =>
+        el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight,
+    ),
+  ).toBe(true);
+  await expect(cards.getByRole("img", { name: /Рейтинг:/ })).toHaveCount(0);
+  await expect(cards).not.toContainText("/ 100");
   await trigger.click();
   const databases = page.getByRole("dialog", { name: "Базы данных" });
   await expect(databases).toContainText("Риск недопуска");
+  await expect(
+    databases.getByRole("img", { name: "Рейтинг: 48 из 100" }),
+  ).toBeVisible();
+  await expect(
+    databases.getByText("до 06.12", { exact: true }).first(),
+  ).toBeVisible();
   await expect(databases.getByText("Посещения", { exact: true })).toBeVisible();
   await expect(
     databases.getByText("Работы", { exact: true }).locator(".."),
@@ -38,7 +53,7 @@ test("S5: Ксения видит работы, ближайший срок и �
   await page.keyboard.press("Escape");
   await expect(databases).not.toBeVisible();
   await expect(trigger).toBeFocused();
-  await expect(page.getByText(/Ближайший срок — 06.12/)).toBeVisible();
+  await expect(page.getByText(/Ближайший срок —/)).toHaveCount(0);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
