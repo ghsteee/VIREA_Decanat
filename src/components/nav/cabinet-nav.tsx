@@ -9,6 +9,7 @@ import {
   GraduationCap,
   House,
   Megaphone,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,44 +42,83 @@ function isActive(pathname: string, href: string) {
 
 export function CabinetNav({ account }: { account: AccountSummary }) {
   const pathname = usePathname();
-  const items = [
-    ...(account.role === "staff" ? STAFF : STUDENT),
-    NOTIFICATIONS,
+  const sections = account.role === "staff" ? STAFF : STUDENT;
+  const mobileItems = [
+    ...sections,
+    { href: "/profile", label: "Профиль", icon: UserRound },
   ];
+  const mobileIndex = mobileItems.findIndex((item) =>
+    isActive(pathname, item.href),
+  );
+  const items = [...sections, NOTIFICATIONS];
   const activeIndex = items.findIndex((item) => isActive(pathname, item.href));
   return (
-    <header className="cabinet-bar">
-      <div className="cabinet-bar-inner">
-        <Link
-          className="cabinet-wordmark"
-          aria-label="Деканыч — главная"
-          href={account.role === "staff" ? "/staff" : "/"}
-        >
-          <BrandMark size={32} /> Деканыч
-        </Link>
-        <nav aria-label="Разделы" className="split-nav">
-          {items.map(({ href, label, icon: Icon }, i) => (
-            <Link
-              key={href}
-              href={href}
-              prefetch={href === "/feed" ? false : undefined}
-              aria-label={label}
-              aria-current={activeIndex === i ? "page" : undefined}
-              className={cn(
-                "split-tab",
-                (i === 0 || i === activeIndex + 1) && "split-first",
-                (i === items.length - 1 || i === activeIndex - 1) &&
-                  "split-last",
-              )}
-            >
-              <Icon size={19} aria-hidden />
-              <span>{label}</span>
-              <small aria-hidden>{href === "/feed" ? "Лента" : label}</small>
-            </Link>
-          ))}
-        </nav>
-        <AccountMenu key={pathname} account={account} />
-      </div>
-    </header>
+    <>
+      <nav
+        aria-label="Разделы"
+        className="fixed inset-x-[10px] bottom-[calc(10px+env(safe-area-inset-bottom))] z-20 grid rounded-[18px] bg-nav p-1 md:inset-x-6 lg:hidden"
+        style={{
+          gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0,1fr))`,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-1 left-1 rounded-[14px] bg-nav-active motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out"
+          style={{
+            width: `calc((100% - 0.5rem) / ${mobileItems.length})`,
+            transform: `translateX(${Math.max(mobileIndex, 0) * 100}%)`,
+            opacity: mobileIndex < 0 ? 0 : 1,
+          }}
+        />
+        {mobileItems.map(({ href, label, icon: Icon }, i) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={i === mobileIndex ? "page" : undefined}
+            className={cn(
+              "relative flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[14px] text-[10.5px] no-underline",
+              i === mobileIndex
+                ? "font-bold text-nav-active-text"
+                : "text-nav-text",
+            )}
+          >
+            <Icon size={20} strokeWidth={2} aria-hidden />
+            {label}
+          </Link>
+        ))}
+      </nav>
+      <header className="cabinet-bar hidden lg:block">
+        <div className="cabinet-bar-inner">
+          <Link
+            className="cabinet-wordmark"
+            aria-label="Деканыч — главная"
+            href={account.role === "staff" ? "/staff" : "/"}
+          >
+            <BrandMark size={32} /> Деканыч
+          </Link>
+          <nav aria-label="Разделы" className="split-nav">
+            {items.map(({ href, label, icon: Icon }, i) => (
+              <Link
+                key={href}
+                href={href}
+                prefetch={href === "/feed" ? false : undefined}
+                aria-label={label}
+                aria-current={activeIndex === i ? "page" : undefined}
+                className={cn(
+                  "split-tab",
+                  (i === 0 || i === activeIndex + 1) && "split-first",
+                  (i === items.length - 1 || i === activeIndex - 1) &&
+                    "split-last",
+                )}
+              >
+                <Icon size={19} aria-hidden />
+                <span>{label}</span>
+              </Link>
+            ))}
+          </nav>
+          <AccountMenu key={pathname} account={account} />
+        </div>
+      </header>
+    </>
   );
 }

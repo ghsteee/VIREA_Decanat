@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("Верхнее меню, профиль, тема и прочитанные уведомления", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
   await page.goto("/login");
   await page.getByRole("button", { name: /Студент — Данила/ }).click();
   await page.waitForURL("/");

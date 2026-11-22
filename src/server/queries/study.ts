@@ -13,6 +13,7 @@ const MANDATORY = new Set(["lab", "practice", "test", "essay"]);
 export type SubjectStanding = {
   subjectId: string;
   name: string;
+  shortName: string | null;
   points: number;
   missingPoints: number;
   labs: { done: number; total: number };
@@ -124,6 +125,7 @@ export async function getStudy(
     return {
       subjectId: subject.id,
       name: subject.name,
+      shortName: subject.shortName,
       points,
       missingPoints,
       assessments: list.map((a) => {
