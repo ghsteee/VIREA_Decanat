@@ -128,7 +128,7 @@ test("T1: завтрашняя пара не появляется на табл�
       todayBoard.getByText("Сегодня пар нет", { exact: true }),
     ).toBeVisible();
     await expect(todayBoard.getByRole("table")).toHaveCount(0);
-    await page.screenshot({
+    await todayBoard.screenshot({
       path: testInfo.outputPath("today-no-lessons.jpg"),
       quality: 87,
     });
