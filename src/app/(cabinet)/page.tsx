@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-illustration";
 import { redirect } from "next/navigation";
-import { Bell, ChevronRight, Navigation } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, Navigation } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { Flaps } from "@/components/board/flaps";
@@ -9,6 +9,8 @@ import { BrandSwirl } from "@/components/ui/swirl";
 import { BrandMark } from "@/components/brand-mark";
 import { RequestRoute } from "@/components/board/route";
 import { DeadlineCheck } from "@/components/deadline-check";
+import { AssistantForm } from "./assistant/assistant-form";
+import { assistantEnabled } from "@/server/gigachat";
 import {
   dayRange,
   getAcademicWeek,
@@ -76,8 +78,8 @@ export default async function TodayPage() {
     restored: "Пара восстановлена",
   };
   return (
-    <main className="cabinet-page cabinet-columns flex flex-col lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,1fr)] lg:gap-6">
-      <div className="flex min-w-0 flex-col [&>section:last-child]:grow">
+    <main className="cabinet-page today-page">
+      <div className="flex min-w-0 flex-col">
         <section
           aria-labelledby="today-title"
           className="min-w-0 bg-board px-3 pb-1 pt-3 text-board-text md:rounded-3xl md:p-6"
@@ -186,16 +188,41 @@ export default async function TodayPage() {
         )}
       </div>
 
-      <div className="min-w-0 flex flex-col gap-5 px-4 pb-3 pt-4 md:mt-5 md:grid md:grid-cols-2 md:gap-x-6 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0 lg:flex">
+      <div className="today-details min-w-0 px-4 pb-3 pt-4 md:rounded-3xl md:bg-surface">
         {next?.roomLabel ? (
           <Link
             href={`/schedule?date=${today}#lesson-${next.id}`}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-[14px] md:col-span-2 bg-action font-semibold text-on-action no-underline"
+            className="today-details-wide flex min-h-12 items-center justify-center gap-2 rounded-[14px] bg-action font-semibold text-on-action no-underline"
           >
             <Navigation size={18} aria-hidden />
             Как дойти до {next.roomLabel}
           </Link>
         ) : null}
+
+        {assistantEnabled() && (
+          <section
+            id="assistant"
+            aria-labelledby="today-assistant-title"
+            className="today-details-wide min-w-0"
+          >
+            <details className="group rounded-2xl border border-border bg-surface">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-3 md:px-4 [&::-webkit-details-marker]:hidden">
+                <span
+                  id="today-assistant-title"
+                  className="font-board text-2xl font-extrabold uppercase"
+                >
+                  ИИ-помощник
+                </span>
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-bg text-primary motion-safe:transition-transform group-open:rotate-180">
+                  <ChevronDown size={19} aria-hidden />
+                </span>
+              </summary>
+              <div className="border-t border-border p-3 md:p-4">
+                <AssistantForm />
+              </div>
+            </details>
+          </section>
+        )}
 
         <section aria-labelledby="dl-title">
           <h2

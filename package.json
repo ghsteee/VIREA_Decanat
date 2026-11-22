@@ -26,6 +26,7 @@
     "clsx": "2.1.1",
     "fflate": "0.8.3",
     "lucide-react": "1.72.0",
+    "motion": "^14.14.0",
     "next": "15.5.29",
     "nodemailer": "10.5.0",
     "pdfkit": "0.21.0",
