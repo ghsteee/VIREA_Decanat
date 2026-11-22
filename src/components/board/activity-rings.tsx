@@ -30,9 +30,7 @@ export function ActivityRings({
     },
   ];
   return (
-    <div
-      className={showLegend ? "flex items-center gap-4 py-4" : "study-cover"}
-    >
+    <div className={showLegend ? "flex items-center gap-4 py-4" : "contents"}>
       <svg
         className={showLegend ? "size-[92px] shrink-0" : "study-cover-rings"}
         viewBox="0 0 100 100"
