@@ -20,7 +20,7 @@ export default async function CabinetLayout({
       })
     : null;
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
       <a className="skip-link" href="#cabinet-content">
         К содержанию
       </a>
