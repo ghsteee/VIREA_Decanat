@@ -16,10 +16,8 @@ test("AI2: черновик редактируется до отправки, а
     .getByLabel("Твой вопрос")
     .fill("Сколько баллов нужно для допуска?");
   await page.getByRole("button", { name: "Спросить", exact: true }).click();
-  await expect(
-    page.getByText("Ответ не найден.", { exact: true }),
-  ).toBeVisible();
-  await page.getByRole("link", { name: "Открыть демо-положение" }).click();
+  await expect(page.getByRole("link", { name: /^Пункт 3\.1/ })).toBeVisible();
+  await page.getByRole("link", { name: /^Пункт 3\.1/ }).click();
   await expect(page.locator("#p-3-1")).toBeVisible();
 
   await page.goto("/assistant");
@@ -44,6 +42,38 @@ test("AI2: черновик редактируется до отправки, а
   await expect(page).toHaveURL(
     /\/requests\/new\?type=military_certificate&draft=assistant$/,
   );
+});
+
+test("AI1: помощник на «Сегодня» объясняет долги и допуск разговорными формулировками", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/login");
+  await page.getByRole("button", { name: /Студентка — Ксения/ }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.getByText("ИИ-помощник", { exact: true }).click();
+  const input = page.getByLabel("Твой вопрос");
+  const ask = page.getByRole("button", { name: "Спросить", exact: true });
+  const answer = page.locator('[aria-live="polite"]');
+
+  await input.fill("По каким предметам у меня хвосты?");
+  await ask.click();
+  await expect(answer).toContainText("Базы данных — Риск недопуска.");
+  await expect(answer).toContainText("Лаба 4");
+
+  await input.fill("Что мне нужно сдать для допуска по БД?");
+  await ask.click();
+  await expect(answer).toContainText("Допуск к сессии");
+  await expect(answer).toContainText("До 50 баллов не хватает 2.");
+  await expect(answer).toContainText("Лаба 4");
+  await expect(
+    answer.getByRole("link", { name: "Открыть учёбу" }),
+  ).toHaveAttribute("href", "/study");
+  await expect(page).toHaveURL(/\/$/);
+  await page.locator("details", { has: input }).screenshot({
+    path: testInfo.outputPath("today-assistant-360.jpg"),
+    animations: "disabled",
+    quality: 88,
+  });
 });
 
 test("AI1 и AI3: помощник отвечает по расписанию и оценкам текущего студента", async ({

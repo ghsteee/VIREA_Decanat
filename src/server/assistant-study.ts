@@ -1,6 +1,7 @@
 import "server-only";
 import { dayMonth, mskDate, mskTime } from "@/lib/time";
 import { noAnswer, type PersonalAnswer } from "./assistant-personal";
+import { studyTopic } from "./assistant-protocol";
 import { getStudy, type SubjectStanding } from "./queries/study";
 import { getWeekDeadlines } from "./queries/today";
 
@@ -60,9 +61,31 @@ function dateAndTime(date: Date) {
 }
 
 function asksForNamedSubject(question: string) {
-  return /(?:^| )по (?!всем|кажд|итог|учеб|семестр|предметам|дисциплинам|экзаменам|зачетам|данным)/u.test(
+  return /(?:^| )по (?!(?:всем|кажд|итог|учеб|успева|семестр|предметам|дисциплинам|экзаменам|зачетам|данным|как|срокам|долгам|допус|моим|моей|отдельным|некоторым)\p{L}*)(?=\p{L})/u.test(
     question,
   );
+}
+
+function admissionDetails(subject: SubjectStanding) {
+  const outstanding = subject.checklist.filter((work) => !work.done);
+  const works = outstanding
+    .slice(0, 3)
+    .map((work) =>
+      work.dueAt
+        ? `${work.title} (до ${dayMonth(mskDate(work.dueAt))})`
+        : work.title,
+    );
+  return [
+    `${subject.name} — ${admission[subject.status]}.`,
+    subject.status !== "unpublished" && subject.missingPoints
+      ? `До 50 баллов не хватает ${subject.missingPoints}.`
+      : "",
+    works.length
+      ? `Осталось сдать: ${works.join(", ")}${outstanding.length > 3 ? ` и ещё ${outstanding.length - 3}` : ""}.`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export async function answerStudy(
@@ -103,12 +126,20 @@ export async function answerStudy(
       : { message: noAnswer };
   }
 
-  const subjects = study.subjects.filter(
+  const namedSubjects = study.subjects.filter(
     (subject) =>
       mentionsName(tokens, subject.name) ||
       mentionsName(tokens, subject.shortName) ||
       (tokens.includes("бд") && subject.name === "Базы данных"),
   );
+  const shorthand = normalized.match(/(?:^| )по (\p{L}{3,})$/u)?.[1];
+  const partialMatches =
+    shorthand && !namedSubjects.length && asksForNamedSubject(normalized)
+      ? study.subjects.filter((subject) =>
+          words(subject.name).some((word) => stem(word) === stem(shorthand)),
+        )
+      : [];
+  const subjects = partialMatches.length === 1 ? partialMatches : namedSubjects;
   const published = study.subjects.filter(
     (subject) => subject.status !== "unpublished",
   );
@@ -116,6 +147,31 @@ export async function answerStudy(
   const single = subjects.length === 1 ? subjects[0] : undefined;
   if (!subjects.length && asksForNamedSubject(normalized)) {
     return { message: noAnswer };
+  }
+
+  const topic = studyTopic(normalized);
+  if (topic === "admission" || topic === "debts") {
+    if (topic === "admission") {
+      return {
+        message: resultList("Допуск к сессии", selected.map(admissionDetails)),
+        link: studyLink,
+      };
+    }
+
+    const debts = selected.filter(
+      (subject) => subject.status === "not_admitted",
+    );
+    const atRisk = selected.filter((subject) => subject.status === "at_risk");
+    const lines = [
+      ...(debts.length
+        ? [`Долги: ${debts.length}.`, ...debts.map(admissionDetails)]
+        : ["По опубликованным ведомостям долгов нет."]),
+      ...atRisk.map(admissionDetails),
+    ];
+    const message = selected.some((subject) => subject.status !== "unpublished")
+      ? lines.slice(0, 9).join("\n")
+      : "Ведомости пока не опубликованы.";
+    return { message, link: studyLink };
   }
 
   if (
@@ -198,35 +254,6 @@ export async function answerStudy(
       ),
       link: studyLink,
     };
-  }
-
-  if (/долг|задолженн/u.test(normalized)) {
-    if (!selected.some((subject) => subject.status !== "unpublished"))
-      return { message: noAnswer };
-    const debts = selected.filter(
-      (subject) => subject.status === "not_admitted",
-    );
-    return {
-      message: debts.length
-        ? resultList(
-            `Долги: ${debts.length}.`,
-            debts.map((subject) => subject.name),
-          )
-        : "По опубликованным ведомостям долгов нет.",
-      link: studyLink,
-    };
-  }
-
-  if (/допуск|допущ|допуст|не хватает|хватает ли/u.test(normalized)) {
-    const lines = selected
-      .filter((subject) => subject.status !== "unpublished")
-      .map((subject) => {
-        const missing = subject.missingPoints
-          ? `. До 50 баллов не хватает ${subject.missingPoints}`
-          : "";
-        return `${subject.name} — ${admission[subject.status]}${missing}.`;
-      });
-    return { message: resultList("Допуск к сессии", lines), link: studyLink };
   }
 
   if (/посещаем|пропуск|посетил/u.test(normalized)) {

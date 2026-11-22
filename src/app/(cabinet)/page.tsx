@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-illustration";
 import { redirect } from "next/navigation";
-import { Bell, ChevronRight, Navigation } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  Navigation,
+  Sparkles,
+} from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { BoardHead, LessonRow } from "@/components/board/lesson-row";
 import { BrandAurora } from "@/components/brand-aurora";
@@ -9,6 +15,8 @@ import { BrandMark } from "@/components/brand-mark";
 import { ConceptNote } from "@/components/concept-note";
 import { RequestRoute } from "@/components/board/route";
 import { DeadlineCheck } from "@/components/deadline-check";
+import { assistantEnabled } from "@/server/gigachat";
+import { AssistantForm } from "./assistant/assistant-form";
 import {
   dayRange,
   getAcademicWeek,
@@ -124,6 +132,29 @@ export default async function TodayPage() {
               </p>
             </div>
           </div>
+
+          {assistantEnabled() && (
+            <details className="group mb-3 rounded-xl border border-board-line bg-board-row">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 font-semibold text-board-link [&::-webkit-details-marker]:hidden">
+                <Sparkles size={18} aria-hidden />
+                ИИ-помощник
+                <ChevronDown
+                  size={16}
+                  className="ml-auto group-open:rotate-180"
+                  aria-hidden
+                />
+              </summary>
+              <div className="px-3 pb-3">
+                <AssistantForm />
+                <Link
+                  href="/assistant/rules"
+                  className="mt-2 inline-flex min-h-11 items-center text-sm text-board-link"
+                >
+                  Открыть демо-положение
+                </Link>
+              </div>
+            </details>
+          )}
 
           {next ? (
             <div role="table" aria-label="Ближайшая пара">

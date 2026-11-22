@@ -65,7 +65,7 @@ export function AssistantForm() {
             maxLength={400}
             rows={3}
             required
-            placeholder="Готова ли моя справка об обучении?"
+            placeholder="Что мне нужно сдать для допуска?"
             className="rounded-lg border border-border bg-surface p-3 text-text"
           />
         </label>

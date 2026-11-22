@@ -7,6 +7,7 @@ import {
   answerSections,
   questionTopic,
   requestDraft,
+  studyRuleNumbers,
 } from "@/server/assistant-protocol";
 import { noAnswer, type PersonalAnswer } from "@/server/assistant-personal";
 import { answerRequests } from "@/server/assistant-requests";
@@ -73,10 +74,20 @@ export async function askAssistant(
       message:
         "Черновик готов. Проверь поля, затем самостоятельно отправь заявку.",
     };
-  if (!assistantConfigured()) return { question, message: noAnswer };
+  const studyRules = studyRuleNumbers(question);
+  if (!studyRules.length && !assistantConfigured())
+    return { question, message: noAnswer };
 
   const rules = await assistantRules();
   if (!rules?.sections.length) return { question, message: noAnswer };
+  if (studyRules.length) {
+    const sections = rules.sections.filter(({ number }) =>
+      studyRules.includes(number),
+    );
+    return sections.length
+      ? { question, sections }
+      : { question, message: noAnswer };
+  }
   const source = rules.sections
     .map(({ number, heading, text }) => `${number}. ${heading ?? ""}\n${text}`)
     .join("\n")

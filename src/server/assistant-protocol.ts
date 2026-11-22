@@ -41,6 +41,49 @@ export function requestDraft(question: string) {
   return null;
 }
 
+export function studyTopic(text: string) {
+  if (
+    /(?:^|[^а-я])долг(?:и|ов|ам|ами|ах|а|ом|у)?(?![а-я])|задолж|(?:^|[^а-я])хвост(?:ы|ов|ам|ами|ах)?(?![а-я])|(?:что|какие работы).*?(?:закрыть|досдать|не сдан)/u.test(
+      text,
+    )
+  )
+    return "debts";
+  if (
+    /допус|допущ|не хватает|хватает ли|(?:могу|можно|смогу) ли.*?сдавать.*?(?:экзамен|зачет|сесси)|(?:пустят|пускают|попаду).*?(?:экзамен|зачет|сесси)/u.test(
+      text,
+    )
+  )
+    return "admission";
+  if (/что (?:мне )?(?:нужно|надо|осталось) сдать/u.test(text)) return "debts";
+  return null;
+}
+
+export function studyRuleNumbers(question: string): string[] {
+  const text = question.toLowerCase().replaceAll("ё", "е");
+  if (
+    /(?:^|[^а-я])(?:у меня|меня|мне|мо[ийяюе]|мои[мх]?)(?![а-я])|(?:^| )по (?!каким|всем|кажд|итог|учеб)/u.test(
+      text,
+    )
+  )
+    return [];
+
+  const topic = studyTopic(text);
+  if (
+    topic === "admission" &&
+    /услови|требован|сколько.*?(?:нужно|надо|требуется)|что.*?(?:нужно|надо|требуется)|как (?:получить|оформить).*?допуск/u.test(
+      text,
+    )
+  )
+    return ["3.1", "3.2"];
+  if (
+    /(?:как|где|сколько раз).*?пересда|(?:как|где).*?закрыть.*?(?:долг|задолжен)/u.test(
+      text,
+    )
+  )
+    return ["5.1", "5.2", "5.3"];
+  return [];
+}
+
 export function questionTopic(question: string) {
   const text = question.toLowerCase().replaceAll("ё", "е");
   if (
@@ -66,6 +109,9 @@ export function questionTopic(question: string) {
         )))
   )
     return "requests";
+
+  if (studyRuleNumbers(question).length) return "rules";
+  if (studyTopic(text)) return "study";
 
   if (
     /посещаем|пропустил|посетил|форм[а-я]* контрол|зачет или экзамен|экзамен или зачет|(?:^|\W)gpa(?:\W|$)/u.test(
