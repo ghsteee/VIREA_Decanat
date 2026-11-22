@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/server/auth/session";
 import { LoginForm } from "./login-form";
 import { demoLogin } from "./actions";
 import { demoLoginEnabled } from "@/server/demo";
-import { BrandSwirl } from "@/components/ui/swirl";
+import { BrandAurora } from "@/components/brand-aurora";
 import { BrandMark } from "@/components/brand-mark";
 import { ConceptNote } from "@/components/concept-note";
 
@@ -43,23 +43,24 @@ export default async function LoginPage() {
   if (user) redirect(user.role === "staff" ? "/staff" : "/");
 
   return (
-    <main className="flex min-h-dvh w-full flex-col md:px-6 md:py-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:grid-rows-[1fr_auto] lg:items-stretch lg:gap-6 lg:px-6 lg:py-10">
+    <main className="flex min-h-dvh w-full flex-col md:px-6 md:py-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-stretch lg:gap-6 lg:px-6 lg:py-10">
       <section
         aria-labelledby="login-brand"
-        className="relative isolate flex min-h-64 flex-col items-center justify-center overflow-hidden bg-board px-4 py-10 text-board-text lg:rounded-3xl"
+        className="relative isolate flex min-h-44 flex-col items-center justify-center overflow-hidden bg-board px-4 py-6 text-board-text lg:rounded-3xl lg:py-10"
       >
-        <BrandSwirl />
+        <BrandAurora />
         <div className="pointer-events-none relative flex flex-col items-center gap-3">
-          <BrandMark size={84} className="lg:size-28" />
+          <BrandMark size={56} className="lg:size-28" />
           <h1
             id="login-brand"
-            className="font-board text-5xl font-extrabold uppercase tracking-wide lg:text-7xl"
+            className="font-board text-4xl font-extrabold uppercase tracking-wide lg:text-7xl"
           >
             Деканыч
           </h1>
-          <p className="font-board text-sm font-bold uppercase tracking-widest text-text-muted lg:text-board-muted">
-            Цифровой деканат ВТУ ВИРЭА
+          <p className="rounded-lg bg-board/90 px-2 py-1 text-center font-board text-sm font-bold uppercase tracking-widest text-board-text">
+            Цифровой деканат
           </p>
+          <ConceptNote className="rounded-full bg-board/90 px-3 py-1 text-xs font-medium text-board-muted" />
         </div>
       </section>
       <div className="lg:bg-surface lg:overflow-hidden lg:rounded-3xl">
@@ -68,9 +69,6 @@ export default async function LoginPage() {
             Вход
           </h2>
           <LoginForm />
-          <p className="mt-4 text-center text-sm text-text-muted">
-            Тестовые логины — в комментарии к работе.
-          </p>
         </section>
         {demoLoginEnabled() ? (
           <section
@@ -84,7 +82,7 @@ export default async function LoginPage() {
               Для жюри — вход без пароля
             </h2>
             <p className="m-0 mb-1 text-[13px] leading-[18px] text-text-muted">
-              Все данные вымышленные. Демо каждое утро пересоздаётся.
+              Все данные в демонстрационных аккаунтах вымышленные.
             </p>
             {DEMO.map((d) => (
               <form key={d.key} action={demoLogin}>
@@ -118,9 +116,6 @@ export default async function LoginPage() {
           </section>
         ) : null}
       </div>
-      <footer className="px-4 py-4 lg:col-span-2 lg:p-0">
-        <ConceptNote />
-      </footer>
     </main>
   );
 }

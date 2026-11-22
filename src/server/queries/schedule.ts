@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import type { CalendarLesson } from "@/server/lesson-calendar";
 import { dayMonth, mskDate, mskDayStart, mskTime } from "@/lib/time";
 import type { LessonState } from "@/components/board/status";
+import { meetingLink } from "@/lib/meeting-link";
 
 export type LessonView = {
   id: string;
@@ -11,7 +12,6 @@ export type LessonView = {
   start: string;
   end: string;
   subject: string;
-  subjectShort: string;
   kind: "lecture" | "practice" | "lab";
   teachers: string[];
   /** Код для плиток: «А214», «ЗАЛ», «ОНЛ» */
@@ -139,7 +139,6 @@ export async function getLessons(
       start: mskTime(l.startsAt),
       end: mskTime(l.endsAt),
       subject: l.subject.name,
-      subjectShort: l.subject.shortName ?? l.subject.name,
       kind: l.kind,
       teachers: l.teachers.map((t) => shortName(t.teacher.fullName)),
       roomFlaps:
@@ -157,7 +156,7 @@ export async function getLessons(
             mapUrl: l.room.campus.mapUrl,
           }
         : null,
-      onlineUrl: l.onlineUrl,
+      onlineUrl: meetingLink(l.onlineUrl),
       state,
       changed: Boolean(ch),
       move,
@@ -270,6 +269,52 @@ export async function getMovedOut(groupId: string, from: Date, to: Date) {
 export function dayRange(date: string): [Date, Date] {
   const from = mskDayStart(date);
   return [from, new Date(from.getTime() + 86_400_000)];
+}
+
+/** Ближайшая действующая пара в опубликованном расписании группы. */
+export async function getNextLesson(
+  groupId: string,
+  now: Date,
+  includeCurrent: boolean,
+) {
+  const lesson = await db.lesson.findFirst({
+    where: {
+      groupId,
+      status: "scheduled",
+      ...(includeCurrent
+        ? { endsAt: { gt: now } }
+        : { startsAt: { gte: now } }),
+    },
+    orderBy: { startsAt: "asc" },
+    select: { id: true, startsAt: true },
+  });
+  if (!lesson) return null;
+  const rows = await getLessons(
+    groupId,
+    ...dayRange(mskDate(lesson.startsAt)),
+    now,
+  );
+  return (
+    rows.find(
+      ({ id, state }) => id === lesson.id && state.kind !== "cancelled",
+    ) ?? null
+  );
+}
+
+/** Сессия текущего семестра группы из серверной сессии. */
+export async function getSessionSchedule(groupId: string, now = new Date()) {
+  const term = await db.academicTerm.findFirst({
+    where: { startsOn: { lte: now }, endsOn: { gte: now } },
+    orderBy: { startsOn: "desc" },
+  });
+  const exams = term
+    ? await db.assessment.findMany({
+        where: { groupId, termId: term.id, kind: { in: ["exam", "credit"] } },
+        include: { subject: true },
+        orderBy: [{ heldOn: { sort: "asc", nulls: "last" } }, { title: "asc" }],
+      })
+    : [];
+  return { term, exams };
 }
 
 /** Номер учебной недели и её чётность. */

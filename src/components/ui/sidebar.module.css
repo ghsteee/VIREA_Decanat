@@ -1,0 +1,75 @@
+.rail {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .rail {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-rail);
+    padding: 16px 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: #1d1b18;
+    color: #f3f0ea;
+    transition: width var(--sidebar-transition);
+  }
+  .rail[data-open="true"] {
+    width: var(--sidebar-expanded);
+  }
+  .brand,
+  .links a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    white-space: nowrap;
+    border-radius: 12px;
+  }
+  .brand {
+    padding-left: 4px;
+    gap: 12px;
+    margin-bottom: 20px;
+    font: 700 1.5rem var(--font-board);
+    text-transform: uppercase;
+  }
+  .links {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .links a {
+    padding-inline: 12px;
+    gap: 16px;
+    font-size: 0.875rem;
+  }
+  .rail :is(img, svg) {
+    flex-shrink: 0;
+  }
+  .label {
+    opacity: 0;
+    transform: translateX(-5px);
+    transition:
+      opacity 120ms ease,
+      transform 180ms ease;
+  }
+  .rail[data-open="true"] .label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .rail[data-open="true"] .links a:hover .label {
+    transform: translateX(4px);
+  }
+  .links a:not([aria-current]):hover {
+    background: #35322e;
+    color: #fff;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rail,
+    .label {
+      transition: none;
+    }
+  }
+}

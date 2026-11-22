@@ -18,7 +18,10 @@ test("R2: перерывы 10 и 30 минут видны в дне и неде�
     await expect(
       table.getByText("Перерыв · 30 мин", { exact: true }).first(),
     ).toBeVisible();
-    await expect(table).toContainText("10:30–10:40");
-    await expect(table).toContainText("12:10–12:40");
+    await expect(table).not.toContainText("10:30–10:40");
+    await expect(table).not.toContainText("12:10–12:40");
+    await expect(page.locator(".schedule-picker")).not.toContainText(
+      /чётная|нечётная/,
+    );
   }
 });

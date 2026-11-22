@@ -13,7 +13,7 @@ const danila = /Студент — Данила/;
 const ksenia = /Студентка — Ксения/;
 const irina = /Дирекция — Ирина/;
 const marat = /Староста — Марат/;
-const concept = /Концепт для хакатона\. ВТУ ВИРЭА/;
+const concept = /Учебный прототип/;
 const db = new PrismaClient();
 
 test.afterAll(() => db.$disconnect());
@@ -319,6 +319,11 @@ test("S4 и S9: подача заявки, смена статуса и 404 дл
   const response = await other.goto(requestPath);
   expect(response?.status()).toBe(404);
   expect(await response?.text()).not.toContain(destination);
+  expect(
+    (
+      await other.goto(`/requests/new?type=study_certificate&from=${id}`)
+    )?.status(),
+  ).toBe(404);
   expect((await other.goto("/staff"))?.status()).toBe(404);
   await other.close();
 });

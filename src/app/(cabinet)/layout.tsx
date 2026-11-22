@@ -1,7 +1,6 @@
 import { requireUser } from "@/server/auth/guards";
-import { db } from "@/server/db";
-import { ConceptNote } from "@/components/concept-note";
 import { CabinetNav } from "@/components/nav/cabinet-nav";
+import { CabinetHeader } from "@/components/nav/cabinet-header";
 
 // Оболочка кабинета (задача 3.8): навигация, отступы под капсулу и панель.
 export default async function CabinetLayout({
@@ -9,29 +8,13 @@ export default async function CabinetLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const user = await requireUser();
 
-  const group = user.groupId
-    ? await db.group.findUnique({
-        where: { id: user.groupId },
-        select: {
-          code: true,
-          course: true,
-          institute: { select: { code: true } },
-        },
-      })
-    : null;
   return (
-    <div className="flex min-h-dvh flex-col pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
+    <div className="cabinet-shell flex min-h-dvh flex-col">
       <a className="skip-link" href="#cabinet-content">
         К содержанию
       </a>
-      <CabinetNav
-        account={{
-          name: user.displayName,
-          role: user.role,
-          head: user.isGroupHead,
-          group,
-        }}
-      />
+      <CabinetNav role={user.role} />
+      <CabinetHeader role={user.role} />
       <div
         id="cabinet-content"
         className="flex min-w-0 flex-1 flex-col"
@@ -39,9 +22,6 @@ export default async function CabinetLayout({
       >
         {children}
       </div>
-      <footer className="cabinet-page cabinet-footer">
-        <ConceptNote />
-      </footer>
     </div>
   );
 }

@@ -35,6 +35,8 @@ export function ApplicationForm(props: {
   slots: PickupSlotOption[];
   student: string;
   group: string;
+  studyForm: string;
+  funding: string;
   previousId?: string;
   previousDelivery?: Method;
   defaults?: Record<string, string | number>;
@@ -84,6 +86,8 @@ export function ApplicationForm(props: {
   const review = [
     ["Студент", props.student],
     ["Группа", props.group],
+    ["Форма обучения", props.studyForm],
+    ["Финансирование", props.funding],
     ...props.fields
       .filter((f) => values[f.key]?.trim())
       .map((f) => [f.label, values[f.key].trim()]),
@@ -215,9 +219,9 @@ export function ApplicationForm(props: {
           {step === "review" && (
             <dl className="wizard-review">
               {review.map(([key, val], i) => (
-                <div key={i}>
+                <div key={i} className="min-w-0">
                   <dt>{key}</dt>
-                  <dd>{val}</dd>
+                  <dd className="min-w-0">{val}</dd>
                 </div>
               ))}
             </dl>

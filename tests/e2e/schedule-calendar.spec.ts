@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { expect, test, type Page } from "@playwright/test";
 import { calendarMonth } from "../../src/lib/calendar-month";
-import { mskDate, mskDayStart } from "../../src/lib/time";
+import { addDays, mskDate, mskDayStart, weekStart } from "../../src/lib/time";
 
 const db = new PrismaClient();
 test.afterAll(() => db.$disconnect());
@@ -11,6 +11,38 @@ async function login(page: Page) {
   await page.getByRole("button", { name: /Студент — Данила/ }).click();
   await expect(page).not.toHaveURL(/\/login$/);
 }
+
+test("R2 и G2: полные названия дисциплин в учёбе, неделе и месяце", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/login");
+  await expect(
+    page.getByRole("region", { name: "Деканыч" }).getByText(/ВТУ|ВИРЭА/),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: /Студент — Данила/ }).click();
+  await expect(page).not.toHaveURL(/\/login$/);
+  await page.goto("/study");
+  await expect(
+    page.getByText("Математический анализ", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Программирование", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/^(Матанализ|Программир\.|Линал|Органика)$/),
+  ).toHaveCount(0);
+  const monday = addDays(weekStart(mskDate()), 7);
+  for (const view of ["week", "month"]) {
+    await page.goto(`/schedule?date=${monday}&view=${view}`);
+    await expect(
+      page.getByText("Математический анализ", { exact: false }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/^(Матанализ|Программир\.|Линал|Органика)$/),
+    ).toHaveCount(0);
+  }
+});
 
 test("R1: месячный календарь листается и открывает день с клавиатуры", async ({
   page,

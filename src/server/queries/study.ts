@@ -14,6 +14,7 @@ export type SubjectStanding = {
   subjectId: string;
   name: string;
   shortName: string | null;
+  controlTypes: ("exam" | "credit")[];
   points: number;
   missingPoints: number;
   labs: { done: number; total: number };
@@ -90,6 +91,12 @@ export async function getStudy(
     const missingPoints = Math.max(0, ADMISSION_POINTS - points);
     const mandatory = list.filter((a) => MANDATORY.has(a.kind));
     const own = subject.admission;
+    const hasStanding =
+      own.length > 0 ||
+      list.some(
+        (a) =>
+          (a.kind !== "exam" && a.kind !== "credit") || a.results.length > 0,
+      );
     const admissionByTitle = new Map(own.map((item) => [item.title, item]));
     const assignments = mandatory.map((a) => {
       const item = admissionByTitle.get(a.title);
@@ -126,6 +133,9 @@ export async function getStudy(
       subjectId: subject.id,
       name: subject.name,
       shortName: subject.shortName,
+      controlTypes: (["exam", "credit"] as const).filter((kind) =>
+        list.some((assessment) => assessment.kind === kind),
+      ),
       points,
       missingPoints,
       assessments: list.map((a) => {
@@ -155,7 +165,7 @@ export async function getStudy(
             dueAt: i.dueAt,
           })),
       achievements: subject.achievements,
-      status: !list.length
+      status: !hasStanding
         ? "unpublished"
         : ok
           ? "admitted"
@@ -173,24 +183,41 @@ export async function getStudy(
     where: {
       studentId,
       scale: "grade5",
-      assessment: { term: { endsOn: { lt: now } } },
+      value: { gte: 2, lte: 5 },
+      publishedAt: { lte: now },
+      assessment: { kind: "exam", term: { endsOn: { lt: day } } },
     },
-    include: { assessment: { include: { subject: true, term: true } } },
-    orderBy: { publishedAt: "desc" },
+    select: {
+      value: true,
+      assessment: {
+        select: {
+          subject: { select: { name: true } },
+          term: { select: { id: true, name: true } },
+        },
+      },
+    },
+    orderBy: [
+      { assessment: { term: { endsOn: "desc" } } },
+      { assessment: { term: { id: "asc" } } },
+      { assessment: { subject: { name: "asc" } } },
+    ],
   });
-  const avg = exams.length
-    ? exams.reduce((s, r) => s + (r.value ?? 0), 0) / exams.length
-    : null;
   const history = new Map<
     string,
-    { term: string; items: { name: string; grade: number | null }[] }
+    { termId: string; term: string; items: { name: string; grade: number }[] }
   >();
   for (const r of exams) {
-    const key = r.assessment.term.name;
-    const h = history.get(key) ?? { term: key, items: [] };
-    h.items.push({ name: r.assessment.subject.name, grade: r.value });
-    history.set(key, h);
+    if (r.value === null) continue;
+    const { id, name } = r.assessment.term;
+    const session = history.get(id) ?? { termId: id, term: name, items: [] };
+    session.items.push({ name: r.assessment.subject.name, grade: r.value });
+    history.set(id, session);
   }
+  const sessions = [...history.values()];
+  const grades = sessions.flatMap(({ items }) => items);
+  const latest = sessions[0];
+  const mean = (items: { grade: number }[]) =>
+    items.reduce((sum, { grade }) => sum + grade, 0) / items.length;
 
   return {
     term: {
@@ -202,7 +229,10 @@ export async function getStudy(
     subjects,
     admitted: subjects.filter((s) => s.status === "admitted").length,
     debts: subjects.filter((s) => s.status === "not_admitted").length,
-    average: avg,
-    history: [...history.values()],
+    average: grades.length ? mean(grades) : null,
+    lastSession: latest
+      ? { term: latest.term, average: mean(latest.items) }
+      : null,
+    history: sessions,
   };
 }

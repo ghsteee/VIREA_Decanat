@@ -19,7 +19,19 @@ export function AssistantForm() {
               Ты: {state.question}
             </p>
           ) : null}
-          {state.message ? <p className="m-0">{state.message}</p> : null}
+          {state.message ? (
+            <p className="m-0 whitespace-pre-line break-words">
+              {state.message}
+            </p>
+          ) : null}
+          {state.link ? (
+            <Link
+              className="mt-2 inline-flex min-h-11 items-center font-semibold text-board-link"
+              href={state.link.href}
+            >
+              {state.link.label}
+            </Link>
+          ) : null}
           {state.sections?.map((section) => (
             <div
               key={section.number}
@@ -53,7 +65,7 @@ export function AssistantForm() {
             maxLength={400}
             rows={3}
             required
-            placeholder="Сколько баллов нужно для допуска?"
+            placeholder="Что мне нужно сдать для допуска?"
             className="rounded-lg border border-border bg-surface p-3 text-text"
           />
         </label>
@@ -62,7 +74,7 @@ export function AssistantForm() {
           disabled={pending}
           className="min-h-11 rounded-lg bg-action px-3 font-semibold text-on-action disabled:opacity-60"
         >
-          {pending ? "Ищу в положении…" : "Спросить"}
+          {pending ? "Ищу ответ…" : "Спросить"}
         </button>
       </form>
     </div>

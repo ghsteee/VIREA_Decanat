@@ -1,14 +1,22 @@
 import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-illustration";
 import { redirect } from "next/navigation";
-import { Bell, ChevronRight, Navigation } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  Navigation,
+  Sparkles,
+} from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { BoardHead, LessonRow } from "@/components/board/lesson-row";
-import { Flaps } from "@/components/board/flaps";
-import { BrandSwirl } from "@/components/ui/swirl";
+import { BrandAurora } from "@/components/brand-aurora";
 import { BrandMark } from "@/components/brand-mark";
+import { ConceptNote } from "@/components/concept-note";
 import { RequestRoute } from "@/components/board/route";
 import { DeadlineCheck } from "@/components/deadline-check";
+import { assistantEnabled } from "@/server/gigachat";
+import { AssistantForm } from "./assistant/assistant-form";
 import {
   dayRange,
   getAcademicWeek,
@@ -82,10 +90,10 @@ export default async function TodayPage() {
           aria-labelledby="today-title"
           className="min-w-0 bg-board px-3 pb-1 pt-3 text-board-text md:rounded-3xl md:p-6"
         >
-          <div className="relative isolate grid min-h-24 place-items-center overflow-hidden rounded-xl md:min-h-32">
-            <BrandSwirl compact />
-            <div className="pointer-events-none relative flex items-center gap-2 font-board text-3xl font-extrabold uppercase tracking-[0.03em]">
-              <BrandMark size={36} />
+          <div className="relative isolate grid min-h-16 place-items-center overflow-hidden rounded-xl md:min-h-20">
+            <BrandAurora />
+            <div className="pointer-events-none relative flex items-center gap-2 font-board text-2xl font-extrabold uppercase tracking-[0.03em]">
+              <BrandMark size={28} />
               Деканыч
             </div>
             <Link
@@ -104,7 +112,7 @@ export default async function TodayPage() {
               ) : null}
             </Link>
           </div>
-          <div className="flex items-end justify-between px-0.5 pb-3 pt-2">
+          <div className="flex items-end justify-between gap-3 px-0.5 pb-3 pt-3">
             <div>
               <h1
                 id="today-title"
@@ -117,12 +125,36 @@ export default async function TodayPage() {
                 {week ? ` · неделя ${week.number}` : ""}
               </p>
             </div>
-            <Flaps
-              value={mskTime(now)}
-              label={`Сейчас ${mskTime(now)}`}
-              size="lg"
-            />
+            <div className="shrink-0 pb-0.5 text-right">
+              <ConceptNote className="text-[11px] font-medium text-board-muted" />
+              <p className="font-board text-xl font-bold text-board-muted">
+                Сейчас {mskTime(now)}
+              </p>
+            </div>
           </div>
+
+          {assistantEnabled() && (
+            <details className="group mb-3 rounded-xl border border-board-line bg-board-row">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 font-semibold text-board-link [&::-webkit-details-marker]:hidden">
+                <Sparkles size={18} aria-hidden />
+                ИИ-помощник
+                <ChevronDown
+                  size={16}
+                  className="ml-auto group-open:rotate-180"
+                  aria-hidden
+                />
+              </summary>
+              <div className="px-3 pb-3">
+                <AssistantForm />
+                <Link
+                  href="/assistant/rules"
+                  className="mt-2 inline-flex min-h-11 items-center text-sm text-board-link"
+                >
+                  Открыть демо-положение
+                </Link>
+              </div>
+            </details>
+          )}
 
           {next ? (
             <div role="table" aria-label="Ближайшая пара">
@@ -130,7 +162,7 @@ export default async function TodayPage() {
               <LessonRow lesson={next} details />
             </div>
           ) : (
-            <div className="empty-state border-t border-board-line">
+            <div className="empty-state empty-state-compact border-t border-board-line">
               <EmptyIllustration scene="today" />
               <p className="m-0 font-board text-2xl font-extrabold uppercase">
                 {emptyMessage}
@@ -186,7 +218,7 @@ export default async function TodayPage() {
         )}
       </div>
 
-      <div className="min-w-0 flex flex-col gap-5 px-4 pb-3 pt-4 md:mt-5 md:grid md:grid-cols-2 md:gap-x-6 md:rounded-3xl md:bg-surface md:p-6 lg:mt-0 lg:flex">
+      <div className="dashboard-cards min-w-0 flex flex-col gap-4 px-4 pb-3 pt-4 md:mt-5 md:grid md:grid-cols-2 md:gap-x-6 md:px-0 md:pt-0 lg:mt-0 lg:flex">
         {next?.roomLabel ? (
           <Link
             href={`/schedule?date=${today}#lesson-${next.id}`}
@@ -247,7 +279,7 @@ export default async function TodayPage() {
               })}
             </ul>
           ) : (
-            <div className="empty-state">
+            <div className="empty-state empty-state-compact">
               <EmptyIllustration scene="deadlines" />
               <p className="text-[14px] text-text-muted">
                 Дедлайнов на неделе нет. Можно выдохнуть.
@@ -313,7 +345,25 @@ export default async function TodayPage() {
               Все заявки
             </Link>
           </section>
-        ) : null}
+        ) : (
+          <section className="flex flex-col gap-3" aria-labelledby="app-title">
+            <h2
+              id="app-title"
+              className="font-board text-[22px] font-extrabold uppercase"
+            >
+              Заявки и справки
+            </h2>
+            <p className="text-sm text-text-muted">
+              Закажи справку — данные из профиля уже подставлены.
+            </p>
+            <Link
+              href="/requests"
+              className="flex min-h-11 items-center justify-center rounded-xl bg-action px-4 py-2 font-semibold text-on-action no-underline"
+            >
+              Заказать справку
+            </Link>
+          </section>
+        )}
 
         {next ? (
           <p className="sr-only">

@@ -80,12 +80,12 @@ export function MonthCalendar({
                     {items.slice(0, 2).map((lesson) => (
                       <span
                         key={lesson.id}
-                        className="truncate text-[11px] leading-4"
+                        className="break-words text-[11px] leading-4"
                       >
                         <b className="font-board text-[14px] tabular-nums">
                           {lesson.start}
                         </b>{" "}
-                        {lesson.subjectShort}
+                        {lesson.subject}
                       </span>
                     ))}
                     {items.length > 2 ? (

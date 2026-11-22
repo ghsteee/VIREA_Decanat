@@ -1,4 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { PrismaClient, type AssessmentKind } from "@prisma/client";
+
+const db = new PrismaClient();
+test.afterAll(() => db.$disconnect());
 
 test("S5: Ксения видит работы, ближайший срок и недостающие баллы", async ({
   page,
@@ -59,6 +63,59 @@ test("S5: Ксения видит работы, ближайший срок и �
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+
+  await test.step("Средний балл за последнюю сессию отдельно от среднего за всё время", async () => {
+    const student = await db.studentProfile.findFirstOrThrow({
+      where: { user: { login: "k.lavrova" } },
+    });
+    const subject = await db.subject.findFirstOrThrow({
+      where: { name: "Базы данных" },
+    });
+    const term = await db.academicTerm.create({
+      data: {
+        name: "Демонстрационный прошлый семестр",
+        startsOn: new Date("2025-09-01"),
+        endsOn: new Date("2026-01-31"),
+      },
+    });
+    try {
+      const results: { kind: AssessmentKind; value: number | null }[] = [
+        { kind: "exam", value: 2 },
+        { kind: "lab", value: 2 },
+        { kind: "exam", value: null },
+      ];
+      for (const { kind, value } of results) {
+        await db.assessment.create({
+          data: {
+            groupId: student.groupId,
+            termId: term.id,
+            subjectId: subject.id,
+            kind,
+            title: "Проверка расчёта среднего балла",
+            results: {
+              create: { studentId: student.id, scale: "grade5", value },
+            },
+          },
+        });
+      }
+      await page.reload();
+      const last = page.getByRole("img", {
+        name: "Средний балл за последнюю закрытую сессию: 4,6",
+      });
+      await expect(last).toBeVisible();
+      await expect(last).toHaveText("4,6");
+      await expect(last.locator("span")).toHaveCount(0);
+      await expect(
+        page.getByText("За всё время 4,2", { exact: true }),
+      ).toBeVisible();
+    } finally {
+      await db.assessmentResult.deleteMany({
+        where: { assessment: { termId: term.id } },
+      });
+      await db.assessment.deleteMany({ where: { termId: term.id } });
+      await db.academicTerm.delete({ where: { id: term.id } });
+    }
+  });
 });
 
 test("G1: поиск по названию дисциплины, открытие результата и сброс", async ({
@@ -69,6 +126,7 @@ test("G1: поиск по названию дисциплины, открыти�
   await expect(page).not.toHaveURL(/\/login$/);
   await page.goto("/study");
   const cards = page.getByRole("list", { name: "Карточки дисциплин" });
+  await expect(cards).toBeVisible();
   const buttons = cards.getByRole("button");
   const initialNames = await buttons.allTextContents();
   expect(initialNames.length).toBeGreaterThan(1);

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-illustration";
-import { Bell, ChevronDown, ChevronLeft } from "lucide-react";
+import { MarkNotificationsRead } from "@/components/mark-notifications-read";
+import { Bell, ChevronDown } from "lucide-react";
 import { requireUser } from "@/server/auth/guards";
 import { db } from "@/server/db";
 import { Flaps } from "@/components/board/flaps";
 import { Plate } from "@/components/board/plate";
-import { mskDate, mskTime, weekdayShort } from "@/lib/time";
+import { dayMonth, mskDate, mskTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { NotificationKind } from "@prisma/client";
 
@@ -43,10 +44,17 @@ async function load(userId: string, kinds: readonly NotificationKind[] | null) {
           body: true,
           publishedAt: true,
           lessonChange: {
-            select: { kind: true, newStartsAt: true, authorRole: true },
+            select: {
+              kind: true,
+              newStartsAt: true,
+              newFormat: true,
+              lessonId: true,
+              authorRole: true,
+            },
           },
           deadline: { select: { authorRole: true } },
           announcement: { select: { authorRole: true } },
+          statusEvent: { select: { applicationId: true } },
         },
       },
     },
@@ -61,8 +69,15 @@ function plate(n: Row["notification"]) {
         n.lessonChange?.authorRole === "group_head" ? " · от старосты" : "";
 
       if (k === "cancelled") return <Plate tone="danger">отмена{source}</Plate>;
+      if (k === "restored")
+        return <Plate tone="success">восстановлена{source}</Plate>;
       if (k === "format_changed")
-        return <Plate tone="info">дистант{source}</Plate>;
+        return (
+          <Plate tone="change">
+            {n.lessonChange?.newFormat === "online" ? "дистант" : "очно"}
+            {source}
+          </Plate>
+        );
       if (k === "room_changed")
         return <Plate tone="change">аудитория{source}</Plate>;
       return <Plate tone="change">перенос{source}</Plate>;
@@ -89,8 +104,8 @@ function plate(n: Row["notification"]) {
 
 function target(n: Row["notification"]) {
   if (n.kind === "lesson_change" && n.lessonChange)
-    return `/schedule?date=${mskDate(n.lessonChange.newStartsAt)}`;
-  if (n.kind === "application_status") return "/requests";
+    return `/schedule?date=${mskDate(n.lessonChange.newStartsAt)}#lesson-${n.lessonChange.lessonId}`;
+  if (n.statusEvent) return `/requests/${n.statusEvent.applicationId}`;
   if (n.kind === "deadline" || n.kind === "deadline_reminder") return "/";
   return null;
 }
@@ -108,29 +123,13 @@ export default async function FeedPage({
   const fresh = rows.filter((r) => !r.readAt);
   const earlier = rows.filter((r) => r.readAt);
 
-  // Показали новые — отмечаем прочитанными (только свои строки получателя)
-  if (fresh.length) {
-    await db.notificationRecipient.updateMany({
-      where: { userId: user.id, id: { in: fresh.map((r) => r.id) } },
-      data: { readAt: new Date() },
-    });
-  }
-
-  const home = user.role === "staff" ? "/staff" : "/";
-
   return (
     <main className="cabinet-page flex flex-col">
       <section
         aria-labelledby="feed-title"
         className="min-w-0 flex flex-col gap-3 bg-board px-3 pb-1 pt-2 text-board-text md:rounded-3xl md:p-6"
       >
-        <Link
-          href={home}
-          className="-ml-1 flex min-h-11 items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted no-underline"
-        >
-          <ChevronLeft size={20} aria-hidden />
-          {user.role === "staff" ? "Заявки" : "Сегодня"}
-        </Link>
+        <MarkNotificationsRead ids={fresh.map((r) => r.id)} />
         <div className="px-0.5">
           <h1
             id="feed-title"
@@ -203,7 +202,7 @@ export default async function FeedPage({
               );
             })}
           </ul>
-        ) : (
+        ) : !rows.length ? (
           <div className="empty-state border-t border-board-line">
             <EmptyIllustration
               scene={f === "deadlines" ? "deadlines" : "notifications"}
@@ -214,6 +213,11 @@ export default async function FeedPage({
                 : "Новых уведомлений нет. Если что-то перенесут — напишем первыми."}
             </p>
           </div>
+        ) : (
+          <p className="border-t border-board-line py-4 text-sm text-board-muted">
+            Всё прочитано. Сообщения сохранены — к ним можно вернуться в любой
+            момент.
+          </p>
         )}
         {earlier.length > 0 && (
           <details key={f} className="notification-stack">
@@ -234,11 +238,11 @@ export default async function FeedPage({
                   <>
                     <span>{plate(r.notification)}</span>
                     <b className="text-[14.5px]">{r.notification.title}</b>
-                    {r.notification.body && (
-                      <span className="text-sm text-text-muted">
+                    {r.notification.body ? (
+                      <p className="mt-1 max-w-prose whitespace-pre-line text-sm leading-6 text-text-muted [overflow-wrap:anywhere]">
                         {r.notification.body}
-                      </span>
-                    )}
+                      </p>
+                    ) : null}
                   </>
                 );
                 return (
@@ -247,7 +251,9 @@ export default async function FeedPage({
                     className="grid grid-cols-[58px_minmax(0,1fr)] gap-2.5 border-t border-border py-3"
                   >
                     <div className="text-[11px] font-bold uppercase leading-5 tracking-[0.12em] text-text-muted">
-                      {mskDate(d) === mskDate() ? "" : weekdayShort(mskDate(d))}{" "}
+                      {mskDate(d) === mskDate()
+                        ? "Сегодня"
+                        : dayMonth(mskDate(d))}{" "}
                       {mskTime(d)}
                     </div>
                     {href ? (
@@ -268,13 +274,6 @@ export default async function FeedPage({
             </ul>
           </details>
         )}
-        <p className="mt-3.5 text-[13px] leading-[18px] text-text-muted">
-          Важное дублируем в push и на почту — включается в{" "}
-          <Link href="/profile" className="underline underline-offset-2">
-            профиле
-          </Link>
-          .
-        </p>
       </section>
     </main>
   );

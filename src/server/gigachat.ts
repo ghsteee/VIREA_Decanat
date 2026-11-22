@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { request } from "node:https";
 import { rootCertificates } from "node:tls";
+import { parseAccessToken } from "./gigachat-token";
 
 const TOKEN_URL = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth";
 const CHAT_URL = "https://api.giga.chat/v1/chat/completions";
@@ -89,7 +90,7 @@ async function accessToken(ca: string[], key: string) {
   const body = new URLSearchParams({
     scope: process.env.GIGACHAT_SCOPE || "GIGACHAT_API_PERS",
   });
-  const response = (await postJson(
+  const response = await postJson(
     TOKEN_URL,
     ca,
     body.toString(),
@@ -99,19 +100,11 @@ async function accessToken(ca: string[], key: string) {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     6_000,
-  )) as { access_token?: unknown; expires_at?: unknown } | null;
-  if (
-    typeof response?.access_token !== "string" ||
-    !response.access_token ||
-    typeof response.expires_at !== "number" ||
-    response.expires_at <= Date.now()
-  )
-    throw new Error("Invalid token response");
-  cachedToken = {
-    value: response.access_token,
-    expiresAt: response.expires_at,
-  };
-  return cachedToken.value;
+  );
+  const token = parseAccessToken(response);
+  if (!token) throw new Error("Invalid token response");
+  cachedToken = token;
+  return token.value;
 }
 
 export async function chooseSections(question: string, source: string) {

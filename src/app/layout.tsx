@@ -10,9 +10,8 @@ import { getCurrentUser } from "@/server/auth/session";
 import { db } from "@/server/db";
 
 export const metadata: Metadata = {
-  title: "Деканыч — цифровой деканат ВТУ ВИРЭА",
-  description:
-    "Концепт для хакатона. ВТУ ВИРЭА — вымышленный вуз, прообраз — РТУ МИРЭА. Не официальный сервис.",
+  title: "Деканыч — цифровой деканат",
+  description: "Деканыч — учебный прототип личного кабинета студента.",
   icons: {
     icon: [{ url: "/brand/favicon-32.png", sizes: "32x32" }],
     apple: "/brand/apple-touch-icon.png",

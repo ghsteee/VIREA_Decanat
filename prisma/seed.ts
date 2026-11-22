@@ -1093,7 +1093,7 @@ async function main() {
     tagged.cancelled,
     "cancelled",
     { status: "cancelled" },
-    "Физкультура сегодня в 18:00 отменена",
+    "Физическая культура сегодня в 18:00 отменена",
     "Преподаватель заболел. Пары не будет.",
     "Преподаватель заболел",
   );
@@ -1103,10 +1103,10 @@ async function main() {
     {
       format: "online",
       room: { disconnect: true },
-      onlineUrl: "https://example.org/demo-meet/english",
+      onlineUrl: null,
     },
-    "Английский завтра — онлайн",
-    "Аудитория Г-312 не нужна, ссылка — в паре.",
+    "Английский язык завтра — онлайн",
+    "Аудитория Г-312 не нужна. Занятие пройдёт дистанционно.",
     "Ремонт в корпусе Г",
   );
 
@@ -1360,6 +1360,33 @@ async function main() {
       },
     ].map((item) => ({ ...item, termId: term.id })),
   });
+
+  // Пользователь разрешил произвольное распределение форм контроля в демо.
+  // Даты сессии назначает дирекция через редактор, здесь они не выдумываются.
+  for (const currentGroup of Object.values(group)) {
+    const courses = await db.subject.findMany({
+      where: {
+        OR: [
+          { lessons: { some: { groupId: currentGroup.id, termId: term.id } } },
+          {
+            assessments: {
+              some: { groupId: currentGroup.id, termId: term.id },
+            },
+          },
+        ],
+      },
+      orderBy: { name: "asc" },
+    });
+    await db.assessment.createMany({
+      data: courses.map((course, index) => ({
+        groupId: currentGroup.id,
+        termId: term.id,
+        subjectId: course.id,
+        kind: index % 2 === 0 ? ("exam" as const) : ("credit" as const),
+        title: index % 2 === 0 ? "Экзамен" : "Зачёт",
+      })),
+    });
+  }
 
   for (const studentId of [
     danila.profileId,

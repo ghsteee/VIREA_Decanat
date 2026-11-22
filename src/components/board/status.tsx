@@ -34,11 +34,7 @@ export function StatusWord({
         </span>
       );
     case "planned":
-      return (
-        <span className={cn(base, "text-board-muted", className)}>
-          по плану
-        </span>
-      );
+      return null;
     case "moved":
       return (
         <span className={cn(base, "text-board-change", className)}>

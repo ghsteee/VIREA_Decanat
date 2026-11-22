@@ -1,23 +1,15 @@
 import { expect, test } from "@playwright/test";
 
-test("Верхнее меню, профиль, тема и прочитанные уведомления", async ({
+test("Мобильное меню, тема, маршрут заявки и прочитанные уведомления", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await page.goto("/login");
   await page.getByRole("button", { name: /Студент — Данила/ }).click();
   await page.waitForURL("/");
-  const nav = page.getByRole("navigation", { name: "Разделы" });
-  const trigger = page.getByRole("button", { name: "Меню профиля" });
-  await trigger.click();
-  const menu = page.getByRole("region", { name: "Мой аккаунт" });
-  await expect(menu).toContainText("Данила");
-  await page.keyboard.press("Escape");
-  await expect(menu).toHaveCount(0);
-  await expect(trigger).toBeFocused();
-  await trigger.click();
-  await menu.getByRole("link", { name: "Оформление" }).click();
-  await expect(page).toHaveURL(/profile#thm$/);
+  const nav = page.getByRole("navigation", { name: "Разделы", exact: true });
+  await nav.getByRole("link", { name: "Профиль", exact: true }).click();
+  await expect(page).toHaveURL(/\/profile$/);
   const themes = page.getByRole("group", { name: "Тема" });
   await themes.getByRole("button", { name: "Тёмная" }).click();
   await expect(themes.getByRole("button", { name: "Тёмная" })).toHaveAttribute(
@@ -41,13 +33,18 @@ test("Верхнее меню, профиль, тема и прочитанны�
       .first()
       .locator('[aria-current="step"]'),
   ).toBeVisible();
-  await nav.getByRole("link", { name: "Уведомления" }).click();
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Уведомления", exact: true })
+    .click();
   await page.waitForURL("/feed");
   await page.reload();
   const stack = page.locator("details.notification-stack");
+  const summary = stack.locator("summary");
+  await expect(summary).toBeVisible();
   await expect(stack.locator("ul")).toBeHidden();
-  await stack.locator("summary").press("Enter");
+  await summary.click();
   await expect(stack.locator("li").first()).toBeVisible();
-  await stack.locator("summary").press("Enter");
+  await summary.press("Space");
   await expect(stack.locator("ul")).toBeHidden();
 });

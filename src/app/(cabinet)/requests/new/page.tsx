@@ -10,6 +10,13 @@ import type { Field } from "@/server/applications";
 
 export const dynamic = "force-dynamic";
 
+const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+const STUDY_FORMS = {
+  full_time: "Очная",
+  part_time: "Очно-заочная",
+  extramural: "Заочная",
+} as const;
+
 export default async function NewRequestPage({
   searchParams,
 }: {
@@ -18,6 +25,7 @@ export default async function NewRequestPage({
   const user = await requireUser();
   if (!user.studentProfileId) redirect("/staff");
   const sp = await searchParams;
+  if (sp.from && !UUID.test(sp.from)) notFound();
   const type = sp.type
     ? await db.applicationType.findUnique({ where: { code: sp.type } })
     : null;
@@ -36,21 +44,30 @@ export default async function NewRequestPage({
     where: { id: user.studentProfileId },
     include: { group: { include: { institute: true } } },
   });
+  // Повторная подача: берём поля только из своей отклонённой заявки
+  const prev = sp.from
+    ? await db.application.findFirst({
+        where: {
+          id: sp.from,
+          studentId: profile.id,
+          status: "rejected",
+          typeId: type.id,
+        },
+        include: { resubmission: { select: { id: true } } },
+      })
+    : null;
+  if (sp.from && !prev) notFound();
+  if (prev?.resubmission) redirect(`/requests/${prev.resubmission.id}`);
+
   const slots = type.deliveryMethods.includes("pickup")
     ? await listPickupSlots(profile.group.instituteId, profile.groupId)
     : [];
-  // Повторная подача: берём поля только из своей отклонённой заявки
-  const prev =
-    sp.from && /^[0-9a-f-]{36}$/i.test(sp.from)
-      ? await db.application.findFirst({
-          where: {
-            id: sp.from,
-            studentId: profile.id,
-            status: "rejected",
-            typeId: type.id,
-          },
-        })
-      : null;
+  const student = [profile.lastName, profile.firstName, profile.middleName]
+    .filter(Boolean)
+    .join(" ");
+  const group = `${profile.group.code} · ${profile.group.course} курс · ${profile.group.institute.code}`;
+  const studyForm = STUDY_FORMS[profile.studyForm];
+  const funding = profile.funding === "budget" ? "Бюджет" : "По договору";
 
   return (
     <main className="cabinet-page">
@@ -73,21 +90,15 @@ export default async function NewRequestPage({
             <summary className="flex min-h-11 cursor-pointer items-center justify-between font-semibold">
               Данные из профиля <ChevronDown aria-hidden size={16} />
             </summary>
-            <dl className="m-0 grid grid-cols-[110px_minmax(0,1fr)] gap-x-2.5 gap-y-1 rounded-[10px] bg-board-row p-3 text-[14px]">
+            <dl className="m-0 grid grid-cols-[minmax(7.75rem,0.9fr)_minmax(0,1.4fr)] gap-x-2.5 gap-y-1 rounded-[10px] bg-board-row p-3 text-[14px]">
               <dt className="text-board-muted">Студент</dt>
-              <dd className="m-0">
-                {profile.lastName} {profile.firstName} {profile.middleName}
-              </dd>
+              <dd className="m-0">{student}</dd>
               <dt className="text-board-muted">Группа</dt>
-              <dd className="m-0">
-                {profile.group.code} · {profile.group.course} курс ·{" "}
-                {profile.group.institute.code}
-              </dd>
-              <dt className="text-board-muted">Форма</dt>
-              <dd className="m-0">
-                {profile.studyForm === "full_time" ? "очная" : "заочная"} ·{" "}
-                {profile.funding === "budget" ? "бюджет" : "договор"}
-              </dd>
+              <dd className="m-0">{group}</dd>
+              <dt className="text-board-muted">Форма обучения</dt>
+              <dd className="m-0">{studyForm}</dd>
+              <dt className="text-board-muted">Финансирование</dt>
+              <dd className="m-0">{funding}</dd>
             </dl>
             <p className="m-0 text-[12.5px] text-board-muted">
               Данные из профиля подставятся сами. Если что-то не так — напиши в
@@ -115,10 +126,10 @@ export default async function NewRequestPage({
           )}
           <ApplicationForm
             key={type.id + (prev?.id ?? "")}
-            student={[profile.lastName, profile.firstName, profile.middleName]
-              .filter(Boolean)
-              .join(" ")}
-            group={profile.group.code}
+            student={student}
+            group={group}
+            studyForm={studyForm}
+            funding={funding}
             previousDelivery={prev?.deliveryMethod}
             typeId={type.id}
             fields={type.fields as Field[]}

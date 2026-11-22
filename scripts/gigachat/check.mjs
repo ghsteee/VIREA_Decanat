@@ -108,6 +108,61 @@ try {
     });
   }
   console.log("Доступ к выбранной модели: OK");
+  stage = "ответ модели";
+  const completion = await json(
+    "https://api.giga.chat/v1/chat/completions",
+    ca,
+    {
+      body: JSON.stringify({
+        model,
+        temperature: 0.1,
+        max_tokens: 160,
+        stream: false,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Верни только JSON-массив строк с номерами подходящих пунктов.",
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              question: "Сколько баллов нужно для допуска?",
+              source:
+                "3.1. Для допуска к сессии нужно набрать не меньше 50 баллов и сдать все обязательные работы.",
+            }),
+          },
+        ],
+      }),
+      headers: {
+        Authorization: "Bearer " + token.access_token,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  const answer = completion?.choices?.[0]?.message?.content;
+  const normalized =
+    typeof answer === "string"
+      ? answer.trim().replace(/^```(?:json)?\s*([\s\S]*?)\s*```$/i, "$1")
+      : "";
+  let sections;
+  try {
+    sections = JSON.parse(normalized);
+  } catch {
+    throw Object.assign(new Error("Некорректный ответ модели"), {
+      code: "INVALID_COMPLETION",
+    });
+  }
+  if (
+    !Array.isArray(sections) ||
+    sections.length !== 1 ||
+    sections[0] !== "3.1"
+  ) {
+    throw Object.assign(new Error("Ожидался пункт 3.1"), {
+      code: "UNEXPECTED_SECTION",
+    });
+  }
+  console.log("Ответ с пунктом 3.1: OK");
 } catch (error) {
   console.error(
     stage +

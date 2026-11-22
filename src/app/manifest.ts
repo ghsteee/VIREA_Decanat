@@ -3,10 +3,9 @@ import type { MetadataRoute } from "next";
 // PWA: установка на экран «Домой» — на iPhone push работает только так (N3).
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Деканыч — цифровой деканат ВТУ ВИРЭА",
+    name: "Деканыч — цифровой деканат",
     short_name: "Деканыч",
-    description:
-      "Концепт для хакатона. ВТУ ВИРЭА — вымышленный вуз. Не официальный сервис.",
+    description: "Учебный прототип личного кабинета студента.",
     lang: "ru",
     start_url: "/",
     display: "standalone",

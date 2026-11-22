@@ -33,19 +33,17 @@ async function checkNav(page: Page, viewport: (typeof sizes)[number]) {
   await expect(nav).toHaveCount(1);
   const box = (await nav.boundingBox())!;
   expect(box.width).toBeLessThanOrEqual(viewport.width);
-  const menu = page.getByRole("button", { name: "Меню профиля" });
   if (viewport.width >= 1024) {
-    expect(box.y).toBeLessThan(32);
-    await expect(menu).toBeVisible();
+    expect(box.x).toBe(0);
+    expect(box.height).toBe(viewport.height);
   } else {
     expect(viewport.height - box.y - box.height).toBe(10);
     expect(box.height).toBe(64);
     expect(box.x).toBe(viewport.width >= 768 ? 24 : 10);
-    await expect(menu).toBeHidden();
     const staff = new URL(page.url()).pathname.startsWith("/staff");
     await expect(nav.getByRole("link")).toHaveText(
       staff
-        ? ["Заявки", "Расписание", "Объявления", "Профиль"]
+        ? ["Заявки", "Расписание", "Сессия", "Объявления", "Профиль"]
         : ["Сегодня", "Расписание", "Учёба", "Заявки", "Профиль"],
     );
   }
@@ -67,8 +65,10 @@ for (const size of sizes) {
       .getByRole("heading", { name: "Вход", exact: true })
       .locator("../..")
       .boundingBox())!;
-    const note = (await page.getByText(/^Концепт для хакатона/).boundingBox())!;
-    expect(note.y).toBeGreaterThanOrEqual(formPanel.y + formPanel.height);
+    await expect(
+      page.getByText("Учебный прототип", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText(/Концепт для хакатона/)).toHaveCount(0);
     if (size.width >= 1024) {
       expect(brand.y).toBe(formPanel.y);
       expect(brand.height).toBe(formPanel.height);
@@ -100,9 +100,9 @@ for (const size of sizes) {
       exact: true,
     });
     await expect(requestsLink).toHaveAttribute("href", "/requests");
-    expect((await requestsLink.boundingBox())!.height).toBeGreaterThanOrEqual(
-      44,
-    );
+    expect(
+      await requestsLink.evaluate((link) => (link as HTMLElement).offsetHeight),
+    ).toBeGreaterThanOrEqual(44);
     await requestsLink.focus();
     await requestsLink.press("Enter");
     await expect(
@@ -112,6 +112,8 @@ for (const size of sizes) {
     for (const path of [
       "/schedule",
       "/schedule?view=week",
+      "/schedule?view=month",
+      "/schedule?view=session",
       "/study",
       "/feed",
       "/requests",
@@ -127,7 +129,12 @@ for (const size of sizes) {
     expect(results.y).toBeGreaterThanOrEqual(picker.y + picker.height);
     expect(results.x).toBe(picker.x);
     expect(results.width).toBe(picker.width);
-    await expect(page.getByRole("contentinfo")).toHaveCount(1);
+    await expect(page.getByRole("contentinfo")).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("banner")
+        .getByRole("link", { name: "Уведомления", exact: true }),
+    ).toBeVisible();
     for (const link of await page
       .getByRole("navigation", { name: "Дни недели" })
       .getByRole("link")
@@ -140,8 +147,12 @@ for (const size of sizes) {
     const days = page.locator(".schedule-week > section");
     await expect(days).toHaveCount(7);
     if (size.width >= 1024) {
-      const first = (await days.nth(0).boundingBox())!;
-      const second = (await days.nth(1).boundingBox())!;
+      const [first, second] = await days.evaluateAll((elements) =>
+        elements.slice(0, 2).map((element) => {
+          const { x, y } = element.getBoundingClientRect();
+          return { x, y };
+        }),
+      );
       expect(first.y).toBe(second.y);
       expect(second.x).toBeGreaterThan(first.x);
     }

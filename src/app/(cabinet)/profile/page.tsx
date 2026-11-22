@@ -13,8 +13,16 @@ import { emailConfigured } from "@/server/email";
 
 export const dynamic = "force-dynamic";
 
+const STUDY_FORMS = {
+  full_time: "Очная форма обучения",
+  part_time: "Очно-заочная форма обучения",
+  extramural: "Заочная форма обучения",
+} as const;
+
 export default async function ProfilePage() {
   const user = await requireUser();
+  const pushKey = vapidPublicKey();
+  const mailAvailable = Boolean(user.studentProfileId) && emailConfigured();
   const [profile, prefs, email] = await Promise.all([
     user.studentProfileId
       ? db.studentProfile.findUnique({
@@ -23,7 +31,7 @@ export default async function ProfilePage() {
         })
       : null,
     db.userPreferences.findUnique({ where: { userId: user.id } }),
-    user.studentProfileId
+    mailAvailable
       ? db.emailSubscription.findFirst({
           where: { userId: user.id, revokedAt: null },
           select: { id: true, verifiedAt: true },
@@ -78,16 +86,36 @@ export default async function ProfilePage() {
                 </span>
               </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
-                Форма
-              </span>
-              <span className="font-board text-[15px] font-bold uppercase tracking-[0.06em]">
-                {profile.studyForm === "full_time" ? "очная" : "заочная"} ·{" "}
-                {profile.funding === "budget" ? "бюджет" : "договор"}
-                {user.isGroupHead ? " · староста" : ""}
-              </span>
-            </div>
+            <dl className="m-0 grid gap-3 border-t border-board-line pt-3">
+              <div className="grid gap-1">
+                <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                  Форма обучения
+                </dt>
+                <dd className="m-0 text-[14px] leading-5">
+                  {STUDY_FORMS[profile.studyForm]}
+                </dd>
+              </div>
+              <div className="grid gap-1">
+                <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                  Финансирование обучения
+                </dt>
+                <dd className="m-0 text-[14px] leading-5">
+                  {profile.funding === "budget"
+                    ? "За счёт бюджетных средств"
+                    : "По договору об оказании платных образовательных услуг"}
+                </dd>
+              </div>
+              {user.isGroupHead ? (
+                <div className="grid gap-1">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-board-muted">
+                    Роль в учебной группе
+                  </dt>
+                  <dd className="m-0 text-[14px] leading-5">
+                    Староста учебной группы
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
           </article>
         ) : (
           <p className="m-0 text-[15px] text-board-muted">
@@ -113,26 +141,17 @@ export default async function ProfilePage() {
             ИИ-помощник <ChevronRight size={16} aria-hidden />
           </Link>
         ) : null}
-        <section aria-labelledby="ntf" className="flex flex-col gap-1">
-          <h2
-            id="ntf"
-            className="m-0 font-board text-[22px] font-extrabold uppercase leading-[26px] tracking-[0.03em]"
-          >
-            Уведомления
-          </h2>
-          <PushToggle publicKey={vapidPublicKey()} />
-          {profile && (
-            <EmailSettings
-              available={emailConfigured()}
-              subscription={
-                email && {
-                  id: email.id,
-                  verified: Boolean(email.verifiedAt),
-                }
+        {pushKey ? <PushToggle publicKey={pushKey} /> : null}
+        {mailAvailable ? (
+          <EmailSettings
+            subscription={
+              email && {
+                id: email.id,
+                verified: Boolean(email.verifiedAt),
               }
-            />
-          )}
-        </section>
+            }
+          />
+        ) : null}
 
         <section aria-labelledby="thm">
           <h2

@@ -7,6 +7,10 @@ import { Flaps } from "@/components/board/flaps";
 import { dayMonth } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
+const gradeFormat = new Intl.NumberFormat("ru-RU", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
 
 export default async function StudyPage() {
   const user = await requireUser();
@@ -23,19 +27,15 @@ export default async function StudyPage() {
         <p>Семестр ещё не начался или уже закончился.</p>
         <Link
           href="/study/portfolio"
-          className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-border bg-surface px-4 font-semibold text-primary"
+          className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-board-row px-4 py-2 text-sm font-semibold text-board-link"
         >
-          Моё портфолио
+          Моё портфолио →
         </Link>
       </main>
     );
   }
-  const avg =
-    study.average !== null ? study.average.toFixed(1).replace(".", ",") : null;
-
   const rated = study.subjects.filter((s) => s.status !== "unpublished").length;
   const metrics = [
-    ["Средний балл", avg],
     ["Долги", String(study.debts)],
     ["Допуск", `${study.admitted}/${rated}`],
   ] as const;
@@ -53,12 +53,38 @@ export default async function StudyPage() {
           </p>
           <Link
             href="/study/portfolio"
-            className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-border bg-surface px-4 font-semibold text-primary"
+            className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-board-row px-4 py-2 text-sm font-semibold text-board-link"
           >
-            Моё портфолио
+            Моё портфолио →
           </Link>
         </div>
         <dl className="flex flex-wrap items-start gap-x-5 gap-y-3 sm:gap-x-9">
+          <div className="min-w-0">
+            <dt className="text-sm font-semibold text-text-muted">
+              Средний балл
+            </dt>
+            {study.lastSession && study.average !== null ? (
+              <dd className="mt-2">
+                <span
+                  role="img"
+                  aria-label={`Средний балл за последнюю закрытую сессию: ${gradeFormat.format(study.lastSession.average)}`}
+                  className="inline-flex h-[1.25em] items-center whitespace-nowrap rounded-[0.18em] bg-[var(--flap-bottom)] px-[0.32em] font-board text-[30px] font-extrabold leading-none text-[var(--flap-digit)] tabular-nums"
+                >
+                  {gradeFormat.format(study.lastSession.average)}
+                </span>
+                <span className="mt-1 block text-xs text-text-muted">
+                  {study.lastSession.term}
+                </span>
+                <span className="mt-1 block text-xs text-text-muted">
+                  За всё время {gradeFormat.format(study.average)}
+                </span>
+              </dd>
+            ) : (
+              <dd className="mt-2 text-sm text-text-muted">
+                Нет оценок за закрытые сессии
+              </dd>
+            )}
+          </div>
           {metrics.map(([label, value]) => (
             <div key={label} className="min-w-0">
               <dt className="text-sm font-semibold text-text-muted">{label}</dt>
@@ -95,11 +121,12 @@ export default async function StudyPage() {
             Работы — сданные из запланированных обязательных работ.
             Дополнительные достижения — полученные из опубликованных целей. Для
             допуска нужны 50 баллов из 100 и все обязательные работы. Средний
-            балл считается по экзаменам за закрытые сессии.
+            балл считается по опубликованным оценкам за экзамены закрытых
+            сессий.
           </p>
         </details>
         {study.history.map((h) => (
-          <details key={h.term}>
+          <details key={h.termId}>
             <summary className="min-h-11 cursor-pointer py-3 font-semibold">
               {h.term}
             </summary>

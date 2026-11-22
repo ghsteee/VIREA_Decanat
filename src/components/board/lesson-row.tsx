@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const wideColumns = "md:grid-cols-[126px_minmax(0,1fr)_82px]";
 
-/** Строка табло с парой: время на плитках, название и статус, аудитория. */
+/** Строка табло: единый стиль времени начала и конца, пара и аудитория. */
 export function LessonRow({
   lesson,
   details,
@@ -23,36 +23,43 @@ export function LessonRow({
       role="row"
       id={`lesson-${lesson.id}`}
       className={cn(
-        "lesson-row grid grid-cols-[92px_minmax(0,1fr)_58px] items-center gap-2 border-t border-board-line px-0.5 py-[9px]",
+        "lesson-row grid grid-cols-[92px_minmax(0,1fr)_76px] items-center gap-2 border-t border-board-line px-0.5 py-[9px]",
         wide && wideColumns,
         s === "soon" && "bg-board-soon-row",
       )}
     >
       <div
         role="cell"
-        className="flex flex-col items-start gap-0.5 whitespace-nowrap"
+        className={cn(
+          "lesson-time flex flex-col items-start whitespace-nowrap font-board text-[24px] font-bold leading-6 tabular-nums",
+          wide && "md:text-[26px] md:leading-7",
+          dim
+            ? "text-board-dim"
+            : lesson.move
+              ? "text-board-change"
+              : "text-board-text",
+        )}
       >
-        <Flaps
-          value={lesson.start}
-          label={details ? lesson.start : `${lesson.start}–${lesson.end}`}
-          tone={dim ? "dim" : lesson.move ? "change" : "default"}
-          className={wide ? "md:text-[26px]" : undefined}
-        />
-        {details ? (
-          <span className="text-[11px] text-board-muted">до {lesson.end}</span>
-        ) : null}
+        <time dateTime={lesson.startsAt.toISOString()}>{lesson.start}</time>
+        <time
+          dateTime={lesson.endsAt.toISOString()}
+          className={dim ? undefined : "text-board-muted"}
+        >
+          <span className="sr-only">до </span>
+          {lesson.end}
+        </time>
       </div>
       <div role="cell" className="min-w-0">
         <div
           className={cn(
-            "font-board text-[19px] font-extrabold uppercase leading-[22px] tracking-[0.03em]",
+            "text-[15px] font-semibold leading-5",
             "[overflow-wrap:anywhere]",
-            wide && "md:text-[22px] md:leading-6",
+            wide && "md:text-base md:leading-6",
             dim && "text-board-dim",
             s === "cancelled" && "line-through",
           )}
         >
-          {details ? lesson.subject : lesson.subjectShort}
+          {lesson.subject}
         </div>
         {details ? (
           <div className="text-[12.5px] leading-4 text-board-muted [overflow-wrap:anywhere]">
@@ -99,16 +106,16 @@ export function BoardHead({ wide }: { wide?: boolean } = {}) {
     <div
       role="row"
       className={cn(
-        "lesson-head grid grid-cols-[92px_minmax(0,1fr)_58px] gap-2 px-0.5 py-[7px] text-[10px] font-bold uppercase tracking-[0.12em] text-board-head",
+        "lesson-head grid grid-cols-[92px_minmax(0,1fr)_76px] gap-2 px-0.5 py-[7px] text-[10px] font-bold uppercase tracking-[0.12em] text-board-head",
         wide && wideColumns,
       )}
     >
       <span role="columnheader">
-        Время<span className="hidden max-[399px]:inline"> / ауд.</span>
+        Время<span className="hidden max-[399px]:block">Аудитория</span>
       </span>
       <span role="columnheader">Пара · статус</span>
       <span role="columnheader" className="text-right">
-        Ауд.
+        Аудитория
       </span>
     </div>
   );
