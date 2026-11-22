@@ -101,6 +101,24 @@ export async function answerStudy(
   const year = tokens.find((token) => /^(?:19|20)\d{2}$/u.test(token));
   const season = normalized.match(/(?:^| )(осен|весн)/u)?.[1];
   const termName = study.term.name.toLowerCase();
+  const asksForLastSession =
+    /(?:прошл|предыдущ|последн|закрыт)[а-я]* (?:семестр|сесси)/u.test(
+      normalized,
+    );
+  if (
+    /средн[а-я]* балл|gpa/u.test(normalized) &&
+    asksForLastSession &&
+    !year &&
+    !season &&
+    !asksForNamedSubject(normalized)
+  ) {
+    return study.lastSession
+      ? {
+          message: `Средний балл за последнюю закрытую сессию (${study.lastSession.term}): ${study.lastSession.average.toFixed(1).replace(".", ",")}.`,
+          link: studyLink,
+        }
+      : { message: noAnswer };
+  }
   const differentTerm =
     /(?:прошл|предыдущ|следующ|будущ|последн)[а-я]* (?:семестр|сесси)|закрытую сессию/u.test(
       normalized,

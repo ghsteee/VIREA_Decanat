@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 type Props = {
-  /** Текст на плитках; «:», «.», «-» и пробел рисуются как разделители */
+  /** Текст на плитках; двоеточие, точка, запятая, дефис и пробел — разделители. */
   value: string;
   /** Подпись для экранных чтецов, например «Сейчас 10:15» */
   label?: string;
@@ -33,7 +33,7 @@ export function Flaps({
       )}
     >
       {[...value].map((ch, i) =>
-        /[:.\- ]/.test(ch) ? (
+        /[:.,\- ]/.test(ch) ? (
           <span key={i} className="flap-sep" aria-hidden>
             {ch === " " ? "" : ch}
           </span>
